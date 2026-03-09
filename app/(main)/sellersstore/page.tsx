@@ -1,0 +1,739 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerClose,
+} from "@/components/ui/drawer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import {
+  EllipsisVertical,
+  MoreHorizontal,
+  Store,
+  User,
+  Ban,
+  X,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import Image from "next/image";
+import { ColumnDef } from "@tanstack/react-table";
+import { UserTable } from "@/components/UserTable";
+import {
+  anaBarIcon,
+  barIcon,
+  WhiteanaBaricon,
+  whiteProIcon,
+  whiteStoreIcon,
+} from "@/svg";
+import { useRouter } from "next/navigation";
+
+// ────────────────────────────────────────────────
+// Types
+// ────────────────────────────────────────────────
+interface Seller {
+  id: string | number;
+  name: string;
+  username: string;
+  avatarUrl?: string;
+  role?: string;
+  status: "ACTIVE" | "SUSPENDED" | "PENDING" | "INACTIVE";
+  liveProducts: number | null;
+  totalEarnings: number;
+  platformRevenue: number;
+  lastActivity: string | null;
+
+  analytics?: {
+    totalOrders: number;
+    totalRevenue: number;
+    masterclassHosted: number;
+    hireRequests: number;
+    bestSellingProduct?: { name: string; image?: string };
+    unitsSold: number;
+    revenue: number;
+  };
+}
+
+interface SellersData {
+  sellers: Seller[];
+  total: number;
+  currentPage: number;
+  pageSize: number;
+}
+
+// ────────────────────────────────────────────────
+// Mock data – replace with real backend fetch (e.g., /api/admin/sellers)
+// ────────────────────────────────────────────────
+const mockData: SellersData = {
+  sellers: [
+    {
+      id: "1",
+      name: "Alex Morgan",
+      username: "@neonbyte",
+      avatarUrl:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
+      status: "ACTIVE",
+      liveProducts: 12,
+      totalEarnings: 1320567,
+      platformRevenue: 23720,
+      lastActivity: "19 Jan, 2026",
+    },
+    {
+      id: "2",
+      name: "Sarah Johnson",
+      username: "@sarahj",
+      avatarUrl:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
+      status: "SUSPENDED",
+      liveProducts: 12,
+      totalEarnings: 1320567,
+      platformRevenue: 23720,
+      lastActivity: "19 Jan, 2026",
+    },
+    {
+      id: "3",
+      name: "Michael Chen",
+      username: "@mikechen",
+      avatarUrl:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+      status: "PENDING",
+      liveProducts: null,
+      totalEarnings: 0,
+      platformRevenue: 0,
+      lastActivity: null,
+    },
+    {
+      id: "4",
+      name: "Emily Davis",
+      username: "@emilyd",
+      avatarUrl:
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100",
+      status: "INACTIVE",
+      liveProducts: null,
+      totalEarnings: 0,
+      platformRevenue: 0,
+      lastActivity: "19 Jan, 2026",
+    },
+    {
+      id: "5",
+      name: "David Wilson",
+      username: "@davidw",
+      avatarUrl:
+        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100",
+      status: "ACTIVE",
+      liveProducts: 8,
+      totalEarnings: 890000,
+      platformRevenue: 15680,
+      lastActivity: "20 Jan, 2026",
+    },
+    // Add more rows as needed for pagination demo
+  ],
+  total: 12560,
+  currentPage: 1,
+  pageSize: 16,
+};
+
+const formatCurrency = (num: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(num);
+
+const SellersStore = () => {
+  const [data, setData] = useState<SellersData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState<
+    Seller["analytics"] | null
+  >(null);
+  const router = useRouter();
+
+  // Simulate fetching analytics when drawer opens
+  useEffect(() => {
+    if (drawerOpen && selectedSeller) {
+      setAnalyticsLoading(true);
+      setAnalyticsData(null);
+
+      // Simulate API delay (replace with real fetch)
+      const timer = setTimeout(() => {
+        // Mock analytics response
+        setAnalyticsData({
+          totalOrders: 123,
+          totalRevenue: 10300,
+          masterclassHosted: 10300,
+          hireRequests: 10300,
+          bestSellingProduct: { name: "Premium Beat Pack", image: undefined },
+          unitsSold: 7687,
+          revenue: 123849,
+        });
+        setAnalyticsLoading(false);
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [drawerOpen, selectedSeller]);
+
+  const handleOpenAnalytics = (seller: Seller) => {
+    setSelectedSeller(seller);
+    setDrawerOpen(true);
+  };
+
+  useEffect(() => {
+    // TODO: Replace with real API fetch
+    const fetchSellers = async () => {
+      try {
+        setLoading(true);
+        // const res = await fetch(`/api/admin/sellers?page=${currentPage}&status=${statusFilter}&search=${searchQuery}`);
+        // const json = await res.json();
+        // setData(json);
+
+        setTimeout(() => {
+          setData(mockData);
+          setLoading(false);
+        }, 800);
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+      }
+    };
+
+    fetchSellers();
+  }, []); // Initial fetch only
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin h-8 w-8 border-4 border-[#F75803] border-t-transparent rounded-full mx-auto" />
+          <p className="text-[#808080]">Loading sellers...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data)
+    return (
+      <div className="p-8 text-center text-[#808080]">No data available</div>
+    );
+
+  // Filter sellers based on search and status
+  const filteredSellers = data.sellers.filter((seller) => {
+    // Search filter - search by name, username, or role
+    const matchesSearch =
+      seller.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      seller.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (seller.role?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+
+    // Status filter
+    const matchesStatus =
+      statusFilter === "All Status" || seller.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const columns: ColumnDef<Seller>[] = [
+    {
+      accessorKey: "name",
+      header: "Creator",
+      cell: ({ row }) => {
+        const seller = row.original;
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-[36px] w-[36px]">
+              <AvatarImage src={seller.avatarUrl} alt={seller.name} />
+              <AvatarFallback>{seller.name[0]}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-medium text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
+                {seller.name}
+              </p>
+              <p className=" text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                {seller.username}
+              </p>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string;
+        let bg =
+          "bg-[#2BAC47] text-[#FFFFFF] INT500 font-medium leading-[16px] tracking-[6%] text-[12px]";
+
+        if (status === "SUSPENDED") {
+          bg = "bg-[#C83532]";
+        } else if (status === "PENDING") {
+          bg = "bg-[#EF8943]";
+        } else if (status === "INACTIVE") {
+          bg = "bg-[#A4A4A4]";
+        }
+
+        return (
+          <div
+            className={`inline-flex items-center px-3 py-1 rounded-[4px] text-[#FFFFFF] INT500 leading-[16px] tracking-[6%] text-[12px] font-medium border ${bg} `}
+          >
+            {status}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "liveProducts",
+      header: "Live Products",
+      cell: ({ row }) => {
+        const value = row.getValue("liveProducts");
+        return (
+          <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+            {value ?? "-"}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "totalEarnings",
+      header: "Total Earnings",
+      cell: ({ row }) => (
+        <span className="font-medium text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
+          {formatCurrency(row.getValue("totalEarnings"))}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "platformRevenue",
+      header: "Platform revenue",
+      cell: ({ row }) => (
+        <span className="font-medium text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
+          {formatCurrency(row.getValue("platformRevenue"))}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "lastActivity",
+      header: "Last activity",
+      cell: ({ row }) => {
+        const value = row.getValue("lastActivity");
+        return (
+          <span className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+            {value ?? "-"}
+          </span>
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => {
+        const seller = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <EllipsisVertical className="h-4 w-4 text-[#5B5B5B]" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 space-y-3">
+              {seller.status !== "INACTIVE" && (
+                <DropdownMenuItem
+                  className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#373737]"
+                  onClick={() => handleOpenAnalytics(seller)}
+                >
+                  {WhiteanaBaricon}
+                  More Analytics
+                </DropdownMenuItem>
+              )}
+
+              {seller.status !== "INACTIVE" && (
+                <DropdownMenuItem
+                  className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#373737]"
+                  onClick={() => router.push(`/sellersstore/${seller.id}`)}
+                >
+                  {whiteStoreIcon}
+                  View Store
+                </DropdownMenuItem>
+              )}
+
+              <DropdownMenuItem className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#373737]">
+                {whiteProIcon}
+                View Profile
+              </DropdownMenuItem>
+              {seller.status !== "SUSPENDED" && (
+                <DropdownMenuItem className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#C83532]">
+                  <Ban className="h-4 w-4" />
+                  Suspend
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+
+  const showingStart = (data.currentPage - 1) * data.pageSize + 1;
+  const showingEnd = Math.min(
+    Math.min(showingStart + data.pageSize - 1, data.total),
+    showingStart + filteredSellers.length - 1,
+  );
+
+  return (
+    <div className="space-y-2 pb-10">
+      {/* Header */}
+      <div>
+        <h2 className="text-[#111810] INT500 font-medium text-[24px] leading-[32px] tracking-[-1.5%]">
+          Sellers Store
+        </h2>
+        <p className="mt-1.5  text-[#A8A8A8] INT400 font-normal text-[14px] tracking-[-1.8%] leading-[20px]">
+          Lorem ipsum dolor sit amet consectetur.
+        </p>
+      </div>
+
+      {/* Search + Filter */}
+      <div className="flex items-center justify-between gap-4 flex-wrap pt-4">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#A4A4A4]" />
+          <Input
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 border-[#F1F1F1] focus-visible:ring-[#F75803] bg-[#F7F7F7]"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px] border-[#F1F1F1] ">
+            <SelectValue
+              placeholder="All Status"
+              className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"
+            />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              value="All Status"
+              className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"
+            >
+              All Status
+            </SelectItem>
+            <SelectItem
+              value="ACTIVE"
+              className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"
+            >
+              ACTIVE
+            </SelectItem>
+            <SelectItem
+              value="SUSPENDED"
+              className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"
+            >
+              SUSPENDED
+            </SelectItem>
+            <SelectItem
+              value="PENDING"
+              className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"
+            >
+              PENDING
+            </SelectItem>
+            <SelectItem
+              value="INACTIVE"
+              className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"
+            >
+              INACTIVE
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white overflow-hidden">
+        <UserTable
+          data={filteredSellers}
+          columns={columns}
+          placeholder="Search sellers..."
+        />
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between text-sm text-[#808080] flex-1">
+        <p>
+          SHOWING {filteredSellers.length > 0 ? showingStart : 0}-
+          {filteredSellers.length > 0 ? showingEnd : 0} OF{" "}
+          {filteredSellers.length}
+        </p>
+        <div className="flex items-center gap-2">
+          {/* <Button
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center"
+            variant="outline"
+            size="sm"
+            disabled={data.currentPage === 1}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                fill="#111810"
+              />
+            </svg> 
+          </Button> */}
+
+             <button  
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
+         
+            disabled={data.currentPage === 1}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                fill="#111810"
+              />
+            </svg> 
+          </button>
+
+
+          <button  
+            disabled={showingEnd >= filteredSellers.length}
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                fill="#111810"
+              />
+            </svg>
+          </button>
+
+{/* 
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={showingEnd >= filteredSellers.length}
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                fill="#111810"
+              />
+            </svg>
+          </Button> */}
+        </div>
+      </div>
+
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="right">
+        <DrawerContent className="h-full max-w-[500px] w-full ml-auto bg-white text-black md:rounded-tl-lg rounded-tl-none rounded-tr-none rounded-bl-none rounded-br-none  [&>div:first-child]:hidden overflow-x-hidden">
+          <div className="flex flex-col h-full w-full">
+            <DrawerHeader className="px-8 py-6">
+              <div className="flex items-center justify-between">
+                <DrawerTitle className="INT500 font-medium text-[20px] leading-[28px] text-[#111810]">
+                  More Analytics
+                </DrawerTitle>
+                <DrawerClose asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-[#373737] hover:text-black border border-[#F1F1F1] rounded-full "
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </DrawerClose>
+              </div>
+            </DrawerHeader>
+
+            <div className="flex-1 overflow-y-auto px-8  w-full">
+              {analyticsLoading ? (
+                // ─── Loading state inside drawer ───
+                <div className="flex flex-col items-center justify-center h-full">
+                  <div className="animate-spin h-12 w-12 border-4 border-[#F75803] border-t-transparent rounded-full mb-6" />
+                  <p className="text-gray-400 text-lg">
+                    Loading analytics for {selectedSeller?.name}...
+                  </p>
+                  <p className="text-gray-600 text-sm mt-2">
+                    This may take a moment
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Seller Header */}
+                  {selectedSeller && (
+                    <div className="flex flex-col gap-5 mb-8">
+                      <Avatar className="h-[56px] w-[56px] border-2 border-[#F75803]/30">
+                        <AvatarImage src={selectedSeller.avatarUrl} />
+                        <AvatarFallback className="bg-[#1A1A1A] text-[#F75803]">
+                          {selectedSeller.name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="text-[#111810] INT500 font-medium text-[18px] leading-[24px] tracking-[-1.5%]">
+                          {selectedSeller.name}
+                        </h3>
+                        <p className="text-[#808080] INT400 text-[14px] leading-[20px] tracking-[-1.8%] mt-1">
+                          {selectedSeller.username}
+                        </p>
+                        {selectedSeller.role && (
+                          <p className="text-[#808080] INT400 text-[14px] leading-[20px] tracking-[-1.8%] mt-2">
+                            {selectedSeller.role}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Analytics Snapshot */}
+                  <div className="mb-12 w-full">
+                    <div className="w-full ">
+                      <h4 className="text-[#808080] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] mb-3 gap-2 flex items-center mb-8">
+                        {anaBarIcon} Analytics Snapshot
+                      </h4>
+                      <div className="grid grid-cols-2 w-full">
+                        <div className="flex flex-col justify-center gap-2 items-center border-[1.2px] border-[#F1F1F1] w-full h-[96px] rounded-tl-[4px]">
+                          <p className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                            Total orders
+                          </p>
+                          <p className="text-[#111810] INT500 text-[24px] leading-[32px] tracking-[-1.5%] font-medium">
+                            {analyticsData?.totalOrders?.toLocaleString() ??
+                              "123"}
+                          </p>
+                        </div>
+                        <div className="flex flex-col justify-center gap-2 items-center border-[1.2px] border-[#F1F1F1] w-full h-[96px] rounded-tr-[4px]">
+                          <p className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                            Total Revenue
+                          </p>
+                          <p className="text-[#111810] INT500 text-[24px] leading-[32px] tracking-[-1.5%] font-medium">
+                            $
+                            {(
+                              analyticsData?.totalRevenue ?? 10300
+                            ).toLocaleString()}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-col justify-center gap-2 items-center border-[1.2px] border-[#F1F1F1] w-full h-[96px] rounded-bl-[4px]">
+                          <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                            Masterclass Hosted
+                          </span>
+                          <span className="text-[#111810] INT500 text-[24px] leading-[32px] tracking-[-1.5%] font-medium">
+                            {(
+                              analyticsData?.masterclassHosted ?? 10300
+                            ).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex flex flex-col justify-center gap-2 items-center border-[1.2px] border-[#F1F1F1] w-full h-[96px] rounded-br-[4px]">
+                          <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                            Hire Requests
+                          </span>
+                          <span className="text-[#111810] INT500 text-[24px] leading-[32px] tracking-[-1.5%] font-medium">
+                            {(
+                              analyticsData?.hireRequests ?? 10300
+                            ).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Best Selling Product */}
+                  <div className="mb-12 ">
+                    <h4 className="text-[#808080] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] mb-3 gap-2 flex items-center">
+                      {anaBarIcon} Best Selling Product
+                    </h4>
+                    <div className="bg-[#F1F1F1] p-8  min-h-[320px] flex items-center justify-center ">
+                      {analyticsData?.bestSellingProduct?.image ? (
+                        <img
+                          src={analyticsData.bestSellingProduct.image}
+                          alt="Best selling"
+                          className="max-h-60 object-contain rounded-lg shadow-2xl"
+                        />
+                      ) : (
+                        <div className="text-center text-gray-500">
+                          <p className="text-2xl mb-3">Product Preview</p>
+                          <p className="text-base">(Image not available yet)</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Units Sold & Revenue */}
+                  <div className="mb-10 flex flex-col gap-4">
+                    <div className="flex flex-row justify-between">
+                      <div className="flex flex-row items-center gap-1">
+                        {barIcon}
+                        <h4 className="text-[#A4A4A4] INT500 font-medium text-[16px] leading-[24px] tracking-[-1.5%]">
+                          Units Sold
+                        </h4>
+                      </div>
+
+                      <div className="text-[#111810] INT500 font-medium text-[16px] leading-[24px] tracking-[-1.5%]">
+                        {(analyticsData?.unitsSold ?? 7687).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-row justify-between">
+                      <div className="flex flex-row items-center gap-1">
+                        {barIcon}
+                        <h4 className="text-[#A4A4A4] INT500 font-medium text-[16px] leading-[24px] tracking-[-1.5%]">
+                          Revenue
+                        </h4>
+                      </div>
+
+                      <div className="text-[#111810] INT500 font-medium text-[16px] leading-[24px] tracking-[-1.5%]">
+                        ${(analyticsData?.revenue ?? 123849).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </div>
+  );
+};
+
+export default SellersStore;

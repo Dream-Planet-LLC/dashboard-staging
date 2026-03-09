@@ -679,7 +679,7 @@ const handleUpdateRole = async () => {
                       >
                         <Image
                           src="/icons/deleteiconred.svg"
-                          alt="Delete"
+                          alt=""
                           width={16}
                           height={16}
                         />

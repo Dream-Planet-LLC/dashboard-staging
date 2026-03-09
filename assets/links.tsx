@@ -12,6 +12,16 @@ import {
   AccessControlIcon,
   ChangePasswordIcon,
   ChallengeIcon,
+  ModerationIcon,
+  ProductsIcon,
+  EventsIcon,
+  OrdersIcon,
+  PayoutsIcon,
+  HireIcon,
+  BuyersIcon,
+  OverviewIcon,
+  SellersStoreIcon,
+
 } from "@/components/icons";
 
 const userPermission:string[] = []
@@ -113,6 +123,94 @@ export const NavLinks = [
     name: "Forum",
     icon: <ForumIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
     href: "/forum",
+    accordion: false,
+  },
+    {
+    name: "Overview",
+    icon: <OverviewIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/overview",
+    accordion: false,
+  },
+    {
+    name: "Sellers Store",
+    icon: <SellersStoreIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/sellersstore",
+    accordion: false,
+  },
+
+  {
+    name: "Products",
+    icon: <ProductsIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/products",
+    accordion: true,
+    sublink: [
+      {
+        title: "Products catalogue",
+        href: "/products/catalogue",
+      },
+      {
+        title: "Featured Products",
+        href: "/products/featuredproducts",
+      },
+    ],
+  },
+
+    {
+    name: "Events",
+    icon: <EventsIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/events",
+    accordion: false,
+  },
+
+    {
+    name: "Orders",
+    icon: <OrdersIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/orders",
+    accordion: false,
+  },
+
+    {
+    name: "Payouts",
+    icon: <PayoutsIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/payouts",
+    accordion: false,
+  },
+
+    {
+    name: "Hire",
+    icon: <HireIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/hire",
+    accordion: false,
+  },
+
+  {
+    name: "Buyers",
+    icon: <BuyersIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/buyers",
+    accordion: true,
+    sublink: [
+      {
+        title: "Insight Overview",
+        href: "/buyers/overview",
+      },
+      {
+        title: "Purchase Preferences",
+        href: "/buyers/preferences",
+      },
+    ],
+  },
+
+  //   {
+  //   name: "Wallet",
+  //   icon: <ForumIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+  //   href: "/wallet",
+  //   accordion: false,
+  // },
+
+    {
+    name: "Moderation",
+    icon: <ModerationIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/moderation",
     accordion: false,
   },
   {

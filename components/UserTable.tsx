@@ -61,7 +61,7 @@ export function UserTable<TData, TValue>({
 
   
   return (
-    <div className="flex flex-col space-y-3 mt-[24px]">
+    <div className="flex flex-col space-y-3 mt-[20px]">
       {top && (
         <div className="flex justify-between items-center">
           <div></div>
@@ -110,16 +110,16 @@ export function UserTable<TData, TValue>({
 
       <div className="rounded-md border-0">
         <Table className="border-none">
-          <TableHeader className="">
+          <TableHeader className="rounded-[16px]">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
-                className="bg-gray-100 font-normal"
+                className="bg-gray-100 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] rounded-[16px]"
                 key={headerGroup.id}
               >
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead
-                      className="text-[#808080] h-[32px]"
+                      className="text-[#808080] h-[56px] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]"
                       key={header.id}
                     >
                       {header.isPlaceholder
