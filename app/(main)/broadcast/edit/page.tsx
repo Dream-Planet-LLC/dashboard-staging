@@ -20,7 +20,7 @@ import useBroadcast from "@/hooks/useBroadcast";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import { ArrowLeft } from "lucide-react";
 
 interface FileWithPreview {
@@ -74,13 +74,8 @@ const BroadcastEdit = () => {
   return (
     <div className="flex justify-between items-start">
        {(updateLoading || deleteLoading) && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+        <LoadingOverlay message="Processing..." />
+      )}
       <div className="flex w-3/6 flex-col space-y-[24px]">
       <div
             onClick={() => {

@@ -36,7 +36,8 @@ import Image from "next/image";
 import useCampaign from "@/hooks/useCampaign";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import LoadingState from "@/components/LoadingState";
 
 const profile = {
   name: "Randall_Henn",
@@ -430,16 +431,27 @@ const Campaign = () => {
     },
   ];
 
+  const hasCampaignData =
+    (campaignActive?.length ?? 0) > 0 ||
+    (campaignProcessing?.length ?? 0) > 0 ||
+    (campaignStopped?.length ?? 0) > 0 ||
+    (campaignMostPerformed?.length ?? 0) > 0 ||
+    (campaignCompleted?.length ?? 0) > 0 ||
+    (groupedCampaigns?.length ?? 0) > 0;
+
+  if (campaignLoading && !hasCampaignData) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <LoadingState message="Loading campaigns..." />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full grid grid-cols-8 space-x-4">
-      {campaignLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+      {campaignLoading && hasCampaignData && (
+        <LoadingOverlay message="Processing..." />
+      )}
       <section className="col-span-6 flex flex-col space-y-7">
         <div>
           <h2 className="text-2xl">Campaign</h2>
@@ -823,17 +835,7 @@ const Campaign = () => {
       <Sheet open={isSheetOpen} onOpenChange={closeSheet}>
      
         <SheetContent className=" sm:max-w-[519px] overflow-y-auto scrollbar-hide">
-        {campaignLoadingSheet && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div
-      className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px] animate-fadeIn"
-      style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
-    >
-      <FadeLoader color="#7E2D02" />
-      <p className="text-[#111810] text-[20px]">Processing...</p>
-    </div>
-  </div>
-)}
+        {campaignLoadingSheet && <LoadingOverlay message="Processing..." />}
           <SheetHeader>
          
             <SheetTitle className="flex justify-between">

@@ -11,7 +11,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { updateActiveUser } from "@/redux/slices/performanceslice";
 import { useRouter } from "next/navigation";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import LoadingState from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -232,16 +233,24 @@ useEffect(() => {
 
 }, [creatorPage]);
 
+  const hasPerformanceData =
+    (allPerformanceCreator?.length ?? 0) > 0 ||
+    (allPerformanceFan?.length ?? 0) > 0 ||
+    (allPerformanceInvestor?.length ?? 0) > 0;
+
+  if (performanceLoading && !hasPerformanceData) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <LoadingState message="Loading analytics..." />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col space-y-7">
-      {performanceLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+      {performanceLoading && hasPerformanceData && (
+        <LoadingOverlay message="Processing..." />
+      )}
       <div>
         
         <h2 className="text-2xl"> User Analytics</h2>

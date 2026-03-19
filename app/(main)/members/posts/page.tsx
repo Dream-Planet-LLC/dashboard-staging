@@ -9,7 +9,8 @@ import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import useGetUsers from "@/hooks/useGetUsers";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import LoadingState from "@/components/LoadingState";
 import MediaCarousel from "@/components/MediaCarousel";
 const Posts = () => {
   const { updateUserPosts, userLoading, deletePost } = useGetUsers();
@@ -110,16 +111,21 @@ const Posts = () => {
 
     return () => clearTimeout(timer);
   }, [isOpen, setisOpen]);
+  const hasPosts = (userPost?.length ?? 0) > 0;
+
+  if (userLoading && !hasPosts) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <LoadingState message="Loading posts..." />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col space-y-4">
-       {userLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+       {userLoading && hasPosts && (
+         <LoadingOverlay message="Processing..." />
+       )}
       <p
         onClick={() => {
           router.push("/members");

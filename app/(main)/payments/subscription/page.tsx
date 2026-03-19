@@ -27,7 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import LoadingState from "@/components/LoadingState";
 
 const SubscriptionFee = () => {
   const {
@@ -55,16 +56,24 @@ const SubscriptionFee = () => {
     setNewPrice(subData.price)
   }, [isOpen])
 
+  const hasSubscriptions =
+    (subscriptioncreator?.length ?? 0) > 0 ||
+    (subscriptionfan?.length ?? 0) > 0 ||
+    (subscriptioninvestor?.length ?? 0) > 0;
+
+  if (paymentLoading && !hasSubscriptions) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <LoadingState message="Loading subscriptions..." />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col space-y-[24px]">
-      {paymentLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+      {paymentLoading && hasSubscriptions && (
+        <LoadingOverlay message="Processing..." />
+      )}
       <div>
         <h2 className="text-2xl"> Our subscriptions pricing</h2>
         <p className="text-sm text-[#A8A8A8]">

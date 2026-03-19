@@ -1,5 +1,6 @@
 "use client";
 
+import LoadingState from "@/components/LoadingState";
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -314,10 +315,7 @@ const HireMarketplacePage = () => {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin h-8 w-8 border-4 border-[#F75803] border-t-transparent rounded-full mx-auto" />
-          <p className="text-[#808080]">Loading hire marketplace...</p>
-        </div>
+        <LoadingState message="Loading hire marketplace..." />
       </div>
     );
   }

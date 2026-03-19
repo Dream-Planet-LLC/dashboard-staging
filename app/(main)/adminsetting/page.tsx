@@ -47,7 +47,8 @@ import useAdminsetting from "@/hooks/useAdminsetting";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import LoadingState from "@/components/LoadingState";
 import { updateRoles } from "@/redux/slices/adminsettingslice";
 
 const features = [
@@ -455,15 +456,23 @@ const handleUpdateRole = async () => {
 };
 
 
+  const hasAdminData =
+    (acceptedAdmin?.length ?? 0) > 0 ||
+    (pendingAdmin?.length ?? 0) > 0 ||
+    (adminRoles?.length ?? 0) > 0;
+
+  if (adminLoading && !hasAdminData) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <LoadingState message="Loading admin settings..." />
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-8 space-x-4">
-      {adminLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px] z-50">
-            <FadeLoader color="#7E2D02" />
-            <p className="text-[#111810] text-[20px]">Processing...</p>
-          </div>
-        </div>
+      {adminLoading && hasAdminData && (
+        <LoadingOverlay message="Processing..." />
       )}
       <section className="col-span-6 flex flex-col space-y-7">
         <div className="flex items-center justify-between">

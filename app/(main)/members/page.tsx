@@ -48,7 +48,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import LoadingState from "@/components/LoadingState";
 import { countries, dateOptions } from "@/utils/interface";
 
 const Members = () => {
@@ -409,16 +410,25 @@ const handleInvestorCountryChange = (value: string) => {
     },
   ];
 
+  const hasUsers =
+    (usersAll?.length ?? 0) > 0 ||
+    (usersCreator?.length ?? 0) > 0 ||
+    (usersFan?.length ?? 0) > 0 ||
+    (usersInvestor?.length ?? 0) > 0;
+
+  if (userLoading && !hasUsers) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <LoadingState message="Loading users..." />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col space-y-7">
-      {userLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+      {userLoading && hasUsers && (
+        <LoadingOverlay message="Processing..." />
+      )}
       <div>
         <h2 className=" text-2xl"> Onboarded Users</h2>
         <p className="text-sm text-[#A8A8A8]">
@@ -985,14 +995,7 @@ const handleInvestorCountryChange = (value: string) => {
       <Sheet open={isSheetOpen} onOpenChange={closeSheet}>
      
         <SheetContent className="sm:max-w-[519px] overflow-y-auto scrollbar-hide">
-        {sheetLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+        {sheetLoading && <LoadingOverlay message="Processing..." />}
           <SheetHeader>
             <SheetTitle className="flex justify-between">
               <p className="text-[#111810] font-medium text-[20px]">

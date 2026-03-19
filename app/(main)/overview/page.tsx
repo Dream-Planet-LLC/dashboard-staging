@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
 import { UserTable } from "@/components/UserTable";
 import { useRouter } from "next/navigation";
+import LoadingState from "@/components/LoadingState";
 
 import {
   buyIcon,
@@ -165,10 +166,7 @@ const Overview = () => {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin h-8 w-8 border-4 border-[#F75803] border-t-transparent rounded-full mx-auto" />
-          <p className="text-[#808080]">Loading overview...</p>
-        </div>
+        <LoadingState message="Loading overview..." />
       </div>
     );
   }

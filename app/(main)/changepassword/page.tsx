@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import useLogin from "@/hooks/login";
 import { toast } from "@/hooks/use-toast";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 const changePassword = () => {
   const { changePassword, isOpen, setisOpen, loading } = useLogin();
@@ -55,14 +55,7 @@ const changePassword = () => {
   };
   return (
     <div>
-     { loading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+     {loading && <LoadingOverlay message="Processing..." />}
       <div className="flex w-3/6 flex-col space-y-[32px]">
         <div>
           <h2 className="text-2xl">Change Password</h2>

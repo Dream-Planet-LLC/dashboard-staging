@@ -30,7 +30,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import useChallenge from "@/hooks/useChallenge";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 interface FileWithPreview {
   preview: string; // Cloudinary URL
@@ -59,14 +59,7 @@ const CreateChallenge = () => {
   const router = useRouter();
   return (
     <div className="flex justify-between items-start">
-       {challengeLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+      {challengeLoading && <LoadingOverlay message="Processing..." />}
       <div className="flex w-3/6 flex-col space-y-[24px]">
         <div>
           <p

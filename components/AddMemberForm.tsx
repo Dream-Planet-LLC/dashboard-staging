@@ -24,7 +24,7 @@ import {
 } from "./ui/dialog";
 import Image from "next/image";
 import useAdminsetting from "@/hooks/useAdminsetting";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import { useRouter } from "next/navigation";
 import { countries } from "@/assets/country";
 import { useSelector } from "react-redux";
@@ -68,14 +68,7 @@ const AddMemberForm = () => {
 
   return (
     <>
-    {adminLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+    {adminLoading && <LoadingOverlay message="Processing..." />}
      
     
     <div>

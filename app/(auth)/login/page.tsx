@@ -5,7 +5,7 @@ import useLogin from "@/hooks/login";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 const Login = () => {
   const router = useRouter();
@@ -17,13 +17,7 @@ const Login = () => {
       className="flex justify-center items-center h-screen bg-cover bg-center"
       style={{ backgroundImage: "url('/pattern.svg')" }}
     >
-      {loading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-      <div className="bg-white flex flex-col items-center justify-center w-[300px] h-[130px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-      </div>
-    </div> 
-  )}
+      {loading && <LoadingOverlay message="Processing..." />}
       <div className="flex flex-col justify-center border p-8 items-center  rounded-md shadow-md">
         <div className="flex items-center flex-col mb-[32px]">
           <img

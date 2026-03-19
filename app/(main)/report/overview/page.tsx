@@ -40,7 +40,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { updateCreatorData } from "@/redux/slices/reportslice";
 import { useRouter } from "next/navigation";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import LoadingState from "@/components/LoadingState";
 
 const ReportOverview = () => {
   const dispatch = useDispatch();
@@ -234,16 +235,21 @@ const ReportOverview = () => {
   const handleRemoveCreator = () => setSelectedCreator(null);
   const handleRemoveAdmin = () => setSelectedAdmin(null);
 
+  const hasReportData = (creatorReport?.length ?? 0) > 0;
+
+  if (reportLoading && !hasReportData) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <LoadingState message="Loading reports..." />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col space-y-7">
-      {reportLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+      {reportLoading && hasReportData && (
+        <LoadingOverlay message="Processing..." />
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl">Report</h2>

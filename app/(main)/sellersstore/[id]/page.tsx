@@ -1,5 +1,6 @@
 "use client";
 
+import LoadingState from "@/components/LoadingState";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -381,10 +382,7 @@ const SellerStorePage = () => {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin h-8 w-8 border-4 border-[#F75803] border-t-transparent rounded-full mx-auto" />
-          <p className="text-[#808080]">Loading store...</p>
-        </div>
+        <LoadingState message="Loading store..." />
       </div>
     );
   }

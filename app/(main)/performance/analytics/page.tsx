@@ -33,7 +33,8 @@ import { useEffect, useState } from "react";
 import useForum from "@/hooks/useForum";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import LoadingState from "@/components/LoadingState";
 
 const ForumAnalytics = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -203,16 +204,21 @@ const ForumAnalytics = () => {
       },
     },
   ];
-  return (
-    <div className="flex flex-col space-y-7">
-      {forumLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
+  const hasForums = (allForums?.length ?? 0) > 0;
+
+  if (forumLoading && !hasForums) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <LoadingState message="Loading analytics..." />
       </div>
-    </div> 
-  )}
+    );
+  }
+
+  return (
+      <div className="flex flex-col space-y-7">
+      {forumLoading && hasForums && (
+        <LoadingOverlay message="Processing..." />
+      )}
       <div>
         <h2 className="text-2xl"> Forum Analytics</h2>
         {/* <p className="text-sm text-[#A8A8A8]">
@@ -333,14 +339,7 @@ const ForumAnalytics = () => {
 
       <Sheet open={isSheetOpen} onOpenChange={closeSheet}>
         <SheetContent className="sm:max-w-[519px] overflow-y-auto scrollbar-hide">
-        {forumSheetLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
-  )}
+        {forumSheetLoading && <LoadingOverlay message="Processing..." />}
           <SheetHeader>
             <SheetTitle className="flex justify-between mb-[40px]">
               <p className="text-[#111810] font-medium text-[20px]">

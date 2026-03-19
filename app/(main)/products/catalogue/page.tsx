@@ -1,5 +1,6 @@
 "use client";
 
+import LoadingState from "@/components/LoadingState";
 import { useState, useEffect } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { UserTable } from "@/components/UserTable";
@@ -492,10 +493,7 @@ const ProductCataloguePage = () => {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin h-8 w-8 border-4 border-[#F75803] border-t-transparent rounded-full mx-auto" />
-          <p className="text-[#808080]">Loading products...</p>
-        </div>
+        <LoadingState message="Loading products..." />
       </div>
     );
   }

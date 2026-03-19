@@ -7,7 +7,7 @@ import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import AdminSetting from "../adminsetting/page";
 import { useEffect } from "react";
-import FadeLoader from "react-spinners/FadeLoader";
+import LoadingState from "@/components/LoadingState";
 
 export default function AdminSettingPage() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function AdminSettingPage() {
   if (!hasAdminSettingAccess) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <FadeLoader color="#F75803" />
+        <LoadingState message="Loading..." />
       </div>
     );
   }

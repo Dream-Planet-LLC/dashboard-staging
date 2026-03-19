@@ -20,7 +20,8 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { Input } from "@/components/ui/input";
 import { updateBroadcastEdit } from "@/redux/slices/broadcastslice";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
-import FadeLoader from 'react-spinners/FadeLoader';
+import LoadingOverlay from "@/components/LoadingOverlay";
+import LoadingState from "@/components/LoadingState";
 
 const BroadCast = () => {
   const { hasNextPage, hasPrevPage, limit, page, totalDocs } = useSelector(
@@ -187,15 +188,20 @@ const BroadCast = () => {
     },
   ];
 
+  const hasBroadcasts = (broadcast?.length ?? 0) > 0;
+
+  if (allLoading && !hasBroadcasts) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <LoadingState message="Loading broadcasts..." />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col space-y-7">
-  {allLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white flex flex-col items-center justify-center w-[432px] h-[160px] rounded-lg shadow-lg space-y-[8px]">
-        <FadeLoader color="#7E2D02" />
-        <p className="text-[#111810] text-[20px]">Processing...</p>
-      </div>
-    </div> 
+  {allLoading && hasBroadcasts && (
+    <LoadingOverlay message="Processing..." />
   )}
        <div className="flex items-center justify-between">
         <div>
