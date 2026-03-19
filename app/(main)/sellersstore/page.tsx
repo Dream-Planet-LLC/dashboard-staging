@@ -305,18 +305,19 @@ const SellersStore = () => {
         );
       },
     },
-    {
-      accessorKey: "liveProducts",
-      header: "Live Products",
-      cell: ({ row }) => {
-        const value = row.getValue("liveProducts");
-        return (
-          <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-            {value ?? "-"}
-          </span>
-        );
-      },
-    },
+{
+  accessorKey: "liveProducts",
+  header: "Live Products",
+  cell: ({ row }) => {
+    const value = row.getValue("liveProducts");
+
+    return (
+      <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+        {value !== null && value !== undefined ? String(value) : "-"}
+      </span>
+    );
+  },
+},
     {
       accessorKey: "totalEarnings",
       header: "Total Earnings",
@@ -342,7 +343,7 @@ const SellersStore = () => {
         const value = row.getValue("lastActivity");
         return (
           <span className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-            {value ?? "-"}
+            {value !== null && value !== undefined ? String(value) : "-"}
           </span>
         );
       },
