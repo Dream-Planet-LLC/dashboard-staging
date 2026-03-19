@@ -33,9 +33,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
-// ═══════════════════════════════════════════════════════════════
-// TYPES
-// ═══════════════════════════════════════════════════════════════
+
 interface FeaturedProduct {
   id: string;
   name: string;
