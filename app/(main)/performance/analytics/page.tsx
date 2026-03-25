@@ -33,7 +33,6 @@ import { useEffect, useState } from "react";
 import useForum from "@/hooks/useForum";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 
 const ForumAnalytics = () => {
@@ -46,6 +45,7 @@ const ForumAnalytics = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchForum, setSearchForum] = useState('');
   const [forumId, setForumId] = useState(0);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -79,6 +79,12 @@ const ForumAnalytics = () => {
   useEffect(() => {
     getAllForums(searchForum)
    },[forumPage])
+
+  useEffect(() => {
+    if (!forumLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [forumLoading]);
 
   useEffect(() => {
     getForumMembers(forumId, searchTerm);
@@ -204,9 +210,7 @@ const ForumAnalytics = () => {
       },
     },
   ];
-  const hasForums = (allForums?.length ?? 0) > 0;
-
-  if (forumLoading && !hasForums) {
+  if (forumLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading analytics..." />
@@ -216,9 +220,6 @@ const ForumAnalytics = () => {
 
   return (
       <div className="flex flex-col space-y-7">
-      {forumLoading && hasForums && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <div>
         <h2 className="text-2xl"> Forum Analytics</h2>
         {/* <p className="text-sm text-[#A8A8A8]">
@@ -339,7 +340,6 @@ const ForumAnalytics = () => {
 
       <Sheet open={isSheetOpen} onOpenChange={closeSheet}>
         <SheetContent className="sm:max-w-[519px] overflow-y-auto scrollbar-hide">
-        {forumSheetLoading && <LoadingOverlay message="Processing..." />}
           <SheetHeader>
             <SheetTitle className="flex justify-between mb-[40px]">
               <p className="text-[#111810] font-medium text-[20px]">

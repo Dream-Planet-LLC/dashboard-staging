@@ -11,7 +11,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import useForum from "@/hooks/useForum";
 import { useEffect, useState } from "react";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +24,7 @@ const Forum = () => {
     (state: RootState) => state.forum.pagination
   );
   const [searchForum, setSearchForum] = useState('');
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   
   useEffect(() => {
     setForumPage(1);
@@ -39,6 +39,12 @@ const Forum = () => {
   useEffect(() => {
     getAllForums(searchForum)
    },[forumPage])
+
+  useEffect(() => {
+    if (!forumLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [forumLoading]);
 
   const columns: ColumnDef<any>[] = [
     {
@@ -112,9 +118,7 @@ const Forum = () => {
     },
   ];
 
-  const hasForums = (allForums?.length ?? 0) > 0;
-
-  if (forumLoading && !hasForums) {
+  if (forumLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading forums..." />
@@ -124,9 +128,6 @@ const Forum = () => {
 
   return (
     <div className="flex flex-col space-y-7">
-      {forumLoading && hasForums && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <div>
         <h2 className=" text-2xl"> Forum</h2>
         <p className="text-sm text-[#A8A8A8]">

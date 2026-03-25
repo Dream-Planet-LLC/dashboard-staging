@@ -27,7 +27,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 import { dateOptions } from "@/utils/interface";
 
@@ -115,6 +114,7 @@ const PaymentHistory = () => {
   ];
   const userOptions = ["creator", "fan", "investor"];
   const [selectedDate, setSelectedDate] = useState<any>("All Date");
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const handleDateChange = (value: any) => {
     setSelectedDate(value);
   };
@@ -170,10 +170,13 @@ const PaymentHistory = () => {
     );
   }, [paymentPage]);
 
+  useEffect(() => {
+    if (!paymentLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [paymentLoading]);
 
-  const hasHistory = (history?.length ?? 0) > 0;
-
-  if (paymentLoading && !hasHistory) {
+  if (paymentLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading payment history..." />
@@ -183,13 +186,10 @@ const PaymentHistory = () => {
 
   return (
     <div className="flex flex-col space-y-7">
-      {paymentLoading && hasHistory && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <div>
         <h2 className="text-2xl"> Payment history</h2>
         <p className="text-sm text-[#A8A8A8]">
-          Lorem ipsum dolor sit amet consectetur.
+         view and manage all payment histories
         </p>
       </div>
       <div className="flex items-center space-x-10">

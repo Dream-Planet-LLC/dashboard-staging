@@ -27,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 
 const SubscriptionFee = () => {
@@ -45,6 +44,7 @@ const SubscriptionFee = () => {
   const { subscriptioncreator, subscriptionfan, subscriptioninvestor } =
     useSelector((state: RootState) => state.payment);
   const [isOpen, setisOpen] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const closeDialog = () => {setisOpen(false)
     setSubData('');
     setNewExpiry('')
@@ -56,12 +56,13 @@ const SubscriptionFee = () => {
     setNewPrice(subData.price)
   }, [isOpen])
 
-  const hasSubscriptions =
-    (subscriptioncreator?.length ?? 0) > 0 ||
-    (subscriptionfan?.length ?? 0) > 0 ||
-    (subscriptioninvestor?.length ?? 0) > 0;
+  useEffect(() => {
+    if (!paymentLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [paymentLoading]);
 
-  if (paymentLoading && !hasSubscriptions) {
+  if (paymentLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading subscriptions..." />
@@ -71,9 +72,6 @@ const SubscriptionFee = () => {
 
   return (
     <div className="flex flex-col space-y-[24px]">
-      {paymentLoading && hasSubscriptions && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <div>
         <h2 className="text-2xl"> Our subscriptions pricing</h2>
         <p className="text-sm text-[#A8A8A8]">
@@ -279,6 +277,7 @@ const SubscriptionFee = () => {
                 }
               }}
               type="button"
+              loading={paymentLoading}
             >
               Update Price
             </Button> : 

@@ -23,7 +23,6 @@ import { useRouter } from "next/navigation";
 import useChallenge from "@/hooks/useChallenge";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import LoadingOverlay from "@/components/LoadingOverlay";
 
 interface FileWithPreview {
   preview: string; // Cloudinary URL
@@ -79,7 +78,6 @@ const UpdateChallenge = () => {
   const router = useRouter();
   return (
     <div className="flex justify-between items-start">
-      {challengeLoading && <LoadingOverlay message="Processing..." />}
       <div className="flex w-3/6 flex-col space-y-[24px]">
         <div>
           <p
@@ -330,6 +328,7 @@ const UpdateChallenge = () => {
               router.push("/challenge");
             }}
             className="btnColored"
+            loading={challengeLoading}
           >
             Upload
           </Button>

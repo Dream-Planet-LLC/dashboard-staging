@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import useGetUsers from "@/hooks/useGetUsers";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 import MediaCarousel from "@/components/MediaCarousel";
 const Posts = () => {
@@ -32,6 +31,7 @@ const Posts = () => {
   const { userPost, userProfile } = useSelector(
     (state: RootState) => state.usersOnboarded
   );
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const timeSincePost = (createdAt: string) => {
     const createdDate = new Date(createdAt);
@@ -111,9 +111,13 @@ const Posts = () => {
 
     return () => clearTimeout(timer);
   }, [isOpen, setisOpen]);
-  const hasPosts = (userPost?.length ?? 0) > 0;
+  useEffect(() => {
+    if (!userLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [userLoading]);
 
-  if (userLoading && !hasPosts) {
+  if (userLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading posts..." />
@@ -123,9 +127,6 @@ const Posts = () => {
 
   return (
     <div className="flex flex-col space-y-4">
-       {userLoading && hasPosts && (
-         <LoadingOverlay message="Processing..." />
-       )}
       <p
         onClick={() => {
           router.push("/members");
@@ -460,6 +461,7 @@ const Posts = () => {
               }}
                 className="w-full shadow-md text-[14px] text-white bg-[#C83532] hover:bg-[#C83532] transition-all hover:scale-105 active:scale-95"
                 type="submit"
+                loading={userLoading}
               >
                 Delete
               </Button>

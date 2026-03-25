@@ -30,7 +30,6 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import useChallenge from "@/hooks/useChallenge";
-import LoadingOverlay from "@/components/LoadingOverlay";
 
 interface FileWithPreview {
   preview: string; // Cloudinary URL
@@ -59,7 +58,6 @@ const CreateChallenge = () => {
   const router = useRouter();
   return (
     <div className="flex justify-between items-start">
-      {challengeLoading && <LoadingOverlay message="Processing..." />}
       <div className="flex w-3/6 flex-col space-y-[24px]">
         <div>
           <p
@@ -311,6 +309,7 @@ const CreateChallenge = () => {
               router.push("/challenge");
             }}
             className="btnColored"
+            loading={challengeLoading}
           >
             Upload
           </Button>

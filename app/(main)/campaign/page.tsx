@@ -36,7 +36,6 @@ import Image from "next/image";
 import useCampaign from "@/hooks/useCampaign";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 
 const profile = {
@@ -50,6 +49,7 @@ const Campaign = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [detailsData, setDetailsData] = useState<any>({});
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   useEffect(() => {
     const hideChevronsInTrigger = () => {
@@ -99,6 +99,11 @@ const Campaign = () => {
     getMostPerformedCampaigns();
     getProcessingCampaigns();
   }, []);
+  useEffect(() => {
+    if (!campaignLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [campaignLoading]);
   useEffect(() => {
     getActiveCampaigns(); 
   }, [activePage]);
@@ -431,15 +436,7 @@ const Campaign = () => {
     },
   ];
 
-  const hasCampaignData =
-    (campaignActive?.length ?? 0) > 0 ||
-    (campaignProcessing?.length ?? 0) > 0 ||
-    (campaignStopped?.length ?? 0) > 0 ||
-    (campaignMostPerformed?.length ?? 0) > 0 ||
-    (campaignCompleted?.length ?? 0) > 0 ||
-    (groupedCampaigns?.length ?? 0) > 0;
-
-  if (campaignLoading && !hasCampaignData) {
+  if (campaignLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading campaigns..." />
@@ -449,9 +446,6 @@ const Campaign = () => {
 
   return (
     <div className="w-full grid grid-cols-8 space-x-4">
-      {campaignLoading && hasCampaignData && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <section className="col-span-6 flex flex-col space-y-7">
         <div>
           <h2 className="text-2xl">Campaign</h2>
@@ -835,7 +829,6 @@ const Campaign = () => {
       <Sheet open={isSheetOpen} onOpenChange={closeSheet}>
      
         <SheetContent className=" sm:max-w-[519px] overflow-y-auto scrollbar-hide">
-        {campaignLoadingSheet && <LoadingOverlay message="Processing..." />}
           <SheetHeader>
          
             <SheetTitle className="flex justify-between">

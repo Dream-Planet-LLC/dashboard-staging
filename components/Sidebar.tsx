@@ -18,7 +18,7 @@ import { NAV_PERMISSIONS } from "@/constants/permission";
 import { ChevronRight, ChevronRightIcon } from "lucide-react";
 
 type SidebarProps = {
-  onNavigate?: () => void;
+  onNavigate?: (label: string) => void;
 };
 
 const Sidebar = ({ onNavigate }: SidebarProps) => {
@@ -131,7 +131,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
                         : "text-[#A4A4A4] hover:text-[#808080]",
                     )}
                     href={sublink.href}
-                    onClick={onNavigate}
+                    onClick={() => onNavigate?.(sublink.title)}
                   >
                     {sublink.title}
                   </Link>
@@ -151,7 +151,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
           "flex items-center justify-between text-[14px] INT400 py-2.5 px-3 transition-colors rounded-sm",
           isActive ? "bg-[#FFEEE6] text-[#F75803]" : "bg-none text-[#808080] hover:text-[#808080]/80",
         )}
-        onClick={onNavigate}
+        onClick={() => onNavigate?.(item.name)}
       >
         <span className="flex items-center gap-3">
           {React.cloneElement(item.icon, {
@@ -203,7 +203,6 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
         <button
           onClick={() => {
             dispatch(clearUser());
-            onNavigate?.();
           }}
           className="flex items-center gap-2 w-full  text-[#C83532] INT500 text-[14px] font-medium hover:bg-[#FAFAFA] transition-all active:scale-95"
         >

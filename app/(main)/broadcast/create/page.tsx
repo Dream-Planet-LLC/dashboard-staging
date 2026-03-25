@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useBroadcast from "@/hooks/useBroadcast";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
@@ -54,8 +53,6 @@ const BroadcastCreate = () => {
   }, [isDeleteOpen, setisDeleteOpen]);
   return (
     <div className="flex justify-between items-start">
-       {createLoading && <LoadingOverlay message="Processing..." />}
-    
       <div className="flex w-3/6 flex-col space-y-[24px]">
       <div
             onClick={() => {
@@ -173,6 +170,7 @@ const BroadcastCreate = () => {
               setFiles([]);
             }}
             className="btnColored"
+            loading={createLoading}
           >
             Upload Post
           </Button>

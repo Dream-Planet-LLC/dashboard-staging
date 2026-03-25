@@ -20,7 +20,6 @@ import useBroadcast from "@/hooks/useBroadcast";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import { ArrowLeft } from "lucide-react";
 
 interface FileWithPreview {
@@ -73,9 +72,6 @@ const BroadcastEdit = () => {
   }, [isDeleteOpen, setisDeleteOpen]);
   return (
     <div className="flex justify-between items-start">
-       {(updateLoading || deleteLoading) && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <div className="flex w-3/6 flex-col space-y-[24px]">
       <div
             onClick={() => {
@@ -197,6 +193,7 @@ const BroadcastEdit = () => {
               router.push("/broadcast");
             }}
             className="btnColored"
+            loading={updateLoading}
           >
             Upload Post
           </Button>
@@ -242,6 +239,7 @@ const BroadcastEdit = () => {
                   await deleteBroadcast(broadcastEdit.id);
                   router.push("/broadcast");
                 }}
+                loading={deleteLoading}
               >
                 Delete
               </Button>

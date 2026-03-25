@@ -331,7 +331,7 @@ const Overview = () => {
         ))}
       </div> */}
 
-      <div className="flex flex-row gap-[109px]">
+      <div className="flex flex-row justify-between">
         <div className=" flex items-center gap-[12px]">
           <div className="flex flex-col gap-[4px]">
             <p className="flex items-center gap-[6px] text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">

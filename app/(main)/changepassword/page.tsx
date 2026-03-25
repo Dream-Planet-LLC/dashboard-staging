@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -17,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import useLogin from "@/hooks/login";
 import { toast } from "@/hooks/use-toast";
-import LoadingOverlay from "@/components/LoadingOverlay";
 
 const changePassword = () => {
   const { changePassword, isOpen, setisOpen, loading } = useLogin();
@@ -55,7 +53,6 @@ const changePassword = () => {
   };
   return (
     <div>
-     {loading && <LoadingOverlay message="Processing..." />}
       <div className="flex w-3/6 flex-col space-y-[32px]">
         <div>
           <h2 className="text-2xl">Change Password</h2>
@@ -140,6 +137,7 @@ const changePassword = () => {
             <Button
               className="btnColored"
               onClick={handleChangePassword}
+              loading={loading}
             >
               Set New Password
             </Button>

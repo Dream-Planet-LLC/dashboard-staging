@@ -20,7 +20,6 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { Input } from "@/components/ui/input";
 import { updateBroadcastEdit } from "@/redux/slices/broadcastslice";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 
 const BroadCast = () => {
@@ -35,6 +34,7 @@ const BroadCast = () => {
   const [isDeleteOpen, setisDeleteOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [broadcastId, setBroadcastId] = useState<number>(1);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const closeDeleteDialog = () => setisDeleteOpen(false);
 
   
@@ -188,9 +188,13 @@ const BroadCast = () => {
     },
   ];
 
-  const hasBroadcasts = (broadcast?.length ?? 0) > 0;
+  useEffect(() => {
+    if (!allLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [allLoading]);
 
-  if (allLoading && !hasBroadcasts) {
+  if (allLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading broadcasts..." />
@@ -200,9 +204,6 @@ const BroadCast = () => {
 
   return (
     <div className="flex flex-col space-y-7">
-  {allLoading && hasBroadcasts && (
-    <LoadingOverlay message="Processing..." />
-  )}
        <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl">Broadcast</h2>
@@ -329,6 +330,7 @@ const BroadCast = () => {
                   closeDeleteDialog();
                   await deleteBroadcast(broadcastId);
                 }}
+                loading={deleteLoading}
               >
                 Delete
               </Button>

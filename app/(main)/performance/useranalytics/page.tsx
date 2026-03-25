@@ -11,7 +11,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { updateActiveUser } from "@/redux/slices/performanceslice";
 import { useRouter } from "next/navigation";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +27,7 @@ const UserAnalytics = () => {
   const [searchCreator, setSearchCreator] = useState('')
   const [searchFan, setSearchFan] = useState('')
   const [searchInvestor, setSearchInvestor] = useState('')
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const columns: ColumnDef<any>[] = [
     {
@@ -233,12 +233,13 @@ useEffect(() => {
 
 }, [creatorPage]);
 
-  const hasPerformanceData =
-    (allPerformanceCreator?.length ?? 0) > 0 ||
-    (allPerformanceFan?.length ?? 0) > 0 ||
-    (allPerformanceInvestor?.length ?? 0) > 0;
+  useEffect(() => {
+    if (!performanceLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [performanceLoading]);
 
-  if (performanceLoading && !hasPerformanceData) {
+  if (performanceLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading analytics..." />
@@ -248,9 +249,6 @@ useEffect(() => {
 
   return (
     <div className="flex flex-col space-y-7">
-      {performanceLoading && hasPerformanceData && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <div>
         
         <h2 className="text-2xl"> User Analytics</h2>

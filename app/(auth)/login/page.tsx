@@ -1,23 +1,21 @@
 "use client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import useLogin from "@/hooks/login";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import LoadingOverlay from "@/components/LoadingOverlay";
 
 const Login = () => {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, loading } = useLogin()
+  const canSubmit = Boolean(email && password);
   return (
     <div
       className="flex justify-center items-center h-screen bg-cover bg-center"
       style={{ backgroundImage: "url('/pattern.svg')" }}
     >
-      {loading && <LoadingOverlay message="Processing..." />}
       <div className="flex flex-col justify-center border p-8 items-center  rounded-md shadow-md">
         <div className="flex items-center flex-col mb-[32px]">
           <img
@@ -60,27 +58,18 @@ const Login = () => {
             />
           </div>
         </div>
-       {
-        email && password ?  <button
-        onClick={async() => {
-          console.log("signin")
-         await login(email, password);
-          setEmail('');
-          setPassword('');
-        }}
-        className="bg-[#F75803] transition-all text-[14px] active:scale-95 text-white w-[370px] py-2 rounded-md shadow-md"
-      >
-        Sign In
-      </button> :
-       <button
-      //  onClick={() => {
-      //    router.push("/broadcast");
-      //  }}
-       className="btnColoredInactive w-[370px]"
-     >
-       Sign In
-     </button>
-       }
+        <Button
+          onClick={async () => {
+            await login(email, password);
+            setEmail('');
+            setPassword('');
+          }}
+          className={`${canSubmit ? "btnColored" : "btnColoredInactive"} w-[370px]`}
+          disabled={!canSubmit || loading}
+          loading={loading}
+        >
+          Sign In
+        </Button>
        
       </div>
     </div>

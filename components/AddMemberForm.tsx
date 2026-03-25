@@ -24,7 +24,6 @@ import {
 } from "./ui/dialog";
 import Image from "next/image";
 import useAdminsetting from "@/hooks/useAdminsetting";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import { useRouter } from "next/navigation";
 import { countries } from "@/assets/country";
 import { useSelector } from "react-redux";
@@ -68,9 +67,6 @@ const AddMemberForm = () => {
 
   return (
     <>
-    {adminLoading && <LoadingOverlay message="Processing..." />}
-     
-    
     <div>
     <form
       onSubmit={async(e) => { e.preventDefault();
@@ -99,7 +95,7 @@ const AddMemberForm = () => {
         <h2 className="text-[20px] font-normal">Add Admin</h2>
         <div className="space-x-2">
         {/* <Button type="button" onClick={() => setisOpen(true)} className="btnPlain">Send link</Button> */}
-         {selectedCountry && firstName && lastName && phoneNumber && email && selectedRole ?           <Button type="submit" className="btnColored">Add Admin</Button>
+         {selectedCountry && firstName && lastName && phoneNumber && email && selectedRole ?           <Button type="submit" className="btnColored" loading={adminLoading}>Add Admin</Button>
 :           <Button disabled className="btnColoredInactive">Add Admin</Button>
  
  }

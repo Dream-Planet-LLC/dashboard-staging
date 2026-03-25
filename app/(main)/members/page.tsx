@@ -48,7 +48,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 import { countries, dateOptions } from "@/utils/interface";
 
@@ -75,6 +74,7 @@ const Members = () => {
   const [searchTermCreator, setSearchTermCreator] = useState("");
   const [searchTermFan, setSearchTermFan] = useState("");
   const [searchTermInvestor, setSearchTermInvestor] = useState("");
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [countryStatus, setCountryStatus] = useState<string>("All");
@@ -410,13 +410,13 @@ const handleInvestorCountryChange = (value: string) => {
     },
   ];
 
-  const hasUsers =
-    (usersAll?.length ?? 0) > 0 ||
-    (usersCreator?.length ?? 0) > 0 ||
-    (usersFan?.length ?? 0) > 0 ||
-    (usersInvestor?.length ?? 0) > 0;
+  useEffect(() => {
+    if (!userLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [userLoading]);
 
-  if (userLoading && !hasUsers) {
+  if (userLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading users..." />
@@ -426,13 +426,10 @@ const handleInvestorCountryChange = (value: string) => {
 
   return (
     <div className="flex flex-col space-y-7">
-      {userLoading && hasUsers && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <div>
         <h2 className=" text-2xl"> Onboarded Users</h2>
         <p className="text-sm text-[#A8A8A8]">
-          Lorem ipsum dolor sit amet consectetur.
+      View and manage all list of all onboarded users
         </p>
       </div>
       <div>
@@ -995,7 +992,6 @@ const handleInvestorCountryChange = (value: string) => {
       <Sheet open={isSheetOpen} onOpenChange={closeSheet}>
      
         <SheetContent className="sm:max-w-[519px] overflow-y-auto scrollbar-hide">
-        {sheetLoading && <LoadingOverlay message="Processing..." />}
           <SheetHeader>
             <SheetTitle className="flex justify-between">
               <p className="text-[#111810] font-medium text-[20px]">

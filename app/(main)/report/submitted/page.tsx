@@ -4,9 +4,8 @@ import { updateActiveReport } from "@/redux/slices/reportslice";
 import { RootState } from "@/redux/store";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 
 const SubmittedReport = () => {
@@ -14,11 +13,17 @@ const SubmittedReport = () => {
   const { reports } = useSelector((state: RootState) => state.report);
   const { getReports, reportLoading } = useReport();
   const router = useRouter();
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const dispatch = useDispatch();
   useEffect(() => {
     getReports();
   }, []);
+  useEffect(() => {
+    if (!reportLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [reportLoading]);
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, "0");
@@ -41,9 +46,7 @@ const SubmittedReport = () => {
     return `${day} ${month}, ${year}`;
   };
 
-  const hasReports = (reports?.length ?? 0) > 0;
-
-  if (reportLoading && !hasReports) {
+  if (reportLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading reports..." />
@@ -53,9 +56,6 @@ const SubmittedReport = () => {
 
   return (
     <div className="space-y-5">
-      {reportLoading && hasReports && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <div>
         <h2 className="text-2xl"> Submitted Report</h2>
         <p className="text-sm text-[#A8A8A8]">

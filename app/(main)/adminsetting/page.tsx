@@ -47,7 +47,6 @@ import useAdminsetting from "@/hooks/useAdminsetting";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 import { updateRoles } from "@/redux/slices/adminsettingslice";
 
@@ -66,6 +65,7 @@ const features = [
 
 const AdminSetting = () => {
   const router = useRouter();
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const { pagination, paginationPending } = useSelector(
     (state: RootState) => state.adminsetting
   );
@@ -456,12 +456,13 @@ const handleUpdateRole = async () => {
 };
 
 
-  const hasAdminData =
-    (acceptedAdmin?.length ?? 0) > 0 ||
-    (pendingAdmin?.length ?? 0) > 0 ||
-    (adminRoles?.length ?? 0) > 0;
+  useEffect(() => {
+    if (!adminLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [adminLoading]);
 
-  if (adminLoading && !hasAdminData) {
+  if (adminLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading admin settings..." />
@@ -471,9 +472,6 @@ const handleUpdateRole = async () => {
 
   return (
     <div className="grid grid-cols-8 space-x-4">
-      {adminLoading && hasAdminData && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <section className="col-span-6 flex flex-col space-y-7">
         <div className="flex items-center justify-between">
           <div>

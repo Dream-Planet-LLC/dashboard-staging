@@ -1,24 +1,38 @@
 "use client";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
+import LoadingState from "@/components/LoadingState";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import { RootState } from "@/redux/store";
 import { AeonikFont, RecoletaFont } from "@/utils/customFonts";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const user = useSelector((state: RootState) => state.admin.loggedInUser);
   const router = useRouter();
+  const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isRouteLoading, setIsRouteLoading] = useState(false);
+  const [routeLoadingMessage, setRouteLoadingMessage] = useState("Loading...");
 
   useEffect(() => {
     if (!user?.id) {
       router.push("/login");
     }
   }, [user, router]);
+  useEffect(() => {
+    setIsRouteLoading(false);
+  }, [pathname]);
+  useEffect(() => {
+    if (!isRouteLoading) return;
+    const timer = setTimeout(() => {
+      setIsRouteLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [isRouteLoading]);
 
   return (
     <div className={`${AeonikFont.className} ${RecoletaFont.variable}`}>
@@ -27,7 +41,12 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="flex flex-grow">
           <div className="hidden md:flex sticky top-12 w-[270px] py-4  border-r h-[calc(100vh-3rem)] overflow-hidden">
             <div className="overflow-y-scroll overflow-x-hidden h-full scrollbar-hide">
-              <Sidebar />
+              <Sidebar
+                onNavigate={(label) => {
+                  setRouteLoadingMessage(`Loading ${label.toLowerCase()}...`);
+                  setIsRouteLoading(true);
+                }}
+              />
             </div>
           </div>
           <div
@@ -51,11 +70,25 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               )}
             >
               <div className="overflow-y-scroll overflow-x-hidden h-full scrollbar-hide py-4">
-                <Sidebar onNavigate={() => setIsSidebarOpen(false)} />
+                <Sidebar
+                  onNavigate={(label) => {
+                    setIsSidebarOpen(false);
+                    setRouteLoadingMessage(`Loading ${label.toLowerCase()}...`);
+                    setIsRouteLoading(true);
+                  }}
+                />
               </div>
             </div>
           </div>
-          <div className="p-5 w-full">{children}</div>
+          <div className="p-5 w-full">
+            {isRouteLoading ? (
+              <div className="flex min-h-[60vh] items-center justify-center">
+                <LoadingState message={routeLoadingMessage} />
+              </div>
+            ) : (
+              children
+            )}
+          </div>
         </div>
       </div>
       <Toaster />

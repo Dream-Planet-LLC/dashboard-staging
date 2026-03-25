@@ -40,7 +40,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { updateCreatorData } from "@/redux/slices/reportslice";
 import { useRouter } from "next/navigation";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 
 const ReportOverview = () => {
@@ -166,6 +165,7 @@ const ReportOverview = () => {
   );
 
   const [isOpen, setisOpen] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const closeOpenDialog = () => setisOpen(false);
   const { getCreatorReport, getAdmin, getCreator, createCreatorReport, reportLoading, reportPage, setReportPage } =
     useReport();
@@ -218,6 +218,12 @@ const ReportOverview = () => {
     getCreator(searchReport);
   }, [searchReport]);
 
+  useEffect(() => {
+    if (!reportLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [reportLoading]);
+
   const handleSelectCreator = (creator: any) => {
     setSelectedCreator({
       username: creator.username,
@@ -235,9 +241,7 @@ const ReportOverview = () => {
   const handleRemoveCreator = () => setSelectedCreator(null);
   const handleRemoveAdmin = () => setSelectedAdmin(null);
 
-  const hasReportData = (creatorReport?.length ?? 0) > 0;
-
-  if (reportLoading && !hasReportData) {
+  if (reportLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading reports..." />
@@ -247,9 +251,6 @@ const ReportOverview = () => {
 
   return (
     <div className="flex flex-col space-y-7">
-      {reportLoading && hasReportData && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl">Report</h2>
@@ -570,6 +571,7 @@ const ReportOverview = () => {
                   setSelectedCreator(null);
                   setInvestor(undefined);
                 }}
+                loading={reportLoading}
               >
                 Add
               </Button>

@@ -32,13 +32,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { cn } from "@/lib/utils";
 import { Calendar } from "./ui/calendar";
 import { format } from "date-fns";
-import LoadingOverlay from "@/components/LoadingOverlay";
 import LoadingState from "@/components/LoadingState";
 import { dateOptions } from "@/utils/interface";
 
 const Challenge = () => {
   const router = useRouter();
   const [isDeleteOpen, setisDeleteOpen] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const closeDeleteDialog = () => setisDeleteOpen(false);
   const { challengeAll, challengeEdit } = useSelector(
     (state: RootState) => state.challenge
@@ -80,6 +80,12 @@ const Challenge = () => {
     getAllChallenges(searchString, date);
   }, [challengePage]);
   const [challengeId, setChallengeId] = useState<number>(1);
+
+  useEffect(() => {
+    if (!challengeLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [challengeLoading]);
 
   const columns: ColumnDef<any>[] = [
     {
@@ -175,9 +181,7 @@ const Challenge = () => {
     },
   ];
 
-  const hasChallenges = (challengeAll?.length ?? 0) > 0;
-
-  if (challengeLoading && !hasChallenges) {
+  if (challengeLoading && isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading challenges..." />
@@ -187,9 +191,6 @@ const Challenge = () => {
 
   return (
     <div className="flex flex-col space-y-7">
-      {challengeLoading && hasChallenges && (
-        <LoadingOverlay message="Processing..." />
-      )}
       <div className="flex items-center justify-between">
         <div>
           <h2 className=" text-2xl">Challenge</h2>
@@ -344,6 +345,7 @@ const Challenge = () => {
                   await deleteChallenge(challengeId);
                   getAllChallenges();
                 }}
+                loading={challengeLoading}
               >
                 Delete
               </Button>

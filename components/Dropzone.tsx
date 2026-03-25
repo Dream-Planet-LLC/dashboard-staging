@@ -2,7 +2,7 @@
 import React, { Dispatch, SetStateAction, useCallback, useState } from "react";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
-import LoadingOverlay from "@/components/LoadingOverlay";
+import LoadingState from "@/components/LoadingState";
 import { toast } from "@/hooks/use-toast";
 
 interface FileWithPreview {
@@ -97,7 +97,9 @@ export default function Dropzone({
     >
       {!loading && <input {...getInputProps()} />}
       {loading ? (
-        <LoadingOverlay message="Processing..." />
+        <div className="py-4">
+          <LoadingState message="Loading..." />
+        </div>
       ) : isDragActive ? (
         <p>Drop the files here ...</p>
       ) : (
