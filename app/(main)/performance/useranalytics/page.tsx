@@ -251,9 +251,9 @@ useEffect(() => {
     <div className="flex flex-col space-y-7">
       <div>
         
-        <h2 className="text-2xl"> User Analytics</h2>
-        <p className="text-sm text-[#A8A8A8]">
-          track user performance and engagement metrics
+        <h2 className="text-[#111810] font-medium INT500 text-[24px] leading-[32px] tracking-[-1.5%]"> User Analytics</h2>
+        <p className="mt-1.5 text-[#A8A8A8] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+      View General User Analytics 
         </p>
       </div>
       <div className="flex items-center space-x-[121px]">

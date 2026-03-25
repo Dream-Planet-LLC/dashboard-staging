@@ -475,9 +475,9 @@ const handleUpdateRole = async () => {
       <section className="col-span-6 flex flex-col space-y-7">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl">Admin Setting</h2>
-            <p className="text-sm text-[#A8A8A8]">
-              manage admin accounts, roles, and permissions
+            <h2 className="text-[#111810] font-medium INT500 text-[24px] leading-[32px] tracking-[-1.5%]">Admin Setting</h2>
+            <p className="mt-1.5 text-[#A8A8A8] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+              Add, Manage and Create Admin Roles.
             </p>
           </div>
           <div className="flex items-center space-x-[8px]">

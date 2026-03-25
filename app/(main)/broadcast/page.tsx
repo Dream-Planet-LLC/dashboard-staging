@@ -206,9 +206,9 @@ const BroadCast = () => {
     <div className="flex flex-col space-y-7">
        <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl">Broadcast</h2>
-          <p className="text-sm text-[#A8A8A8]">
-            create and manage platform broadcasts
+          <h2 className="text-[#111810] font-medium INT500 text-[24px] leading-[32px] tracking-[-1.5%]">Broadcast</h2>
+          <p className="mt-1.5 text-[#A8A8A8] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+            Send, View and Manage App wide Broadcast Messages
           </p>
         </div>
         <div>

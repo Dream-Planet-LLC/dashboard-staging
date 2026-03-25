@@ -57,9 +57,9 @@ const SubmittedReport = () => {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-2xl"> Submitted Report</h2>
-        <p className="text-sm text-[#A8A8A8]">
-          review submitted reports and open details
+        <h2 className="text-[#111810] font-medium INT500 text-[24px] leading-[32px] tracking-[-1.5%]"> Submitted Report</h2>
+        <p className="mt-1.5 text-[#A8A8A8] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+          Review Submitted Reports and Open Details
         </p>
       </div>
       <div className="grid grid-cols-5 gap-6">

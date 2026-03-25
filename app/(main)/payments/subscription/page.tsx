@@ -73,9 +73,9 @@ const SubscriptionFee = () => {
   return (
     <div className="flex flex-col space-y-[24px]">
       <div>
-        <h2 className="text-2xl"> Our subscriptions pricing</h2>
-        <p className="text-sm text-[#A8A8A8]">
-          view and update subscription plans and pricing
+        <h2 className="text-[#111810] font-medium INT500 text-[24px] leading-[32px] tracking-[-1.5%]"> Our subscriptions pricing</h2>
+        <p className="mt-1.5 text-[#A8A8A8] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+       Update User Subscription Pricing
         </p>
       </div>
       <div>

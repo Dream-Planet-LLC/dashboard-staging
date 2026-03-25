@@ -253,9 +253,9 @@ const ReportOverview = () => {
     <div className="flex flex-col space-y-7">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl">Report</h2>
-          <p className="text-sm text-[#A8A8A8]">
-            manage creator reports and assign admins
+          <h2 className="text-[#111810] font-medium INT500 text-[24px] leading-[32px] tracking-[-1.5%]">Report</h2>
+          <p className="mt-1.5 text-[#A8A8A8] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+          Send and Manage Creator Reports
           </p>
         </div>
         <div>

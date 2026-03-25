@@ -189,7 +189,7 @@ const PaymentHistory = () => {
       <div>
         <h2 className="text-2xl"> Payment history</h2>
         <p className="text-sm text-[#A8A8A8]">
-         view and manage all payment histories
+         View and Manage all Payment Histories
         </p>
       </div>
       <div className="flex items-center space-x-10">

@@ -193,9 +193,9 @@ const Challenge = () => {
     <div className="flex flex-col space-y-7">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className=" text-2xl">Challenge</h2>
-          <p className="text-sm text-[#A8A8A8]">
-            view and manage challenges
+          <h2 className=" text-[#111810] font-medium INT500 text-[24px] leading-[32px] tracking-[-1.5%]">Challenge</h2>
+          <p className="mt-1.5 text-[#A8A8A8] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+            Upload and Manage App Wide Challenges 
           </p>
         </div>
         <div>

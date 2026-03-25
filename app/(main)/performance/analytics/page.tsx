@@ -221,9 +221,9 @@ const ForumAnalytics = () => {
   return (
       <div className="flex flex-col space-y-7">
       <div>
-        <h2 className="text-2xl"> Forum Analytics</h2>
-        <p className="text-sm text-[#A8A8A8]">
-          analyze forum performance and member activity
+        <h2 className="text-[#111810] font-medium INT500 text-[24px] leading-[32px] tracking-[-1.5%]"> Forum Analytics</h2>
+        <p className="mt-1.5 text-[#A8A8A8] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+          Analyze Forum Performance and Member Activity
         </p>
       </div>
       {/* <div className="flex items-center space-x-[50px] w-full">
