@@ -75,7 +75,7 @@ const SubscriptionFee = () => {
       <div>
         <h2 className="text-2xl"> Our subscriptions pricing</h2>
         <p className="text-sm text-[#A8A8A8]">
-          Lorem ipsum dolor sit amet consectetur.
+          view and update subscription plans and pricing
         </p>
       </div>
       <div>

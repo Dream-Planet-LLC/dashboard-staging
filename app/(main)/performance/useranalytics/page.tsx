@@ -253,7 +253,7 @@ useEffect(() => {
         
         <h2 className="text-2xl"> User Analytics</h2>
         <p className="text-sm text-[#A8A8A8]">
-          Lorem ipsum dolor sit amet consectetur.
+          track user performance and engagement metrics
         </p>
       </div>
       <div className="flex items-center space-x-[121px]">

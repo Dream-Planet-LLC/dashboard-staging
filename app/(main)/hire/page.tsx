@@ -328,7 +328,7 @@ const HireMarketplacePage = () => {
           Hire Marketplace
         </h2>
         <p className="mt-1.5 text-[#A8A8A8] INT400 font-normal text-[14px] tracking-[-1.8%] leading-[20px]">
-          Lorem ipsum dolor sit amet consectetur.
+          manage hire requests, projects, and top creators
         </p>
       </div>
 

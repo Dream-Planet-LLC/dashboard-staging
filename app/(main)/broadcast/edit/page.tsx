@@ -86,7 +86,7 @@ const BroadcastEdit = () => {
         <div>
           <h2 className=" text-2xl">Edit Broadcast</h2>
           <p className="text-sm text-[#A8A8A8]">
-            Lorem ipsum dolor sit amet consectetur.
+            update broadcast details and media content
           </p>
         </div>
         <div>

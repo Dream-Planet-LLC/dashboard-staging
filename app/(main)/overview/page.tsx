@@ -307,7 +307,7 @@ const Overview = () => {
           Overview
         </h2>
         <p className="mt-1.5 text-[#A8A8A8] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-          Lorem ipsum dolor sit amet consectetur.
+          track key platform metrics and recent products
         </p>
       </div>
 

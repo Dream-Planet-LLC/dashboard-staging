@@ -477,7 +477,7 @@ const handleUpdateRole = async () => {
           <div>
             <h2 className="text-2xl">Admin Setting</h2>
             <p className="text-sm text-[#A8A8A8]">
-              Lorem ipsum dolor sit amet consectetur.
+              manage admin accounts, roles, and permissions
             </p>
           </div>
           <div className="flex items-center space-x-[8px]">

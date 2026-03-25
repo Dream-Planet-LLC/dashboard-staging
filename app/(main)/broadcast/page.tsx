@@ -208,7 +208,7 @@ const BroadCast = () => {
         <div>
           <h2 className="text-2xl">Broadcast</h2>
           <p className="text-sm text-[#A8A8A8]">
-            Lorem ipsum dolor sit amet consectetur.
+            create and manage platform broadcasts
           </p>
         </div>
         <div>

@@ -255,7 +255,7 @@ const ReportOverview = () => {
         <div>
           <h2 className="text-2xl">Report</h2>
           <p className="text-sm text-[#A8A8A8]">
-            Lorem ipsum dolor sit amet consectetur.
+            manage creator reports and assign admins
           </p>
         </div>
         <div>

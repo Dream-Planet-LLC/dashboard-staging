@@ -97,7 +97,7 @@ const foulwords = () => {
         <div>
           <h2 className="text-2xl">Foul Words</h2>
           <p className="text-sm text-[#A8A8A8]">
-            Lorem ipsum dolor sit amet consectetur.
+            manage blocked words to keep community conversations safe
           </p>
         </div>
         <div>

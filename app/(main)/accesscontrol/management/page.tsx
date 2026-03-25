@@ -57,7 +57,7 @@ const management = () => {
       <div>
         <h2 className="text-2xl">Access Management</h2>
         <p className="text-sm text-[#A8A8A8]">
-          Lorem ipsum dolor sit amet consectetur.
+          manage access roles and permissions across the platform
         </p>
       </div>
       <div>

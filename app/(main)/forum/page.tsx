@@ -131,7 +131,7 @@ const Forum = () => {
       <div>
         <h2 className=" text-2xl"> Forum</h2>
         <p className="text-sm text-[#A8A8A8]">
-          Lorem ipsum dolor sit amet consectetur.
+          view and manage all community forums
         </p>
       </div>
       <div>

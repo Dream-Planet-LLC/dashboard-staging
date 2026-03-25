@@ -222,9 +222,9 @@ const ForumAnalytics = () => {
       <div className="flex flex-col space-y-7">
       <div>
         <h2 className="text-2xl"> Forum Analytics</h2>
-        {/* <p className="text-sm text-[#A8A8A8]">
-          Lorem ipsum dolor sit amet consectetur.
-        </p> */}
+        <p className="text-sm text-[#A8A8A8]">
+          analyze forum performance and member activity
+        </p>
       </div>
       {/* <div className="flex items-center space-x-[50px] w-full">
         <div className="space-y-2">

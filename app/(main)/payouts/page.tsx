@@ -277,7 +277,7 @@ const PayoutsPage = () => {
           Payouts
         </h2>
         <p className="mt-[2px] text-[#A8A8A8] INT400 font-normal text-[14px] tracking-[-1.8%] leading-[20px]">
-          Lorem ipsum dolor sit amet consectetur.
+          track payouts, statuses, and totals
         </p>
       </div>
 

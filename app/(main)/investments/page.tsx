@@ -146,7 +146,7 @@ const Investments = () => {
       <div>
         <h2 className="text-2xl">Investment</h2>
         <p className="text-sm text-[#A8A8A8]">
-          Lorem ipsum dolor sit amet consectetur.
+          view investment activity across creators and the platform
         </p>
       </div>
       <div className="flex items-center space-x-[160px]">

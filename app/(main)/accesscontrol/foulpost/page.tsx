@@ -58,7 +58,7 @@ const FoulPost = () => {
       <div>
         <h2 className="text-2xl">Foul Post</h2>
         <p className="text-sm text-[#A8A8A8]">
-          Lorem ipsum dolor sit amet consectetur.
+          review reported posts and take moderation actions
         </p>
       </div>
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">

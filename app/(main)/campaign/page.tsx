@@ -450,7 +450,7 @@ const Campaign = () => {
         <div>
           <h2 className="text-2xl">Campaign</h2>
           <p className="text-sm text-[#A8A8A8]">
-            Lorem ipsum dolor sit amet consectetur.
+            monitor campaigns and manage their status
           </p>
         </div>
 

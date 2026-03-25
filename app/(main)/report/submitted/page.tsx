@@ -59,7 +59,7 @@ const SubmittedReport = () => {
       <div>
         <h2 className="text-2xl"> Submitted Report</h2>
         <p className="text-sm text-[#A8A8A8]">
-          Lorem ipsum dolor sit amet consectetur.
+          review submitted reports and open details
         </p>
       </div>
       <div className="grid grid-cols-5 gap-6">
