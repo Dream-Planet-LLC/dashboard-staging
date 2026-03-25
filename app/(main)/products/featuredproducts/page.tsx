@@ -612,7 +612,7 @@ const FeaturedProductsPage = () => {
             Featured Products
           </h2>
           <p className="mt-1.5 text-[#A8A8A8] INT400 font-normal text-[14px] tracking-[-1.8%] leading-[20px]">
-            curate featured product collections and categories
+            Curate Featured Product Collections and Categories
           </p>
         </div>
         <Button

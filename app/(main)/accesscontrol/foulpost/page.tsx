@@ -56,9 +56,9 @@ const FoulPost = () => {
   return (
     <div className="flex flex-col space-y-7">
       <div>
-        <h2 className="text-2xl">Foul Post</h2>
-        <p className="text-sm text-[#A8A8A8]">
-          review reported posts and take moderation actions
+        <h2 className="text-[#111810] INT500 font-medium text-[24px] leading-[32px] tracking-[-1.5%]">Foul Post</h2>
+        <p className="mt-1.5 text-[#A8A8A8] INT400 font-normal text-[14px] tracking-[-1.8%] leading-[20px]">
+          Review reported posts and Take moderation actions
         </p>
       </div>
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">

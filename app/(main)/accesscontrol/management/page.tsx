@@ -55,9 +55,9 @@ const management = () => {
   return (
     <div className="flex flex-col space-y-7">
       <div>
-        <h2 className="text-2xl">Access Management</h2>
-        <p className="text-sm text-[#A8A8A8]">
-          manage access roles and permissions across the platform
+        <h2 className="text-[#111810] INT500 font-medium text-[24px] leading-[32px] tracking-[-1.5%]">Access Management</h2>
+        <p className="mt-1.5 text-[#A8A8A8] INT400 font-normal text-[14px] tracking-[-1.8%] leading-[20px]">
+        View and Manage Permissions
         </p>
       </div>
       <div>

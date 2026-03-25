@@ -95,9 +95,9 @@ const foulwords = () => {
     <div className="flex flex-col space-y-7">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl">Foul Words</h2>
-          <p className="text-sm text-[#A8A8A8]">
-            manage blocked words to keep community conversations safe
+          <h2 className="text-[#111810] INT500 font-medium text-[24px] leading-[32px] tracking-[-1.5%]">Foul Words</h2>
+          <p className="mt-1.5 text-[#A8A8A8] INT400 font-normal text-[14px] tracking-[-1.8%] leading-[20px]">
+            Manage Blocked Words to Keep Community Conversations Safe
           </p>
         </div>
         <div>

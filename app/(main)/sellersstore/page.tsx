@@ -410,7 +410,7 @@ const SellersStore = () => {
           Sellers Store
         </h2>
         <p className="mt-1.5  text-[#A8A8A8] INT400 font-normal text-[14px] tracking-[-1.8%] leading-[20px]">
-          monitor seller activity, revenue, and store status
+          View and Manage Seller’s Store Activities
         </p>
       </div>
 

@@ -337,7 +337,7 @@ const EventsPage = () => {
           Events
         </h2>
         <p className="mt-1.5 text-[#A8A8A8] INT400 font-normal text-[14px] tracking-[-1.8%] leading-[20px]">
-          track live, upcoming, and completed events
+         Manange all live, upcoming, and completed Events within the Dream Planet ecosystem.
         </p>
       </div>
 
