@@ -1,4 +1,5 @@
 "use client";
+
 import React, { Dispatch, SetStateAction, useCallback, useState } from "react";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
@@ -6,51 +7,53 @@ import LoadingState from "@/components/LoadingState";
 import { toast } from "@/hooks/use-toast";
 
 interface FileWithPreview {
-  preview: string;
+  preview: string;   // Cloudinary secure_url
   name: string;
   size: number;
 }
 
-export default function Dropzone({
+export default function GeneralDropzone({
   className,
-  setFiles,
-  files,
+  setPostMediaFiles,
+ postMediaFiles,
+
 }: {
   className?: string;
-  setFiles: Dispatch<SetStateAction<FileWithPreview[]>>;
-  files: FileWithPreview[];
+  setPostMediaFiles: Dispatch<SetStateAction<FileWithPreview[]>>;
+  postMediaFiles: FileWithPreview[];
 }) {
   const [loading, setLoading] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setLoading(true);
+
     acceptedFiles.forEach(async (file) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append(
-        
         "upload_preset",
         process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""
       );
 
       try {
         const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`,
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`, 
+          // ← Important: /auto/upload instead of /upload
           {
             method: "POST",
             body: formData,
           }
         );
-      
+
         if (!res.ok) {
-          const errorData = await res.json(); 
+          const errorData = await res.json();
           throw new Error(errorData?.error?.message || "Upload failed");
         }
-      
+
         const data = await res.json();
-      
+
         if (data.secure_url) {
-          setFiles((prevFiles) => [
+          setPostMediaFiles((prevFiles) => [
             ...prevFiles,
             {
               preview: data.secure_url,
@@ -60,31 +63,34 @@ export default function Dropzone({
           ]);
         }
       } catch (error: any) {
+        console.error(error);
         toast({
           variant: "destructive",
-          description: error?.message || "Something went wrong",
+          description: error?.message || "Failed to upload file",
         });
       } finally {
         setLoading(false);
       }
-      
     });
-  }, []);
+  }, [setPostMediaFiles]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      "image/jpeg": [],
-      "image/png": [],
-      "video/mp4": [],
-      "video/mov": [],
-    },
-    maxSize: 1024 * 1024 * 50, // 50 MB limit
+    accept: undefined,                    // Accept ALL file types
+    maxSize: 1024 * 1024 * 1024,         // 1GB limit
     onDrop,
     onDropRejected: (fileRejections) => {
       setLoading(false);
       fileRejections.forEach((file) => {
         if (file.errors.some((err) => err.code === "file-too-large")) {
-          alert("File is too large. Maximum size is 50 MB.");
+          toast({
+            variant: "destructive",
+            description: `File "${file.file.name}" is too large. Maximum size is 1GB.`,
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            description: `File "${file.file.name}" was rejected.`,
+          });
         }
       });
     },
@@ -93,31 +99,34 @@ export default function Dropzone({
   return (
     <div
       {...getRootProps({
-        className: `${className} ${loading ? "pointer-events-none" : ""}`,
+        className: `${className} ${loading ? "pointer-events-none opacity-70" : ""}`,
       })}
     >
-      {!loading && <input {...getInputProps()} />}
+      <input {...getInputProps()} />
+
       {loading ? (
         <div className="py-4">
-          <LoadingState message="Loading..." />
+          <LoadingState message="Uploading file..." />
         </div>
       ) : isDragActive ? (
-        <p>Drop the files here ...</p>
+        <p className="text-[#808080]">Drop the files here ...</p>
       ) : (
         <div className="flex items-center flex-col">
           <Image
             src={"/icons/fileImage.svg"}
             height={40}
             width={40}
-            alt="fileImage"
+            alt="upload icon"
           />
-          <p className="text-[#808080]">
+          <p className="text-[#808080] mt-2">
             <span className="underline underline-offset-4 text-[14px]">
               Click to upload
             </span>{" "}
             or drag and drop
           </p>
-          <p className="text-[#808080] text-[12px]">Maximum file size 50 MB.</p>
+          <p className="text-[#808080] text-[12px]">
+            Any file type supported • Max 1GB
+          </p>
         </div>
       )}
     </div>
