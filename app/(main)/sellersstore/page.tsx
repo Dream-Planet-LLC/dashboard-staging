@@ -24,6 +24,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   EllipsisVertical,
@@ -47,112 +56,15 @@ import {
   whiteStoreIcon,
 } from "@/svg";
 import { useRouter } from "next/navigation";
+import {
+  fetchSellersStoreData,
+  SellerStore,
+  SellersStorePagination,
+  updateSellerEligibilityStatus,
+} from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 
 // ────────────────────────────────────────────────
-// Types
-// ────────────────────────────────────────────────
-interface Seller {
-  id: string | number;
-  name: string;
-  username: string;
-  avatarUrl?: string;
-  role?: string;
-  status: "ACTIVE" | "SUSPENDED" | "PENDING" | "INACTIVE";
-  liveProducts: number | null;
-  totalEarnings: number;
-  platformRevenue: number;
-  lastActivity: string | null;
-
-  analytics?: {
-    totalOrders: number;
-    totalRevenue: number;
-    masterclassHosted: number;
-    hireRequests: number;
-    bestSellingProduct?: { name: string; image?: string };
-    unitsSold: number;
-    revenue: number;
-  };
-}
-
-interface SellersData {
-  sellers: Seller[];
-  total: number;
-  currentPage: number;
-  pageSize: number;
-}
-
-// ────────────────────────────────────────────────
-// Mock data – replace with real backend fetch (e.g., /api/admin/sellers)
-// ────────────────────────────────────────────────
-const mockData: SellersData = {
-  sellers: [
-    {
-      id: "1",
-      name: "Alex Morgan",
-      username: "@neonbyte",
-      avatarUrl:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-      status: "ACTIVE",
-      liveProducts: 12,
-      totalEarnings: 1320567,
-      platformRevenue: 23720,
-      lastActivity: "19 Jan, 2026",
-    },
-    {
-      id: "2",
-      name: "Sarah Johnson",
-      username: "@sarahj",
-      avatarUrl:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
-      status: "SUSPENDED",
-      liveProducts: 12,
-      totalEarnings: 1320567,
-      platformRevenue: 23720,
-      lastActivity: "19 Jan, 2026",
-    },
-    {
-      id: "3",
-      name: "Michael Chen",
-      username: "@mikechen",
-      avatarUrl:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
-      status: "PENDING",
-      liveProducts: null,
-      totalEarnings: 0,
-      platformRevenue: 0,
-      lastActivity: null,
-    },
-    {
-      id: "4",
-      name: "Emily Davis",
-      username: "@emilyd",
-      avatarUrl:
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100",
-      status: "INACTIVE",
-      liveProducts: null,
-      totalEarnings: 0,
-      platformRevenue: 0,
-      lastActivity: "19 Jan, 2026",
-    },
-    {
-      id: "5",
-      name: "David Wilson",
-      username: "@davidw",
-      avatarUrl:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100",
-      status: "ACTIVE",
-      liveProducts: 8,
-      totalEarnings: 890000,
-      platformRevenue: 15680,
-      lastActivity: "20 Jan, 2026",
-    },
-    // Add more rows as needed for pagination demo
-  ],
-  total: 12560,
-  currentPage: 1,
-  pageSize: 16,
-};
-
 const formatCurrency = (num: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -161,17 +73,40 @@ const formatCurrency = (num: number) =>
     maximumFractionDigits: 0,
   }).format(num);
 
+const formatDate = (dateValue?: string | null) => {
+  if (!dateValue) return "-";
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return dateValue;
+  return parsed.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 const SellersStore = () => {
-  const [data, setData] = useState<SellersData | null>(null);
+  const [sellers, setSellers] = useState<SellerStore[]>([]);
+  const [pagination, setPagination] = useState<SellersStorePagination | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
-  const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
+  const [selectedSeller, setSelectedSeller] = useState<SellerStore | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsData, setAnalyticsData] = useState<
-    Seller["analytics"] | null
+    SellerStore["analytics"] | null
   >(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    "suspend" | "activate" | null
+  >(null);
+  const [confirmSeller, setConfirmSeller] = useState<SellerStore | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const pageSize = 20;
+  const totalSellers = pagination?.totalDocs || 0;
   const router = useRouter();
 
   // Simulate fetching analytics when drawer opens
@@ -199,32 +134,106 @@ const SellersStore = () => {
     }
   }, [drawerOpen, selectedSeller]);
 
-  const handleOpenAnalytics = (seller: Seller) => {
+  const handleOpenAnalytics = (seller: SellerStore) => {
     setSelectedSeller(seller);
     setDrawerOpen(true);
   };
 
   useEffect(() => {
-    // TODO: Replace with real API fetch
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
+  useEffect(() => {
     const fetchSellers = async () => {
       try {
         setLoading(true);
-        // const res = await fetch(`/api/admin/sellers?page=${currentPage}&status=${statusFilter}&search=${searchQuery}`);
-        // const json = await res.json();
-        // setData(json);
-
-        setTimeout(() => {
-          setData(mockData);
-          setLoading(false);
-        }, 800);
+        const trimmedSearch = searchQuery.trim();
+        const statusValue =
+          statusFilter === "All Status" ? undefined : statusFilter.toLowerCase();
+        const data = await fetchSellersStoreData(currentPage, pageSize, {
+          searchString: trimmedSearch || undefined,
+          sellerEligibilityStatus: statusValue,
+        });
+        setSellers(data.sellers);
+        setPagination(data.pagination);
       } catch (err) {
         console.error(err);
+        setSellers([]);
+        setPagination(null);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchSellers();
-  }, []); // Initial fetch only
+  }, [currentPage, pageSize, searchQuery, statusFilter]);
+
+  const refetchSellers = async () => {
+    const trimmedSearch = searchQuery.trim();
+    const statusValue =
+      statusFilter === "All Status" ? undefined : statusFilter.toLowerCase();
+    const data = await fetchSellersStoreData(currentPage, pageSize, {
+      searchString: trimmedSearch || undefined,
+      sellerEligibilityStatus: statusValue,
+    });
+    setSellers(data.sellers);
+    setPagination(data.pagination);
+  };
+
+  const handleSuspendSeller = async (seller: SellerStore) => {
+    try {
+      await updateSellerEligibilityStatus(seller.id, "suspended");
+      toast({
+        variant: "default",
+        title: "Seller suspended",
+      });
+      await refetchSellers();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to suspend seller",
+      });
+    }
+  };
+
+  const handleActivateSeller = async (seller: SellerStore) => {
+    try {
+      await updateSellerEligibilityStatus(seller.id, "active");
+      toast({
+        variant: "default",
+        title: "Seller activated",
+      });
+      await refetchSellers();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to activate seller",
+      });
+    }
+  };
+
+  const openConfirm = (seller: SellerStore, action: "suspend" | "activate") => {
+    setConfirmSeller(seller);
+    setConfirmAction(action);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmSeller || !confirmAction) return;
+    setConfirmLoading(true);
+    try {
+      if (confirmAction === "suspend") {
+        await handleSuspendSeller(confirmSeller);
+      } else {
+        await handleActivateSeller(confirmSeller);
+      }
+      setConfirmOpen(false);
+      setConfirmSeller(null);
+      setConfirmAction(null);
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -234,27 +243,12 @@ const SellersStore = () => {
     );
   }
 
-  if (!data)
+  if (!sellers)
     return (
       <div className="p-8 text-center text-[#808080]">No data available</div>
     );
 
-  // Filter sellers based on search and status
-  const filteredSellers = data.sellers.filter((seller) => {
-    // Search filter - search by name, username, or role
-    const matchesSearch =
-      seller.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      seller.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (seller.role?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
-
-    // Status filter
-    const matchesStatus =
-      statusFilter === "All Status" || seller.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  const columns: ColumnDef<Seller>[] = [
+  const columns: ColumnDef<SellerStore>[] = [
     {
       accessorKey: "name",
       header: "Creator",
@@ -341,7 +335,7 @@ const SellersStore = () => {
         const value = row.getValue("lastActivity");
         return (
           <span className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-            {value !== null && value !== undefined ? String(value) : "-"}
+            {formatDate(value as string | null)}
           </span>
         );
       },
@@ -383,10 +377,19 @@ const SellersStore = () => {
                 {whiteProIcon}
                 View Profile
               </DropdownMenuItem>
+              {seller.status === "SUSPENDED" && (
+                <DropdownMenuItem className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#2BAC47]">
+                  <button type="button" onClick={() => openConfirm(seller, "activate")}>
+                    Activate
+                  </button>
+                </DropdownMenuItem>
+              )}
               {seller.status !== "SUSPENDED" && (
                 <DropdownMenuItem className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#C83532]">
                   <Ban className="h-4 w-4" />
-                  Suspend
+                  <button type="button" onClick={() => openConfirm(seller, "suspend")}>
+                    Suspend
+                  </button>
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -396,11 +399,12 @@ const SellersStore = () => {
     },
   ];
 
-  const showingStart = (data.currentPage - 1) * data.pageSize + 1;
-  const showingEnd = Math.min(
-    Math.min(showingStart + data.pageSize - 1, data.total),
-    showingStart + filteredSellers.length - 1,
-  );
+  const showingStart =
+    totalSellers === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const showingEnd =
+    totalSellers === 0
+      ? 0
+      : Math.min(showingStart + pageSize - 1, totalSellers);
 
   return (
     <div className="space-y-2 pb-10">
@@ -470,7 +474,7 @@ const SellersStore = () => {
       {/* Table */}
       <div className="bg-white overflow-hidden">
         <UserTable
-          data={filteredSellers}
+          data={sellers}
           columns={columns}
           placeholder="Search sellers..."
         />
@@ -479,9 +483,9 @@ const SellersStore = () => {
       {/* Pagination */}
       <div className="flex items-center justify-between text-sm text-[#808080] flex-1">
         <p>
-          SHOWING {filteredSellers.length > 0 ? showingStart : 0}-
-          {filteredSellers.length > 0 ? showingEnd : 0} OF{" "}
-          {filteredSellers.length}
+          SHOWING {sellers.length > 0 ? showingStart : 0}-
+          {sellers.length > 0 ? showingEnd : 0} OF{" "}
+          {totalSellers.toLocaleString()}
         </p>
         <div className="flex items-center gap-2">
           {/* <Button
@@ -506,8 +510,8 @@ const SellersStore = () => {
 
              <button  
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
-         
-            disabled={data.currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={!pagination?.hasPrevPage}
           >
             <svg
               width="16"
@@ -525,8 +529,9 @@ const SellersStore = () => {
 
 
           <button  
-            disabled={showingEnd >= filteredSellers.length}
+            disabled={!pagination?.hasNextPage}
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
+            onClick={() => setCurrentPage((prev) => prev + 1)}
           >
             <svg
               width="16"
@@ -731,6 +736,46 @@ const SellersStore = () => {
           </div>
         </DrawerContent>
       </Drawer>
+
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          setConfirmOpen(open);
+          if (!open) {
+            setConfirmSeller(null);
+            setConfirmAction(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmAction === "suspend" ? "Suspend seller?" : "Activate seller?"}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmSeller
+                ? `Are you sure you want to ${confirmAction} ${confirmSeller.name}?`
+                : "Are you sure you want to continue?"}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-end">
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              onClick={handleConfirmAction}
+              disabled={confirmLoading}
+              className={
+                confirmAction === "suspend"
+                  ? "bg-[#C83532] hover:bg-[#C83532]"
+                  : "bg-[#2BAC47] hover:bg-[#2BAC47]"
+              }
+            >
+              {confirmAction === "suspend" ? "Suspend" : "Activate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

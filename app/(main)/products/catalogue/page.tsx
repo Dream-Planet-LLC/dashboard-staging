@@ -36,108 +36,13 @@ import {
   WhiteListicon,
   WhitesmSquareIcon,
 } from "@/svg";
-import Image from "next/image";
+import {
+  fetchProductCatalogueData,
+  ProductCatalogueItem,
+  ProductCataloguePagination,
+} from "@/lib/api";
 
 // ────────────────────────────────────────────────
-// Types
-// ────────────────────────────────────────────────
-interface Product {
-  id: string;
-  name: string;
-  productType: string;
-  price: number;
-  status: "LISTED" | "SUSPENDED";
-  creator: string;
-  date: string;
-  image?: string;
-}
-
-// ────────────────────────────────────────────────
-// Mock Data
-// ────────────────────────────────────────────────
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    name: "Midnight Tour Dad Cap",
-    productType: "Merchandise",
-    price: 20,
-    status: "LISTED",
-    creator: "@neonvibes",
-    date: "19 Jan, 2026",
-    image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=200",
-  },
-  {
-    id: "2",
-    name: "Midnight Tour Dad Cap",
-    productType: "Audio",
-    price: 20,
-    status: "SUSPENDED",
-    creator: "@neonvibes",
-    date: "19 Jan, 2026",
-    image: "https://images.unsplash.com/photo-1619983081563-430f63602796?w=200",
-  },
-  {
-    id: "3",
-    name: "Midnight Tour Dad Cap",
-    productType: "Video",
-    price: 20,
-    status: "SUSPENDED",
-    creator: "@neonvibes",
-    date: "19 Jan, 2026",
-    image: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=200",
-  },
-  {
-    id: "4",
-    name: "Midnight Tour Dad Cap",
-    productType: "Tickets",
-    price: 20,
-    status: "LISTED",
-    creator: "@neonvibes",
-    date: "19 Jan, 2026",
-    image: "https://images.unsplash.com/photo-1594608661623-aa0bd689a7dd?w=200",
-  },
-  {
-    id: "5",
-    name: "Midnight Tour Dad Cap",
-    productType: "Podcast",
-    price: 20,
-    status: "LISTED",
-    creator: "@neonvibes",
-    date: "19 Jan, 2026",
-    image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200",
-  },
-  {
-    id: "6",
-    name: "Midnight Tour Dad Cap",
-    productType: "Merchandise",
-    price: 12,
-    status: "LISTED",
-    creator: "@neonvibes",
-    date: "19 Jan, 2025",
-    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=200",
-  },
-  {
-    id: "7",
-    name: "Midnight Tour Dad Cap",
-    productType: "Merchandise",
-    price: 12,
-    status: "LISTED",
-    creator: "@neonvibes",
-    date: "19 Jan, 2025",
-    image: "https://images.unsplash.com/photo-1523398002811-999ca8dec234?w=200",
-  },
-  {
-    id: "8",
-    name: "Midnight Tour Dad Cap",
-    productType: "Merchandise",
-    price: 12,
-    status: "LISTED",
-    creator: "@neonvibes",
-    date: "19 Jan, 2025",
-    image: "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=200",
-  },
-];
-
 const formatCurrency = (num: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -146,33 +51,66 @@ const formatCurrency = (num: number) =>
     maximumFractionDigits: 0,
   }).format(num);
 
+const formatDate = (dateValue?: string) => {
+  if (!dateValue) return "Unknown";
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return dateValue;
+  return parsed.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 const ProductCataloguePage = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductCatalogueItem[]>([]);
+  const [pagination, setPagination] = useState<ProductCataloguePagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [productTypeFilter, setProductTypeFilter] = useState("All Products");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 16;
-  const totalProducts = 12560;
+  const pageSize = 10;
+  const totalProducts = pagination?.totalDocs || 0;
 
-  // Simulate API fetch
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setProducts(mockProducts);
-        setLoading(false);
+        const trimmedSearch = searchQuery.trim();
+        const statusValue =
+          statusFilter === "All Status"
+            ? undefined
+            : statusFilter === "LISTED"
+            ? "live"
+            : "suspended";
+        const typeValue =
+          productTypeFilter === "All Products"
+            ? undefined
+            : productTypeFilter.toLowerCase();
+        const data = await fetchProductCatalogueData(currentPage, pageSize, {
+          status: statusValue,
+          type: typeValue,
+          searchString: trimmedSearch || undefined,
+        });
+        setProducts(data.products);
+        setPagination(data.pagination);
       } catch (err) {
         console.error(err);
+        setProducts([]);
+        setPagination(null);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [currentPage, pageSize, searchQuery, statusFilter, productTypeFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, productTypeFilter]);
 
   // Action handlers
   const handleUnpublish = (productId: string) => {
@@ -200,25 +138,8 @@ const ProductCataloguePage = () => {
     // API call to delete
   };
 
-  // Filter products
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.creator.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.productType.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "All Status" || product.status === statusFilter;
-
-    const matchesProductType =
-      productTypeFilter === "All Products" ||
-      product.productType === productTypeFilter;
-
-    return matchesSearch && matchesStatus && matchesProductType;
-  });
-
   // Table columns
-  const columns: ColumnDef<Product>[] = [
+  const columns: ColumnDef<ProductCatalogueItem>[] = [
     {
       accessorKey: "name",
       header: "Product Name",
@@ -320,7 +241,7 @@ const ProductCataloguePage = () => {
       ),
       cell: ({ row }) => (
         <span className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-          {row.getValue("date")}
+          {formatDate(row.getValue("date"))}
         </span>
       ),
     },
@@ -380,7 +301,7 @@ const ProductCataloguePage = () => {
   ];
 
   // Render product card for grid view
-  const renderProductCard = (product: Product) => {
+  const renderProductCard = (product: ProductCatalogueItem) => {
     const statusBgColor =
       product.status === "LISTED" ? "bg-[#2BAC47]" : "bg-[#C83532]";
 
@@ -418,7 +339,7 @@ const ProductCataloguePage = () => {
                 {product.name}
               </h3>
               <p className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%] mb-3">
-                {product.productType} · {product.date}
+                {product.productType} · {formatDate(product.date)}
               </p>
             </div>
 
@@ -484,11 +405,12 @@ const ProductCataloguePage = () => {
     );
   };
 
-  const showingStart = (currentPage - 1) * pageSize + 1;
-  const showingEnd = Math.min(
-    Math.min(showingStart + pageSize - 1, totalProducts),
-    showingStart + filteredProducts.length - 1,
-  );
+  const showingStart =
+    totalProducts === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const showingEnd =
+    totalProducts === 0
+      ? 0
+      : Math.min(showingStart + pageSize - 1, totalProducts);
 
   if (loading) {
     return (
@@ -581,14 +503,14 @@ const ProductCataloguePage = () => {
       {viewMode === "table" ? (
         <div className="bg-white overflow-hidden">
           <UserTable
-            data={filteredProducts}
+            data={products}
             columns={columns}
             placeholder="Search products..."
           />
         </div>
       ) : (
         <div className="flex flex-wrap gap-[26px]">
-          {filteredProducts.map((product) => (
+          {products.map((product) => (
             <div key={product.id}>{renderProductCard(product)}</div>
           ))}
         </div>
@@ -597,18 +519,17 @@ const ProductCataloguePage = () => {
       {/* Pagination */}
       <div className="flex items-center justify-between text-sm text-[#808080] flex-1">
         <p className="INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-          SHOWING {filteredProducts.length > 0 ? showingStart : 0}-
-          {filteredProducts.length > 0 ? showingEnd : 0} OF{" "}
+          SHOWING {products.length > 0 ? showingStart : 0}-
+          {products.length > 0 ? showingEnd : 0} OF{" "}
           {totalProducts.toLocaleString()}
         </p>
         <div className="flex items-center gap-2">
 
           
-              <button  
+          <button  
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
-         
-             disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={!pagination?.hasPrevPage}
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
           >
             <svg
               width="16"
@@ -626,8 +547,8 @@ const ProductCataloguePage = () => {
 
 
           <button  
-        disabled={showingEnd >= totalProducts}
-            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={!pagination?.hasNextPage}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
           >
             <svg

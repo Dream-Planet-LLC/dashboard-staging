@@ -17,100 +17,14 @@ import { Search } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { salRevIcon } from "@/svg";
+import {
+  fetchPayoutsData,
+  Payout,
+  PayoutStats,
+  PayoutsPagination,
+} from "@/lib/api";
 
 // ────────────────────────────────────────────────
-// Types
-// ────────────────────────────────────────────────
-interface Payout {
-  id: string;
-  creator: {
-    name: string;
-    username: string;
-    avatar?: string;
-  };
-  amount: number;
-  status: "COMPLETED" | "FAILED" | "PROCESSING";
-  date: string;
-}
-
-interface PayoutStats {
-  totalProcessed: number;
-  pendingPayouts: number;
-  failedPayouts: number;
-}
-
-// ────────────────────────────────────────────────
-// Mock Data
-// ────────────────────────────────────────────────
-const mockStats: PayoutStats = {
-  totalProcessed: 232000,
-  pendingPayouts: 5200,
-  failedPayouts: 10300,
-};
-
-const mockPayouts: Payout[] = [
-  {
-    id: "1",
-    creator: {
-      name: "Alex Morgan",
-      username: "@neonbyte",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-    },
-    amount: 1320567,
-    status: "COMPLETED",
-    date: "19 Jan, 2026",
-  },
-  {
-    id: "2",
-    creator: {
-      name: "Alex Morgan",
-      username: "@neonbyte",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-    },
-    amount: 1320567,
-    status: "FAILED",
-    date: "19 Jan, 2026",
-  },
-  {
-    id: "3",
-    creator: {
-      name: "Alex Morgan",
-      username: "@neonbyte",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-    },
-    amount: 1320567,
-    status: "PROCESSING",
-    date: "19 Jan, 2026",
-  },
-  {
-    id: "4",
-    creator: {
-      name: "Sarah Johnson",
-      username: "@sarahj",
-      avatar:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
-    },
-    amount: 890000,
-    status: "COMPLETED",
-    date: "18 Jan, 2026",
-  },
-  {
-    id: "5",
-    creator: {
-      name: "Michael Chen",
-      username: "@mikechen",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
-    },
-    amount: 450000,
-    status: "PROCESSING",
-    date: "17 Jan, 2026",
-  },
-];
-
 const formatCurrency = (num: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -118,6 +32,17 @@ const formatCurrency = (num: number) =>
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(num);
+
+const formatDate = (dateValue?: string) => {
+  if (!dateValue) return "Unknown";
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return dateValue;
+  return parsed.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 const formatCompactNumber = (num: number): string => {
   if (num === 0) return "0";
@@ -141,43 +66,44 @@ const formatCompactNumber = (num: number): string => {
 const PayoutsPage = () => {
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [stats, setStats] = useState<PayoutStats | null>(null);
+  const [pagination, setPagination] = useState<PayoutsPagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 16;
-  const totalPayouts = 12560;
+  const pageSize = 20;
+  const totalPayouts = pagination?.totalDocs || 0;
 
-  // Simulate API fetch
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
   useEffect(() => {
     const fetchPayouts = async () => {
       try {
         setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setPayouts(mockPayouts);
-        setStats(mockStats);
-        setLoading(false);
+        const trimmedSearch = searchQuery.trim();
+        const statusValue =
+          statusFilter === "All Status" ? undefined : statusFilter.toLowerCase();
+        const data = await fetchPayoutsData(currentPage, pageSize, {
+          searchString: trimmedSearch || undefined,
+          status: statusValue,
+        });
+        setPayouts(data.payouts);
+        setStats(data.stats);
+        setPagination(data.pagination);
       } catch (err) {
         console.error(err);
+        setPayouts([]);
+        setStats(null);
+        setPagination(null);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchPayouts();
-  }, []);
-
-  // Filter payouts
-  const filteredPayouts = payouts.filter((payout) => {
-    const matchesSearch =
-      payout.creator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payout.creator.username.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "All Status" ||
-      payout.status === statusFilter.toUpperCase();
-
-    return matchesSearch && matchesStatus;
-  });
+  }, [currentPage, pageSize]);
 
   // Define table columns
   const columns: ColumnDef<Payout>[] = [
@@ -249,17 +175,18 @@ const PayoutsPage = () => {
       header: "Date",
       cell: ({ row }) => (
         <span className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-          {row.getValue("date")}
+          {formatDate(row.getValue("date"))}
         </span>
       ),
     },
   ];
 
-  const showingStart = (currentPage - 1) * pageSize + 1;
-  const showingEnd = Math.min(
-    Math.min(showingStart + pageSize - 1, totalPayouts),
-    showingStart + filteredPayouts.length - 1,
-  );
+  const showingStart =
+    totalPayouts === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const showingEnd =
+    totalPayouts === 0
+      ? 0
+      : Math.min(showingStart + pageSize - 1, totalPayouts);
 
   if (loading) {
     return (
@@ -370,7 +297,7 @@ const PayoutsPage = () => {
       {/* Payouts Table */}
       <div className="bg-white overflow-hidden">
         <UserTable
-          data={filteredPayouts}
+          data={payouts}
           columns={columns}
           placeholder="Search payouts..."
         />
@@ -379,16 +306,16 @@ const PayoutsPage = () => {
       {/* Pagination */}
       <div className="flex items-center justify-between text-sm text-[#808080] flex-1">
         <p className="INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-          SHOWING {filteredPayouts.length > 0 ? showingStart : 0}-
-          {filteredPayouts.length > 0 ? showingEnd : 0} OF{" "}
+          SHOWING {payouts.length > 0 ? showingStart : 0}-
+          {payouts.length > 0 ? showingEnd : 0} OF{" "}
           {totalPayouts.toLocaleString()}
         </p>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={!pagination?.hasPrevPage}
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
           >
             <Image
               src="/icons/backbutton.svg"
@@ -400,8 +327,8 @@ const PayoutsPage = () => {
           <Button
             variant="outline"
             size="sm"
-            disabled={showingEnd >= totalPayouts}
-            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={!pagination?.hasNextPage}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
           >
             <Image
               src="/icons/forwardbutton.svg"

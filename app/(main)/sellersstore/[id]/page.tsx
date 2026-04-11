@@ -23,315 +23,17 @@ import Image from "next/image";
 import { ColumnDef } from "@tanstack/react-table";
 import { UserTable } from "@/components/UserTable";
 import { ListIcon, smSquareIcon, WhiteListicon, whiteProIcon, WhitesmSquareIcon } from "@/svg";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import {
+  fetchCreatorStoreDetails,
+  CreatorStoreCreator,
+  CreatorStoreProduct,
+  CreatorStorePagination,
+} from "@/lib/api";
 
 // ────────────────────────────────────────────────
-// Types
-// ────────────────────────────────────────────────
-interface Product {
-  id: string | number;
-  name: string;
-  type: string; // "Merchandise" | "Audio" | etc.
-  price: number;
-  creator: string; // @username
-  unitsSold: number | string; // number or "-" for pending/inactive
-  uploadedDate: string;
-  previewImage?: string | null;
-  status?: "published" | "unpublished" | "suspended"; // for future filtering
-}
-
-interface SellerStoreData {
-  seller: {
-    name: string;
-    username: string;
-    avatarUrl?: string;
-    role: string;
-  };
-  products: Product[];
-  totalProducts: number;
-  currentPage: number;
-  pageSize: number;
-}
-
-// ────────────────────────────────────────────────
-// Mock data – replace with real API fetch (e.g. /api/sellers/[id]/products)
-// ────────────────────────────────────────────────
-const mockData: SellerStoreData = {
-  seller: {
-    name: "Randall Heathcote",
-    username: "@Randheill",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-    role: "Alien creator • Artist/Musician",
-  },
-  products: [
-    {
-      id: "1",
-      name: "Midnight Tour Dad Cap",
-      type: "Merchandise",
-      price: 20,
-      creator: "@neonvibes",
-      unitsSold: 0,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=150",
-    },
-    {
-      id: "2",
-      name: "Backstage Energy Hoodie",
-      type: "Merchandise",
-      price: 40,
-      creator: "@Echo_Rush",
-      unitsSold: 45,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=150",
-    },
-    {
-      id: "3",
-      name: "Studio Nights Vinyl LP",
-      type: "Audio",
-      price: 60,
-      creator: "@urbanflux",
-      unitsSold: 120,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150",
-    },
-     {
-      id: "1",
-      name: "Midnight Tour Dad Cap",
-      type: "Merchandise",
-      price: 20,
-      creator: "@neonvibes",
-      unitsSold: 0,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=150",
-    },
-    {
-      id: "2",
-      name: "Backstage Energy Hoodie",
-      type: "Merchandise",
-      price: 40,
-      creator: "@Echo_Rush",
-      unitsSold: 45,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=150",
-    },
-    {
-      id: "3",
-      name: "Studio Nights Vinyl LP",
-      type: "Audio",
-      price: 60,
-      creator: "@urbanflux",
-      unitsSold: 120,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150",
-    }, {
-      id: "1",
-      name: "Midnight Tour Dad Cap",
-      type: "Merchandise",
-      price: 20,
-      creator: "@neonvibes",
-      unitsSold: 0,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=150",
-    },
-    {
-      id: "2",
-      name: "Backstage Energy Hoodie",
-      type: "Merchandise",
-      price: 40,
-      creator: "@Echo_Rush",
-      unitsSold: 45,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=150",
-    },
-    {
-      id: "3",
-      name: "Studio Nights Vinyl LP",
-      type: "Audio",
-      price: 60,
-      creator: "@urbanflux",
-      unitsSold: 120,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150",
-    }, {
-      id: "1",
-      name: "Midnight Tour Dad Cap",
-      type: "Merchandise",
-      price: 20,
-      creator: "@neonvibes",
-      unitsSold: 0,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=150",
-    },
-    {
-      id: "2",
-      name: "Backstage Energy Hoodie",
-      type: "Merchandise",
-      price: 40,
-      creator: "@Echo_Rush",
-      unitsSold: 45,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=150",
-    },
-    {
-      id: "3",
-      name: "Studio Nights Vinyl LP",
-      type: "Audio",
-      price: 60,
-      creator: "@urbanflux",
-      unitsSold: 120,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150",
-    }, {
-      id: "1",
-      name: "Midnight Tour Dad Cap",
-      type: "Merchandise",
-      price: 20,
-      creator: "@neonvibes",
-      unitsSold: 0,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=150",
-    },
-    {
-      id: "2",
-      name: "Backstage Energy Hoodie",
-      type: "Merchandise",
-      price: 40,
-      creator: "@Echo_Rush",
-      unitsSold: 45,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=150",
-    },
-    {
-      id: "3",
-      name: "Studio Nights Vinyl LP",
-      type: "Audio",
-      price: 60,
-      creator: "@urbanflux",
-      unitsSold: 120,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150",
-    }, {
-      id: "1",
-      name: "Midnight Tour Dad Cap",
-      type: "Merchandise",
-      price: 20,
-      creator: "@neonvibes",
-      unitsSold: 0,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=150",
-    },
-    {
-      id: "2",
-      name: "Backstage Energy Hoodie",
-      type: "Merchandise",
-      price: 40,
-      creator: "@Echo_Rush",
-      unitsSold: 45,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=150",
-    },
-    {
-      id: "3",
-      name: "Studio Nights Vinyl LP",
-      type: "Audio",
-      price: 60,
-      creator: "@urbanflux",
-      unitsSold: 120,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150",
-    }, {
-      id: "1",
-      name: "Midnight Tour Dad Cap",
-      type: "Merchandise",
-      price: 20,
-      creator: "@neonvibes",
-      unitsSold: 0,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=150",
-    },
-    {
-      id: "2",
-      name: "Backstage Energy Hoodie",
-      type: "Merchandise",
-      price: 40,
-      creator: "@Echo_Rush",
-      unitsSold: 45,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=150",
-    },
-    {
-      id: "3",
-      name: "Studio Nights Vinyl LP",
-      type: "Audio",
-      price: 60,
-      creator: "@urbanflux",
-      unitsSold: 120,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150",
-    }, {
-      id: "1",
-      name: "Midnight Tour Dad Cap",
-      type: "Merchandise",
-      price: 20,
-      creator: "@neonvibes",
-      unitsSold: 0,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=150",
-    },
-    {
-      id: "2",
-      name: "Backstage Energy Hoodie",
-      type: "Merchandise",
-      price: 40,
-      creator: "@Echo_Rush",
-      unitsSold: 45,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=150",
-    },
-    {
-      id: "3",
-      name: "Studio Nights Vinyl LP",
-      type: "Audio",
-      price: 60,
-      creator: "@urbanflux",
-      unitsSold: 120,
-      uploadedDate: "19 Jan, 2026",
-      previewImage:
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150",
-    },
-    // ... add more
-  ],
-  totalProducts: 1, // change to real total
-  currentPage: 1,
-  pageSize: 10,
-};
-
 const formatCurrency = (num: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -339,6 +41,17 @@ const formatCurrency = (num: number) =>
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(num);
+
+const formatDate = (dateValue?: string | null) => {
+  if (!dateValue) return "-";
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return dateValue;
+  return parsed.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 const getTypeInitial = (type: string) => {
   const map: Record<string, string> = {
@@ -352,32 +65,55 @@ const getTypeInitial = (type: string) => {
 };
 
 const SellerStorePage = () => {
-  const [data, setData] = useState<SellerStoreData | null>(null);
+  const [creator, setCreator] = useState<CreatorStoreCreator | null>(null);
+  const [products, setProducts] = useState<CreatorStoreProduct[]>([]);
+  const [pagination, setPagination] = useState<CreatorStorePagination | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
-   const router = useRouter();
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
+  const router = useRouter();
+  const params = useParams();
+  const creatorIdParam = params?.id;
+  const creatorId =
+    typeof creatorIdParam === "string" && creatorIdParam.trim() !== ""
+      ? Number.isNaN(Number(creatorIdParam))
+        ? creatorIdParam
+        : Number(creatorIdParam)
+      : creatorIdParam || "";
 
   useEffect(() => {
-    // TODO: Replace with real fetch – use seller ID from params or context
     const fetchSellerStore = async () => {
       try {
         setLoading(true);
-        // Example: const res = await fetch(`/api/sellers/${sellerId}/store`);
-        // const json = await res.json();
-        // setData(json);
-
-        setTimeout(() => {
-          setData(mockData);
-          setLoading(false);
-        }, 900);
+        if (!creatorId) {
+          setCreator(null);
+          setProducts([]);
+          setPagination(null);
+          return;
+        }
+        const data = await fetchCreatorStoreDetails(
+          creatorId,
+          currentPage,
+          pageSize,
+        );
+        setCreator(data.creator);
+        setProducts(data.products);
+        setPagination(data.pagination);
       } catch (err) {
         console.error(err);
+        setCreator(null);
+        setProducts([]);
+        setPagination(null);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchSellerStore();
-  }, []);
+  }, [creatorId, currentPage, pageSize]);
 
   if (loading) {
     return (
@@ -387,12 +123,12 @@ const SellerStorePage = () => {
     );
   }
 
-  if (!data)
+  if (!creator)
     return (
       <div className="p-8 text-center text-[#808080]">Store not found</div>
     );
 
-  const columns: ColumnDef<Product>[] = [
+  const columns: ColumnDef<CreatorStoreProduct>[] = [
     {
       accessorKey: "name",
       header: "Product Name",
@@ -458,7 +194,7 @@ const SellerStorePage = () => {
       header: "Uploaded Date",
       cell: ({ row }) => (
         <span className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.5%]">
-          {row.getValue("uploadedDate")}
+          {formatDate(row.getValue("uploadedDate"))}
         </span>
       ),
     },
@@ -495,13 +231,7 @@ const SellerStorePage = () => {
     },
   ];
 
-  const showingStart = (data.currentPage - 1) * data.pageSize + 1;
-  const showingEnd = Math.min(
-    showingStart + data.pageSize - 1,
-    data.totalProducts,
-  );
-
-  const ProductCard = ({ product }: { product: Product }) => {
+  const ProductCard = ({ product }: { product: CreatorStoreProduct }) => {
     const hasPreview =
       product.previewImage && product.previewImage.trim() !== "";
 
@@ -563,7 +293,7 @@ const SellerStorePage = () => {
 
           <div className="flex items-center justify-between text-sm">
             <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-              {product.type} . {product.uploadedDate}
+              {product.type} . {formatDate(product.uploadedDate)}
             </span>
 
             {/* <span className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
@@ -604,16 +334,16 @@ const SellerStorePage = () => {
       <div className="flex items-start justify-between flex-wrap gap-6 w-full">
         <div className="flex flex-col gap-4 w-full">
           <Avatar className="h-[56px] w-[56px]">
-            <AvatarImage src={data.seller.avatarUrl} alt={data.seller.name} />
-            <AvatarFallback>{data.seller.name[0]}</AvatarFallback>
+            <AvatarImage src={creator.avatarUrl} alt={creator.name} />
+            <AvatarFallback>{creator.name[0]}</AvatarFallback>
           </Avatar>
           <div className="flex items-center justify-between w-full">
             <div>
               <h2 className="text-[#111810] INT500 font-medium text-[18px] leading-[24px] tracking-[-1.5%]">
-                {data.seller.name}
+                {creator.name}
               </h2>
               <p className="text-[#A8A8A8] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-                {data.seller.username} • {data.seller.role}
+                {creator.username} • {creator.role}
               </p>
             </div>
 
@@ -647,7 +377,7 @@ const SellerStorePage = () => {
       {/* Table Section */}
       {/* <div className="bg-white overflow-hidden">
         <UserTable
-          data={data.products}
+          data={products}
           columns={columns}
           placeholder="Search products..."
         />
@@ -657,14 +387,14 @@ const SellerStorePage = () => {
       {viewMode === "table" ? (
         <div className="bg-white overflow-hidden">
           <UserTable
-            data={data.products}
+            data={products}
             columns={columns}
             placeholder="Search products..."
           />
         </div>
       ) : (
         <div className="flex flex-wrap gap-[27px]">
-          {data.products.map((product) => (
+          {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
@@ -673,15 +403,15 @@ const SellerStorePage = () => {
       {/* Pagination */}
       <div className="flex items-center justify-between text-sm text-[#808080]">
         <p>
-          Page {data.currentPage} of{" "}
-          {Math.ceil(data.totalProducts / data.pageSize)}
+          Page {pagination?.page || currentPage} of{" "}
+          {pagination?.totalPages || 0}
         </p>
         <div className="flex items-center gap-2">
 
               <button  
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
-         
-            disabled={data.currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={!pagination?.hasPrevPage}
           >
             <svg
               width="16"
@@ -699,8 +429,9 @@ const SellerStorePage = () => {
 
 
           <button  
-         disabled={showingEnd >= data.totalProducts}
+            disabled={!pagination?.hasNextPage}
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
+            onClick={() => setCurrentPage((prev) => prev + 1)}
           >
             <svg
               width="16"

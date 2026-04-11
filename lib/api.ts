@@ -195,6 +195,459 @@ export const fetchOrdersData = async (
   }
 };
 
+// Payouts API
+export const fetchPayoutsData = async (
+  page: number,
+  perPage: number,
+  options?: { searchString?: string; status?: string },
+): Promise<PayoutsData> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+    const requestBody: {
+      page: number;
+      perPage: number;
+      searchString?: string;
+      status?: string;
+    } = { page, perPage };
+    if (options?.searchString) {
+      requestBody.searchString = options.searchString;
+    }
+    if (options?.status) {
+      requestBody.status = options.status;
+    }
+    const response = await fetch(`${API_BASE_URL}/admin/get-withdrawals`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: PayoutsApiResponse = await response.json();
+
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const payload =
+      apiResponse?.data?.response ?? apiResponse?.response ?? apiResponse?.data;
+    if (!payload) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    const docs = Array.isArray(payload.docs) ? payload.docs : [];
+    const stats = payload.stats || {};
+
+    const payouts: Payout[] = docs.map((doc: PayoutDoc, index: number) => {
+      const rawStatus = (doc.status || "").toString().toUpperCase();
+      const normalizedStatus =
+        rawStatus === "COMPLETED" || rawStatus === "FAILED"
+          ? rawStatus
+          : "PROCESSING";
+      const username = doc.creator_username
+        ? doc.creator_username.startsWith("@")
+          ? doc.creator_username
+          : `@${doc.creator_username}`
+        : "Unknown";
+      return {
+        id: String(doc.withdrawal_id ?? index + 1),
+        creator: {
+          name: doc.creator_name || "Unknown Creator",
+          username,
+          avatar: doc.creator_image || undefined,
+        },
+        amount: doc.amount || 0,
+        status: normalizedStatus,
+        date: doc.date || "",
+      };
+    });
+
+    return {
+      payouts,
+      stats: {
+        totalProcessed: stats.total_processed_payouts || 0,
+        pendingPayouts: stats.total_pending_payouts || 0,
+        failedPayouts: stats.total_failed_payouts || 0,
+      },
+      pagination: {
+        totalDocs: payload.totalDocs || 0,
+        limit: payload.limit || perPage,
+        page: payload.page || page,
+        totalPages: payload.totalPages || 0,
+        hasPrevPage: Boolean(payload.hasPrevPage),
+        hasNextPage: Boolean(payload.hasNextPage),
+        prevPage: payload.prevPage || 0,
+        nextPage: payload.nextPage || 0,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching payouts data:", error);
+    throw error;
+  }
+};
+
+// Sellers Store API
+export const fetchSellersStoreData = async (
+  page: number,
+  perPage: number,
+  options?: { searchString?: string; sellerEligibilityStatus?: string },
+): Promise<SellersStoreData> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+    const requestBody: {
+      page: number;
+      perPage: number;
+      searchString?: string;
+      seller_eligibility_status?: string;
+    } = { page, perPage };
+    if (options?.searchString) {
+      requestBody.searchString = options.searchString;
+    }
+    if (options?.sellerEligibilityStatus) {
+      requestBody.seller_eligibility_status = options.sellerEligibilityStatus;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/admin/creators/live-listed`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: SellersStoreApiResponse = await response.json();
+
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const payload =
+      apiResponse?.data?.response ?? apiResponse?.response ?? apiResponse?.data;
+    if (!payload) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    const docs = Array.isArray(payload.docs) ? payload.docs : [];
+
+    const sellers: SellerStore[] = docs.map(
+      (doc: SellerStoreDoc, index: number) => {
+        const rawStatus = (doc.seller_eligibility_status || "")
+          .toString()
+          .toUpperCase();
+        const status =
+          rawStatus === "ACTIVE" ||
+          rawStatus === "SUSPENDED" ||
+          rawStatus === "PENDING" ||
+          rawStatus === "INACTIVE"
+            ? (rawStatus as SellerStore["status"])
+            : "ACTIVE";
+        const username = doc.username
+          ? doc.username.startsWith("@")
+            ? doc.username
+            : `@${doc.username}`
+          : "Unknown";
+        return {
+          id: doc.creator_id ?? index + 1,
+          name: doc.name || "Unknown Creator",
+          username,
+          avatarUrl: doc.image || undefined,
+          status,
+          liveProducts:
+            typeof doc.no_of_live_products === "number"
+              ? doc.no_of_live_products
+              : null,
+          totalEarnings: doc.total_earnings || 0,
+          platformRevenue: doc.platform_revenue || 0,
+          lastActivity: doc.last_item_bought_date || null,
+        };
+      },
+    );
+
+    return {
+      sellers,
+      pagination: {
+        totalDocs: payload.totalDocs || 0,
+        limit: payload.limit || perPage,
+        page: payload.page || page,
+        totalPages: payload.totalPages || 0,
+        hasPrevPage: Boolean(payload.hasPrevPage),
+        hasNextPage: Boolean(payload.hasNextPage),
+        prevPage: payload.prevPage || 0,
+        nextPage: payload.nextPage || 0,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching sellers store data:", error);
+    throw error;
+  }
+};
+
+export const updateSellerEligibilityStatus = async (
+  creatorId: string | number,
+  sellerEligibilityStatus: string,
+): Promise<void> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+    const response = await fetch(
+      `${API_BASE_URL}/admin/creators/update-seller-eligibility`,
+      {
+        method: "POST",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          creator_id: creatorId,
+          seller_eligibility_status: sellerEligibilityStatus,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: UpdateSellerEligibilityApiResponse =
+      await response.json();
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+  } catch (error) {
+    console.error("Error updating seller eligibility:", error);
+    throw error;
+  }
+};
+
+// Seller Store Details API
+export const fetchCreatorStoreDetails = async (
+  creatorId: string | number,
+  page: number,
+  perPage: number,
+  options?: { searchString?: string },
+): Promise<CreatorStoreData> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+    const requestBody: {
+      creator_id: string | number;
+      page: number;
+      perPage: number;
+      searchString?: string;
+    } = { creator_id: creatorId, page, perPage };
+    if (options?.searchString) {
+      requestBody.searchString = options.searchString;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/admin/creators/details`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: CreatorStoreApiResponse = await response.json();
+
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const payload =
+      apiResponse?.data?.response ?? apiResponse?.response ?? apiResponse?.data;
+    if (!payload) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    const creatorPayload = payload.creator || {};
+    const productsPayload = payload.products || {};
+    const docs = Array.isArray(productsPayload.docs)
+      ? productsPayload.docs
+      : [];
+
+    const username = creatorPayload.username
+      ? creatorPayload.username.startsWith("@")
+        ? creatorPayload.username
+        : `@${creatorPayload.username}`
+      : "Unknown";
+    const roleParts = [
+      creatorPayload.subscription_plan,
+      creatorPayload.content_creator_type,
+    ].filter(Boolean);
+    const role = roleParts.length ? roleParts.join(" • ") : "Creator";
+
+    const creator: CreatorStoreCreator = {
+      id: creatorPayload.creator_id ?? creatorId,
+      name: creatorPayload.name || "Unknown Creator",
+      username,
+      avatarUrl: creatorPayload.image || undefined,
+      contentCreatorType: creatorPayload.content_creator_type || undefined,
+      subscriptionPlan: creatorPayload.subscription_plan || undefined,
+      sellerEligibilityStatus:
+        creatorPayload.seller_eligibility_status || undefined,
+      role,
+    };
+
+    const products: CreatorStoreProduct[] = docs.map(
+      (doc: CreatorStoreProductDoc, index: number) => {
+        const rawType = (doc.type || "").toString();
+        const normalizedType =
+          rawType.length > 0
+            ? rawType.charAt(0).toUpperCase() + rawType.slice(1)
+            : "Unknown";
+        return {
+          id: doc.id ?? index + 1,
+          name: doc.name || "Unknown Product",
+          type: normalizedType,
+          price: doc.price || 0,
+          creator: username,
+          unitsSold:
+            typeof doc.unit_sold === "number" ? doc.unit_sold : 0,
+          uploadedDate: doc.uploaded_date || "",
+          previewImage: doc.image || null,
+        };
+      },
+    );
+
+    return {
+      creator,
+      products,
+      pagination: {
+        totalDocs: productsPayload.totalDocs || 0,
+        limit: productsPayload.limit || perPage,
+        page: productsPayload.page || page,
+        totalPages: productsPayload.totalPages || 0,
+        hasPrevPage: Boolean(productsPayload.hasPrevPage),
+        hasNextPage: Boolean(productsPayload.hasNextPage),
+        prevPage: productsPayload.prevPage || 0,
+        nextPage: productsPayload.nextPage || 0,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching creator store details:", error);
+    throw error;
+  }
+};
+
+// Product Catalogue API
+export const fetchProductCatalogueData = async (
+  page: number,
+  perPage: number,
+  options?: { status?: string; type?: string; searchString?: string },
+): Promise<ProductCatalogueData> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+    const requestBody: {
+      page: number;
+      perPage: number;
+      status?: string;
+      type?: string;
+      searchString?: string;
+    } = { page, perPage };
+    if (options?.status) requestBody.status = options.status;
+    if (options?.type) requestBody.type = options.type;
+    if (options?.searchString) requestBody.searchString = options.searchString;
+
+    const response = await fetch(`${API_BASE_URL}/store/admin/products/list`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: ProductCatalogueApiResponse = await response.json();
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const payload =
+      apiResponse?.data?.data ??
+      apiResponse?.data?.response ??
+      apiResponse?.response ??
+      apiResponse?.data;
+    if (!payload) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    const docs = Array.isArray(payload.docs) ? payload.docs : [];
+    const products: ProductCatalogueItem[] = docs.map(
+      (doc: ProductCatalogueDoc, index: number) => {
+        const rawStatus = (doc.status || "").toString().toLowerCase();
+        const status = rawStatus === "live" ? "LISTED" : "SUSPENDED";
+        const type = doc.type
+          ? doc.type.charAt(0).toUpperCase() + doc.type.slice(1)
+          : "Unknown";
+        const creator = doc.creatorUsername
+          ? doc.creatorUsername.startsWith("@")
+            ? doc.creatorUsername
+            : `@${doc.creatorUsername}`
+          : "Unknown";
+        return {
+          id: String(doc.id ?? index + 1),
+          name: doc.name || "Unknown Product",
+          productType: type,
+          price: doc.price || 0,
+          status,
+          creator,
+          date: doc.createdAt || "",
+          image: doc.image || undefined,
+        };
+      },
+    );
+
+    return {
+      products,
+      pagination: {
+        totalDocs: payload.totalDocs || 0,
+        limit: payload.limit || perPage,
+        page: payload.page || page,
+        totalPages: payload.totalPages || 0,
+        hasPrevPage: Boolean(payload.hasPrevPage),
+        hasNextPage: Boolean(payload.hasNextPage),
+        prevPage: payload.prevPage || 0,
+        nextPage: payload.nextPage || 0,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching product catalogue:", error);
+    throw error;
+  }
+};
+
 // Types for API responses
 interface Stats {
   total_sales_revenue: number;
@@ -342,4 +795,308 @@ export interface OrdersPagination {
 export interface OrdersData {
   orders: Order[];
   pagination: OrdersPagination;
+}
+
+interface PayoutsApiResponse {
+  error: boolean;
+  code: number;
+  message: string;
+  data: {
+    response: PayoutsResponse;
+  };
+}
+
+interface PayoutsResponse {
+  docs: PayoutDoc[];
+  stats: {
+    total_processed_payouts?: number;
+    total_pending_payouts?: number;
+    total_failed_payouts?: number;
+  };
+  totalDocs: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number;
+  nextPage: number;
+}
+
+interface PayoutDoc {
+  withdrawal_id?: string | number;
+  creator_name?: string;
+  creator_image?: string;
+  creator_username?: string;
+  amount?: number;
+  status?: string;
+  date?: string;
+}
+
+export interface Payout {
+  id: string;
+  creator: {
+    name: string;
+    username: string;
+    avatar?: string;
+  };
+  amount: number;
+  status: "COMPLETED" | "FAILED" | "PROCESSING";
+  date: string;
+}
+
+export interface PayoutStats {
+  totalProcessed: number;
+  pendingPayouts: number;
+  failedPayouts: number;
+}
+
+export interface PayoutsPagination {
+  totalDocs: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number;
+  nextPage: number;
+}
+
+export interface PayoutsData {
+  payouts: Payout[];
+  stats: PayoutStats;
+  pagination: PayoutsPagination;
+}
+
+interface SellersStoreApiResponse {
+  error: boolean;
+  code: number;
+  message: string;
+  data: {
+    response: SellersStoreResponse;
+  };
+}
+
+interface SellersStoreResponse {
+  docs: SellerStoreDoc[];
+  totalDocs: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number;
+  nextPage: number;
+}
+
+interface SellerStoreDoc {
+  creator_id?: string | number;
+  name?: string;
+  image?: string;
+  username?: string;
+  no_of_live_products?: number;
+  total_earnings?: number;
+  platform_revenue?: number;
+  last_item_bought_date?: string;
+  seller_eligibility_status?: string;
+}
+
+export interface SellerStore {
+  id: string | number;
+  name: string;
+  username: string;
+  avatarUrl?: string;
+  role?: string;
+  status: "ACTIVE" | "SUSPENDED" | "PENDING" | "INACTIVE";
+  liveProducts: number | null;
+  totalEarnings: number;
+  platformRevenue: number;
+  lastActivity: string | null;
+  analytics?: {
+    totalOrders: number;
+    totalRevenue: number;
+    masterclassHosted: number;
+    hireRequests: number;
+    bestSellingProduct?: { name: string; image?: string };
+    unitsSold: number;
+    revenue: number;
+  };
+}
+
+export interface SellersStorePagination {
+  totalDocs: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number;
+  nextPage: number;
+}
+
+export interface SellersStoreData {
+  sellers: SellerStore[];
+  pagination: SellersStorePagination;
+}
+
+interface UpdateSellerEligibilityApiResponse {
+  error: boolean;
+  code: number;
+  message: string;
+  data: {
+    response: {
+      id: string | number;
+      full_name: string;
+      username: string;
+      image?: string;
+      seller_eligibility_status: string;
+    };
+  };
+}
+
+interface CreatorStoreApiResponse {
+  error: boolean;
+  code: number;
+  message: string;
+  data: {
+    response: CreatorStoreResponse;
+  };
+}
+
+interface CreatorStoreResponse {
+  creator: CreatorStoreCreatorPayload;
+  products: CreatorStoreProductsPayload;
+}
+
+interface CreatorStoreCreatorPayload {
+  creator_id?: string | number;
+  name?: string;
+  image?: string;
+  username?: string;
+  content_creator_type?: string;
+  subscription_plan?: string;
+  seller_eligibility_status?: string;
+}
+
+interface CreatorStoreProductsPayload {
+  docs: CreatorStoreProductDoc[];
+  totalDocs: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number;
+  nextPage: number;
+}
+
+interface CreatorStoreProductDoc {
+  id?: string | number;
+  name?: string;
+  image?: string;
+  type?: string;
+  price?: number;
+  unit_sold?: number;
+  uploaded_date?: string;
+}
+
+export interface CreatorStoreCreator {
+  id: string | number;
+  name: string;
+  username: string;
+  avatarUrl?: string;
+  contentCreatorType?: string;
+  subscriptionPlan?: string;
+  sellerEligibilityStatus?: string;
+  role: string;
+}
+
+export interface CreatorStoreProduct {
+  id: string | number;
+  name: string;
+  type: string;
+  price: number;
+  creator: string;
+  unitsSold: number | string;
+  uploadedDate: string;
+  previewImage?: string | null;
+  status?: "published" | "unpublished" | "suspended";
+}
+
+export interface CreatorStorePagination {
+  totalDocs: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number;
+  nextPage: number;
+}
+
+export interface CreatorStoreData {
+  creator: CreatorStoreCreator;
+  products: CreatorStoreProduct[];
+  pagination: CreatorStorePagination;
+}
+
+interface ProductCatalogueApiResponse {
+  error: boolean;
+  code: number;
+  message: string;
+  data: {
+    data?: ProductCatalogueResponse;
+    response?: ProductCatalogueResponse;
+  };
+}
+
+interface ProductCatalogueResponse {
+  docs: ProductCatalogueDoc[];
+  totalDocs: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number;
+  nextPage: number;
+}
+
+interface ProductCatalogueDoc {
+  id?: string | number;
+  image?: string;
+  name?: string;
+  type?: string;
+  price?: number;
+  status?: string;
+  creatorUsername?: string;
+  creatorId?: number;
+  createdAt?: string;
+}
+
+export interface ProductCatalogueItem {
+  id: string;
+  name: string;
+  productType: string;
+  price: number;
+  status: "LISTED" | "SUSPENDED";
+  creator: string;
+  date: string;
+  image?: string;
+}
+
+export interface ProductCataloguePagination {
+  totalDocs: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number;
+  nextPage: number;
+}
+
+export interface ProductCatalogueData {
+  products: ProductCatalogueItem[];
+  pagination: ProductCataloguePagination;
 }
