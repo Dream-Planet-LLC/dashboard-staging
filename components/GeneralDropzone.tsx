@@ -7,7 +7,7 @@ import LoadingState from "@/components/LoadingState";
 import { toast } from "@/hooks/use-toast";
 
 interface FileWithPreview {
-  preview: string;   // Cloudinary secure_url
+  preview: string;   // Will be real Cloudinary secure_url with fl_attachment
   name: string;
   size: number;
 }
@@ -15,8 +15,7 @@ interface FileWithPreview {
 export default function GeneralDropzone({
   className,
   setPostMediaFiles,
- postMediaFiles,
-
+  postMediaFiles,
 }: {
   className?: string;
   setPostMediaFiles: Dispatch<SetStateAction<FileWithPreview[]>>;
@@ -34,11 +33,11 @@ export default function GeneralDropzone({
         "upload_preset",
         process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""
       );
+      formData.append("resource_type", "raw");   // ← Critical for Excel, PDF, etc.
 
       try {
         const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`, 
-          // ← Important: /auto/upload instead of /upload
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/raw/upload`,
           {
             method: "POST",
             body: formData,
@@ -46,21 +45,29 @@ export default function GeneralDropzone({
         );
 
         if (!res.ok) {
-          const errorData = await res.json();
+          const errorData = await res.json().catch(() => ({}));
           throw new Error(errorData?.error?.message || "Upload failed");
         }
 
         const data = await res.json();
 
         if (data.secure_url) {
+          // Add fl_attachment so it ALWAYS downloads instead of opening in browser
+          let finalUrl = data.secure_url;
+          finalUrl += finalUrl.includes("?") ? "&fl_attachment" : "?fl_attachment";
+
           setPostMediaFiles((prevFiles) => [
             ...prevFiles,
             {
-              preview: data.secure_url,
+              preview: finalUrl,
               name: file.name,
               size: file.size,
             },
           ]);
+
+          toast({
+            description: `${file.name} uploaded successfully`,
+          });
         }
       } catch (error: any) {
         console.error(error);
@@ -76,20 +83,20 @@ export default function GeneralDropzone({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: undefined,                    // Accept ALL file types
-    maxSize: 1024 * 1024 * 1024,         // 1GB limit
+    maxSize: 1024 * 1024 * 1024,         // 1GB
     onDrop,
     onDropRejected: (fileRejections) => {
       setLoading(false);
-      fileRejections.forEach((file) => {
-        if (file.errors.some((err) => err.code === "file-too-large")) {
+      fileRejections.forEach((rejection) => {
+        if (rejection.errors.some((err) => err.code === "file-too-large")) {
           toast({
             variant: "destructive",
-            description: `File "${file.file.name}" is too large. Maximum size is 1GB.`,
+            description: `File "${rejection.file.name}" is too large (max 1GB)`,
           });
         } else {
           toast({
             variant: "destructive",
-            description: `File "${file.file.name}" was rejected.`,
+            description: `File "${rejection.file.name}" rejected`,
           });
         }
       });
@@ -106,10 +113,10 @@ export default function GeneralDropzone({
 
       {loading ? (
         <div className="py-4">
-          <LoadingState message="Uploading file..." />
+          <LoadingState message="Uploading file to Cloudinary..." />
         </div>
       ) : isDragActive ? (
-        <p className="text-[#808080]">Drop the files here ...</p>
+        <p className="text-[#808080]">Drop the file here ...</p>
       ) : (
         <div className="flex items-center flex-col">
           <Image

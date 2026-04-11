@@ -6,7 +6,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import { UserTable } from "@/components/UserTable";
 import { useRouter } from "next/navigation";
 import LoadingState from "@/components/LoadingState";
-import { fetchOverviewData } from "@/lib/api";
 
 import {
   buyIcon,
@@ -17,7 +16,9 @@ import {
   sellIcon,
 } from "@/svg";
 
+// ────────────────────────────────────────────────
 // Types
+// ────────────────────────────────────────────────
 interface Stat {
   title: string;
   value: string | number;
@@ -25,38 +26,15 @@ interface Stat {
   tooltip?: string;
 }
 
-interface LatestProduct {
-  id?: string | number;
-  name?: string;
-  type?: string;
-  price?: number;
-  creator?: string;
-  date?: string;
-  previewImage?: string | null;
-  mediaType?: "image" | "video" | "audio" | null;
-}
-
-interface Stats {
-  total_sales_revenue: number;
-  platform_revenue: number;
-  total_orders: number;
-  total_sellers: number;
-  total_buyers: number;
-  total_live_products: number;
-}
-
-interface OverviewResponse {
-  stats: Stats;
-  latest_10_products: LatestProduct[];
-}
-
-interface OverviewAPIResponse {
-  error: boolean;
-  code: number;
-  message: string;
-  data: {
-    response: OverviewResponse;
-  };
+interface RecentProduct {
+  id: string | number;
+  name: string;
+  type: string;
+  price: number;
+  creator: string;
+  date: string;
+  previewImage?: string | null; // ← added: URL from backend (or null/undefined)
+  mediaType?: "image" | "video" | "audio" | null; // optional – for future indicators
 }
 
 interface OverviewData {
@@ -66,9 +44,54 @@ interface OverviewData {
   sellers: number;
   buyers: number;
   liveProducts: number;
-  recentProducts: LatestProduct[];
+  recentProducts: RecentProduct[];
 }
 
+// ────────────────────────────────────────────────
+// Mock data – replace with real API fetch
+// ────────────────────────────────────────────────
+const mockData: OverviewData = {
+  salesRevenue: 232000,
+  platformRevenue: 5200,
+  orders: 1179,
+  sellers: 123,
+  buyers: 76,
+  liveProducts: 10300,
+  recentProducts: [
+    {
+      id: "1",
+      name: "Midnight Tour Dad Cap",
+      type: "Merchandise",
+      price: 20,
+      creator: "@eonvibes",
+      date: "19 Jan, 2026",
+      previewImage:
+        "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=150",
+    },
+    {
+      id: "2",
+      name: "Backstage Energy Hoodie",
+      type: "Merchandise",
+      price: 40,
+      creator: "@Echo_Rush",
+      date: "19 Jan, 2026",
+      previewImage:
+        "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=150",
+    },
+    {
+      id: "3",
+      name: "Studio Nights Vinyl LP",
+      type: "Audio",
+      price: 60,
+      creator: "@urbanflux LP",
+      date: "19 Jan, 2026",
+      previewImage:
+        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150",
+      mediaType: "audio",
+    },
+    // Add more with previewImage: null to test fallback
+  ],
+};
 
 const formatCurrency = (num: number) =>
   new Intl.NumberFormat("en-US", {
@@ -119,17 +142,20 @@ const Overview = () => {
   const router = useRouter();
 
   useEffect(() => {
-    // Fetch overview data from API
+    // Replace with your real API call
     const fetchOverview = async () => {
       try {
         setLoading(true);
-        const data = await fetchOverviewData();
-        setData(data);
+        // const res = await fetch("/api/admin/overview");
+        // const json = await res.json();
+        // setData(json);
+
+        setTimeout(() => {
+          setData(mockData);
+          setLoading(false);
+        }, 800);
       } catch (err) {
-        console.error("Failed to fetch overview data:", err);
-        // You might want to show an error message to the user here
-        // For now, we'll just set loading to false
-      } finally {
+        console.error(err);
         setLoading(false);
       }
     };
@@ -150,11 +176,13 @@ const Overview = () => {
       <div className="p-8 text-center text-[#808080]">No data available</div>
     );
 
+  // ────────────────────────────────────────────────
   // Stats
+  // ────────────────────────────────────────────────
   const stats: Stat[] = [
     {
       title: "Sales revenue",
-      value: formatCompactNumber(data.salesRevenue), // changed
+      value: formatCompactNumber(data.salesRevenue), // ← changed
       icon: salRevIcon,
     },
     {
@@ -187,7 +215,7 @@ const Overview = () => {
   // ────────────────────────────────────────────────
   // Table Columns
   // ────────────────────────────────────────────────
-  const columns: ColumnDef<LatestProduct>[] = [
+  const columns: ColumnDef<RecentProduct>[] = [
     {
       accessorKey: "name",
       header: "Product Name",
@@ -227,7 +255,7 @@ const Overview = () => {
             </div>
 
             <span className="font-medium text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
-              {row.getValue("name") || 'Unknown Product'}
+              {row.getValue("name")}
             </span>
           </div>
         );
@@ -238,7 +266,7 @@ const Overview = () => {
       header: "Product type",
       cell: ({ row }) => (
         <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.5%]">
-          {row.getValue("type") || 'Unknown'}
+          {row.getValue("type")}
         </div>
       ),
     },
@@ -247,7 +275,7 @@ const Overview = () => {
       header: "Price",
       cell: ({ row }) => (
         <span className="font-medium text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
-          {formatCurrency(row.getValue("price") || 0)}
+          {formatCurrency(row.getValue("price"))}
         </span>
       ),
     },
@@ -256,7 +284,7 @@ const Overview = () => {
       header: "Creator",
       cell: ({ row }) => (
         <span className=" text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.5%] hover:underline cursor-pointer">
-          {row.getValue("creator") || 'Unknown'}
+          {row.getValue("creator")}
         </span>
       ),
     },
@@ -265,7 +293,7 @@ const Overview = () => {
       header: "Date",
       cell: ({ row }) => (
         <span className=" text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.5%]">
-          {row.getValue("date") || 'Unknown'}
+          {row.getValue("date")}
         </span>
       ),
     },

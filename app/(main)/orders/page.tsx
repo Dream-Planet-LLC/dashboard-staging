@@ -14,134 +14,11 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, X } from "lucide-react";
 import Image from "next/image";
 import { Cdown, Cright } from "@/svg";
+import { fetchOrdersData, Order, OrdersPagination } from "@/lib/api";
 
 // ────────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────────
-interface OrderItem {
-  id: string;
-  name: string;
-  price: number;
-  creator: string;
-  status: "DELIVERED" | "PROCESSING" | "SHIPPED";
-  image?: string;
-  quantity: number;
-}
-
-interface Order {
-  id: string;
-  orderId: string;
-  amount: number;
-  numberOfStores: number;
-  status: string;
-  date: string;
-  items: OrderItem[];
-  
-  // Customer details for drawer
-  customer: {
-    name: string;
-    username: string;
-    avatar?: string;
-    tier: string;
-  };
-  shippingAddress: string;
-}
-
-// ────────────────────────────────────────────────
-// Mock Data
-// ────────────────────────────────────────────────
-const mockOrders: Order[] = [
-  {
-    id: "1",
-    orderId: "Order #54321",
-    amount: 8940,
-    numberOfStores: 3,
-    status: "3/5 delivered",
-    date: "19 Jan, 2026",
-    customer: {
-      name: "Randall Heathcote",
-      username: "@Randall",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-      tier: "Premium Fan",
-    },
-    shippingAddress: "742 Evergreen Terrace springfield, OR 97403 United States",
-    items: [
-      {
-        id: "1",
-        name: "Backstage Energy Hoodie",
-        price: 900,
-        creator: "@neonvibes",
-        status: "DELIVERED",
-        image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=100",
-        quantity: 1,
-      },
-      {
-        id: "2",
-        name: "Carbon Shield Carry Case",
-        price: 150,
-        creator: "@Echo_Rush",
-        status: "DELIVERED",
-        image: "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=100",
-        quantity: 1,
-      },
-      {
-        id: "3",
-        name: "Pro Audio Podcast",
-        price: 150,
-        creator: "@urbanflux",
-        status: "DELIVERED",
-        image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=100",
-        quantity: 1,
-      },
-    ],
-  },
-  {
-    id: "2",
-    orderId: "Order #54322",
-    amount: 8940,
-    numberOfStores: 3,
-    status: "1/3 delivered",
-    date: "19 Jan, 2026",
-    customer: {
-      name: "Randall Heathcote",
-      username: "@Randall",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-      tier: "Premium Fan",
-    },
-    shippingAddress: "742 Evergreen Terrace springfield, OR 97403 United States",
-    items: [
-      {
-        id: "1",
-        name: "Midnight Tour Dad Cap",
-        price: 2000,
-        creator: "@neonvibes",
-        status: "DELIVERED",
-        image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=100",
-        quantity: 1,
-      },
-      {
-        id: "2",
-        name: "Midnight Tour Dad...",
-        price: 3000,
-        creator: "@urbanflux",
-        status: "PROCESSING",
-        image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=100",
-        quantity: 1,
-      },
-      {
-        id: "3",
-        name: "Midnight Tour Dad...",
-        price: 3040,
-        creator: "@neoedisko",
-        status: "SHIPPED",
-        image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=100",
-        quantity: 1,
-      },
-    ],
-  },
- 
-];
-
 const formatCurrency = (num: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -150,6 +27,17 @@ const formatCurrency = (num: number) =>
     maximumFractionDigits: 0,
   }).format(num);
 
+const formatDate = (dateValue?: string) => {
+  if (!dateValue) return "Unknown";
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return dateValue;
+  return parsed.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 const OrdersPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -157,26 +45,29 @@ const OrdersPage = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 16;
-  const totalOrders = 12560;
+  const [pagination, setPagination] = useState<OrdersPagination | null>(null);
+  const pageSize = 20;
+  const totalOrders = pagination?.totalDocs || 0;
 
-  // Simulate API fetch with loading
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-        setOrders(mockOrders);
-        setLoading(false);
+        const data = await fetchOrdersData(currentPage, pageSize);
+        setOrders(data.orders);
+        setPagination(data.pagination);
+        setExpandedOrders(new Set());
       } catch (err) {
         console.error(err);
+        setOrders([]);
+        setPagination(null);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchOrders();
-  }, []);
+  }, [currentPage, pageSize]);
 
   const handleToggleExpand = (orderId: string) => {
     setExpandedOrders((prev) => {
@@ -197,17 +88,28 @@ const OrdersPage = () => {
 
   // Calculate totals
   const calculateOrderTotals = (order: Order) => {
+    if (order.paymentSummary) {
+      return {
+        itemsTotal: order.paymentSummary.subtotal,
+        shipping: order.paymentSummary.shippingFee,
+        total: order.paymentSummary.totalPaid,
+      };
+    }
     const itemsTotal = order.items.reduce(
       (sum, item) => sum + item.price * item.quantity,
-      0
+      0,
     );
-    const shipping = 123849;
+    const shipping = 0;
     const total = itemsTotal + shipping;
     return { itemsTotal, shipping, total };
   };
 
-  const showingStart = (currentPage - 1) * pageSize + 1;
-  const showingEnd = Math.min(showingStart + pageSize - 1, totalOrders);
+  const showingStart =
+    totalOrders === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const showingEnd =
+    totalOrders === 0
+      ? 0
+      : Math.min(showingStart + pageSize - 1, totalOrders);
 
   if (loading) {
     return (
@@ -303,7 +205,7 @@ const OrdersPage = () => {
                   </td>
                   <td className="py-4 px-4">
                     <span className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-                      {order.date}
+                      {formatDate(order.date)}
                     </span>
                   </td>
                   <td className="py-4 px-4 text-right">
@@ -345,7 +247,7 @@ const OrdersPage = () => {
                       </td>
                       <td className="py-3 px-4">
                         <span className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-                          {formatCurrency(item.price)}
+                      {formatCurrency(item.price)}
                         </span>
                       </td>
                       <td className="py-3 px-4">
@@ -377,7 +279,7 @@ const OrdersPage = () => {
 
                         <td className="py-3 px-4" colSpan={2}>
                         <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-                      {order.date}
+                      {formatDate(order.date)}
                     </span>
                       </td>
 
@@ -398,8 +300,8 @@ const OrdersPage = () => {
           <Button
             variant="outline"
             size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={!pagination?.hasPrevPage}
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
           >
             <Image
               src="/icons/backbutton.svg"
@@ -411,8 +313,8 @@ const OrdersPage = () => {
           <Button
             variant="outline"
             size="sm"
-            disabled={showingEnd >= totalOrders}
-            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={!pagination?.hasNextPage}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
           >
             <Image
               src="/icons/forwardbutton.svg"
@@ -473,7 +375,7 @@ const OrdersPage = () => {
                       Shipping Address
                     </h4>
                     <p className="text-[#111810] INT400 text-[14px] leading-[20px] tracking-[-1.8%] mt-[20px]">
-                      {selectedOrder.shippingAddress}
+                      {selectedOrder.shippingAddress || "N/A"}
                     </p>
                   </div>
 
@@ -528,7 +430,7 @@ const OrdersPage = () => {
                         </span>
                         <span className="text-[#111810] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]">
                           {formatCurrency(
-                            calculateOrderTotals(selectedOrder).itemsTotal
+                            calculateOrderTotals(selectedOrder).itemsTotal,
                           )}
                         </span>
                       </div>
@@ -537,7 +439,9 @@ const OrdersPage = () => {
                           Shipping
                         </span>
                         <span className="text-[#111810] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]">
-                          {formatCurrency(123849)}
+                          {formatCurrency(
+                            calculateOrderTotals(selectedOrder).shipping,
+                          )}
                         </span>
                       </div>
                       <div className="pt-[16px] mt-[20px] border-t border-[#E4E4E4] flex justify-between">
@@ -546,7 +450,7 @@ const OrdersPage = () => {
                         </span>
                         <span className="text-[#111810] INT500 font-medium text-[16px] leading-[24px] tracking-[-1.5%]">
                           {formatCurrency(
-                            calculateOrderTotals(selectedOrder).total
+                            calculateOrderTotals(selectedOrder).total,
                           )}
                         </span>
                       </div>

@@ -55,6 +55,15 @@ const useLogin = () => {
         })
       );
 
+      const token =
+        response?.data?.response?.token ??
+        response?.data?.token ??
+        response?.data?.response?.access_token ??
+        response?.data?.access_token;
+      if (token && typeof window !== "undefined") {
+        localStorage.setItem("auth_token", token);
+      }
+
       // dispatch(updateUser(response?.data?.response?.admin));
       router.push("/");
     } catch (error: any) {

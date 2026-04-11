@@ -45,16 +45,15 @@ const CreateChallenge = () => {
 
 const router = useRouter();
 
-  // Auto set link ONLY from Post Media
-  useEffect(() => {
-    if (postMediaFiles.length > 0) {
-      setLink(postMediaFiles[0].preview);
-      console.log("✅ Link set from Post Media:", postMediaFiles[0].preview); // ← Debug
-    } else {
-      setLink("");
-      console.log("❌ Post Media cleared, link reset");
-    }
-  }, [postMediaFiles]);
+
+useEffect(() => {
+  if (postMediaFiles.length > 0) {
+    setLink(postMediaFiles[0].preview);   
+    console.log("✅ Link set from Post Media:", postMediaFiles[0].preview);
+  } else {
+    setLink("");
+  }
+}, [postMediaFiles]);
 
   const removeFile = (fileName: string) => {
     setFiles((prev) => prev.filter((f) => f.name !== fileName));
@@ -219,7 +218,7 @@ const router = useRouter();
           </div> */}
 
           <div>
-            <p className="text-[#10002E] text-[14px] font-medium mb-1">Post Media (Any File)</p>
+            <p className="text-[#10002E] text-[14px] font-medium mb-1">Challenge Material</p>
             
          <GeneralDropzone
               postMediaFiles={postMediaFiles}
