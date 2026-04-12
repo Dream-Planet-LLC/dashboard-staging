@@ -71,6 +71,88 @@ export const fetchOverviewData = async (): Promise<OverviewData> => {
   }
 };
 
+// Buyer Insight Overview API
+export const fetchBuyerInsightOverview = async (): Promise<BuyerInsightData> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+    const url = `${API_BASE_URL}/admin/get-buyer-insight-overview`;
+    const headers = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      "Content-Type": "application/json",
+    };
+
+    const postResponse = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({}),
+    });
+    const response =
+      postResponse.status === 404 || postResponse.status === 405
+        ? await fetch(url, { method: "GET", headers })
+        : postResponse;
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: BuyerInsightApiResponse = await response.json();
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const payload =
+      apiResponse?.data?.response ?? apiResponse?.response ?? apiResponse?.data;
+    if (!payload) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    const stats = payload.stats || {};
+    const retention = payload.buyer_retention || {};
+    const topEngaging = Array.isArray(payload.top_engaging_buyers)
+      ? payload.top_engaging_buyers
+      : [];
+
+    return {
+      stats: {
+        totalFans: stats.total_fans || 0,
+        activeBuyers: stats.total_active_buyers || 0,
+        dormantBuyers: stats.total_dormant_buyers || 0,
+        buyerGrowth: 0,
+        buyerGrowthChange: 0,
+        buyerRetention: {
+          repeat: retention.total_repeat_buyers || 0,
+          oneTime: retention.total_one_time_buyers || 0,
+        },
+      },
+      topBuyers: topEngaging.map((buyer: BuyerInsightTopBuyer, index: number) => {
+        const rawUsername = buyer.username || "";
+        const username =
+          rawUsername.length > 0
+            ? rawUsername.startsWith("@")
+              ? rawUsername
+              : `@${rawUsername}`
+            : "@unknown";
+        return {
+          id: buyer.buyer_id ? String(buyer.buyer_id) : String(index + 1),
+          fan: {
+            name: buyer.name || "Unknown Buyer",
+            username,
+            avatar: buyer.image || undefined,
+          },
+          totalSpent: buyer.total_spent || 0,
+          lastPurchase: buyer.last_purchase_date || "",
+        };
+      }),
+    };
+  } catch (error) {
+    console.error("Error fetching buyer insight overview:", error);
+    throw error;
+  }
+};
+
 // Orders API
 export const fetchOrdersData = async (
   page: number,
@@ -173,6 +255,27 @@ export const fetchOrdersData = async (
               totalPaid: doc.payment_summary.total_paid || 0,
             }
           : undefined,
+        orderFees: doc.order?.order_fees
+          ? {
+              fees: Array.isArray(doc.order.order_fees.fees)
+                ? doc.order.order_fees.fees.map((fee: OrderFeeItem) => ({
+                    name: fee.name || "Fee",
+                    price: fee.price || 0,
+                  }))
+                : [],
+              subTotal: doc.order.order_fees.sub_total || 0,
+              userTotal: doc.order.order_fees.user_total || 0,
+              serviceFee: doc.order.order_fees.service_fee || 0,
+              shippingFee:
+                doc.order.order_fees.shipping_fee ||
+                doc.order.shipping_fee ||
+                0,
+              originalTotal: doc.order.order_fees.original_total || 0,
+              cashbackDeductedTotal:
+                doc.order.order_fees.cashback_deducted_total || 0,
+            }
+          : undefined,
+        orderTotalAmount: doc.order?.total_amount || undefined,
       };
     });
 
@@ -398,6 +501,65 @@ export const fetchSellersStoreData = async (
   }
 };
 
+export const fetchCreatorAnalytics = async (
+  creatorId: string | number,
+): Promise<CreatorAnalytics> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+    const response = await fetch(`${API_BASE_URL}/admin/get-creators-analytics`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ creator_id: creatorId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: CreatorAnalyticsApiResponse = await response.json();
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const payload =
+      apiResponse?.data?.response ??
+      apiResponse?.response ??
+      apiResponse?.data;
+    if (!payload) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    return {
+      creatorName: payload.creator_name || "",
+      username: payload.username || "",
+      image: payload.image || undefined,
+      statistics: {
+        totalOrders: payload.statistics?.total_orders || 0,
+        totalRevenue: payload.statistics?.total_revenue || 0,
+        totalMasterclassHosted:
+          payload.statistics?.total_master_class_hosted || 0,
+        totalHireRequest: payload.statistics?.total_hire_request || 0,
+      },
+      bestSellingProduct: payload.best_selling_product
+        ? {
+            image: payload.best_selling_product.image || undefined,
+            quantitySold: payload.best_selling_product.quantity_sold || 0,
+            totalRevenue: payload.best_selling_product.total_revenue || 0,
+          }
+        : undefined,
+    };
+  } catch (error) {
+    console.error("Error fetching creator analytics:", error);
+    throw error;
+  }
+};
+
 export const updateSellerEligibilityStatus = async (
   creatorId: string | number,
   sellerEligibilityStatus: string,
@@ -530,6 +692,7 @@ export const fetchCreatorStoreDetails = async (
             typeof doc.unit_sold === "number" ? doc.unit_sold : 0,
           uploadedDate: doc.uploaded_date || "",
           previewImage: doc.image || null,
+          status: doc.status || undefined,
         };
       },
     );
@@ -648,6 +811,239 @@ export const fetchProductCatalogueData = async (
   }
 };
 
+// Featured Sections API
+export const createFeaturedSection = async (payload: {
+  name: string;
+  productIds: Array<string | number>;
+  promotionEnabled: boolean;
+  promotionPercentage: number;
+}): Promise<FeaturedSectionResponse> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+    const response = await fetch(`${API_BASE_URL}/store/admin/create-sections`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: payload.name,
+        product_ids: payload.productIds,
+        promotion_enabled: payload.promotionEnabled,
+        promotion_percentage: payload.promotionPercentage,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: FeaturedSectionApiResponse = await response.json();
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const section =
+      apiResponse?.data?.data ??
+      apiResponse?.data?.response ??
+      apiResponse?.response ??
+      apiResponse?.data;
+    if (!section) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    return {
+      id: section.id,
+      name: section.name,
+      promotionEnabled: Boolean(section.promotion_enabled),
+      promotionPercentage: section.promotion_percentage || 0,
+      itemsCount: section.items_count || 0,
+    };
+  } catch (error) {
+    console.error("Error creating featured section:", error);
+    throw error;
+  }
+};
+
+export const deleteStoreItem = async (
+  itemId: string | number,
+): Promise<void> => {
+  try {
+    const resolvedId =
+      typeof itemId === "string" && itemId.trim() !== "" && !Number.isNaN(Number(itemId))
+        ? Number(itemId)
+        : itemId;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+    const response = await fetch(`${API_BASE_URL}/admin/delete-store-item`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: resolvedId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: DeleteStoreItemApiResponse = await response.json();
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+  } catch (error) {
+    console.error("Error deleting store item:", error);
+    throw error;
+  }
+};
+
+export const updateStoreItemStatus = async (
+  itemId: string | number,
+  status: "suspended" | "active",
+): Promise<void> => {
+  try {
+    const resolvedId =
+      typeof itemId === "string" && itemId.trim() !== "" && !Number.isNaN(Number(itemId))
+        ? Number(itemId)
+        : itemId;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+    const response = await fetch(`${API_BASE_URL}/admin/items/update-status`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ item_id: resolvedId, status }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: UpdateStoreItemStatusApiResponse =
+      await response.json();
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+  } catch (error) {
+    console.error("Error updating store item status:", error);
+    throw error;
+  }
+};
+
+// Buyer Purchase Reference API
+export const fetchBuyerPurchaseReference = async (): Promise<BuyerPurchaseReferenceData> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
+    const url = `${API_BASE_URL}/admin/buyer-purchase-reference`;
+    const headers = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      "Content-Type": "application/json",
+    };
+
+    const postResponse = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({}),
+    });
+    const response =
+      postResponse.status === 404 || postResponse.status === 405
+        ? await fetch(url, { method: "GET", headers })
+        : postResponse;
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: BuyerPurchaseReferenceApiResponse = await response.json();
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const payload =
+      apiResponse?.data?.response ??
+      apiResponse?.data?.data ??
+      apiResponse?.response ??
+      apiResponse?.data;
+    if (!payload) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    // Color mapping for categories
+    const getColorForCategory = (category: string): string => {
+      const colors: Record<string, string> = {
+        audio: "#2CAB5B",
+        video: "#DD3B83",
+        podcast: "#249D92",
+        ebook: "#EB6723",
+        masterclass: "#884CED",
+        merchandise: "#CE941C",
+        tickets: "#3971EB",
+        hire: "#063D90",
+      };
+      return colors[category.toLowerCase()] || "#A8A8A8";
+    };
+
+    // Transform categories data
+    const categoriesPayload = Array.isArray(payload.categories)
+      ? payload.categories
+      : [];
+    const categories = categoriesPayload.map(
+      (cat: BuyerPurchaseReferenceCategory) => {
+        const rawCategory = (cat.category || "Unknown").toString();
+        const name =
+          rawCategory.length > 0
+            ? rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1)
+            : "Unknown";
+        return {
+          name,
+          units: Number(cat.total_quantity_sold) || 0,
+          orders: Number(cat.total_orders) || 0,
+          amountMade: Number(cat.total_amount_made) || 0,
+          color: getColorForCategory(rawCategory),
+        };
+      },
+    );
+
+    // Transform revenue shares
+    const revenueShares = categoriesPayload.map(
+      (cat: BuyerPurchaseReferenceCategory) => {
+        const rawCategory = (cat.category || "Unknown").toString();
+        const category =
+          rawCategory.length > 0
+            ? rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1)
+            : "Unknown";
+        return {
+          category,
+          percentage: Number(cat.percentage_of_total_revenue) || 0,
+          color: getColorForCategory(rawCategory),
+        };
+      },
+    );
+
+    return {
+      totalRevenue: Number(payload.total_gross_revenue) || 0,
+      categories,
+      revenueShares,
+    };
+  } catch (error) {
+    console.error("Error fetching buyer purchase reference:", error);
+    throw error;
+  }
+};
+
 // Types for API responses
 interface Stats {
   total_sales_revenue: number;
@@ -681,6 +1077,59 @@ interface OverviewAPIResponse {
   data: {
     response: OverviewResponse;
   };
+}
+
+interface BuyerInsightApiResponse {
+  error: boolean;
+  code: number;
+  message: string;
+  data: {
+    response: {
+      stats?: {
+        total_fans?: number;
+        total_active_buyers?: number;
+        total_dormant_buyers?: number;
+      };
+      buyer_retention?: {
+        total_repeat_buyers?: number;
+        total_one_time_buyers?: number;
+      };
+      top_engaging_buyers?: BuyerInsightTopBuyer[];
+    };
+  };
+}
+
+interface BuyerInsightTopBuyer {
+  buyer_id?: number | string;
+  name?: string;
+  username?: string;
+  image?: string | null;
+  total_spent?: number;
+  last_purchase_date?: string;
+}
+
+export interface BuyerInsightData {
+  stats: {
+    totalFans: number;
+    activeBuyers: number;
+    dormantBuyers: number;
+    buyerGrowth: number;
+    buyerGrowthChange: number;
+    buyerRetention: {
+      repeat: number;
+      oneTime: number;
+    };
+  };
+  topBuyers: {
+    id: string;
+    fan: {
+      name: string;
+      username: string;
+      avatar?: string;
+    };
+    totalSpent: number;
+    lastPurchase: string;
+  }[];
 }
 
 interface OverviewData {
@@ -736,6 +1185,19 @@ interface OrdersDoc {
     shipping_fee?: number;
     total_paid?: number;
   };
+  order?: {
+    shipping_fee?: number;
+    total_amount?: number;
+    order_fees?: {
+      fees?: OrderFeeItem[];
+      sub_total?: number;
+      user_total?: number;
+      service_fee?: number;
+      shipping_fee?: number;
+      original_total?: number;
+      cashback_deducted_total?: number;
+    };
+  };
 }
 
 interface OrdersItem {
@@ -747,6 +1209,11 @@ interface OrdersItem {
   status?: string;
   date_ordered?: string;
   quantity?: number;
+}
+
+interface OrderFeeItem {
+  name?: string;
+  price?: number;
 }
 
 export interface OrderItem {
@@ -779,6 +1246,16 @@ export interface Order {
     shippingFee: number;
     totalPaid: number;
   };
+  orderFees?: {
+    fees: Array<{ name: string; price: number }>;
+    subTotal: number;
+    userTotal: number;
+    serviceFee: number;
+    shippingFee: number;
+    originalTotal: number;
+    cashbackDeductedTotal: number;
+  };
+  orderTotalAmount?: number;
 }
 
 export interface OrdersPagination {
@@ -874,6 +1351,47 @@ interface SellersStoreApiResponse {
   message: string;
   data: {
     response: SellersStoreResponse;
+  };
+}
+
+interface CreatorAnalyticsApiResponse {
+  error: boolean;
+  code: number;
+  message: string;
+  data: {
+    response: {
+      creator_name?: string;
+      username?: string;
+      image?: string;
+      statistics?: {
+        total_orders?: number;
+        total_revenue?: number;
+        total_master_class_hosted?: number;
+        total_hire_request?: number;
+      };
+      best_selling_product?: {
+        image?: string;
+        quantity_sold?: number;
+        total_revenue?: number;
+      };
+    };
+  };
+}
+
+export interface CreatorAnalytics {
+  creatorName: string;
+  username: string;
+  image?: string;
+  statistics: {
+    totalOrders: number;
+    totalRevenue: number;
+    totalMasterclassHosted: number;
+    totalHireRequest: number;
+  };
+  bestSellingProduct?: {
+    image?: string;
+    quantitySold: number;
+    totalRevenue: number;
   };
 }
 
@@ -998,6 +1516,7 @@ interface CreatorStoreProductDoc {
   price?: number;
   unit_sold?: number;
   uploaded_date?: string;
+  status?: string;
 }
 
 export interface CreatorStoreCreator {
@@ -1099,4 +1618,98 @@ export interface ProductCataloguePagination {
 export interface ProductCatalogueData {
   products: ProductCatalogueItem[];
   pagination: ProductCataloguePagination;
+}
+
+interface FeaturedSectionApiResponse {
+  error: boolean;
+  code: number;
+  message: string;
+  data: {
+    data?: {
+      id: number;
+      name: string;
+      promotion_enabled: boolean;
+      promotion_percentage: number;
+      items_count: number;
+    };
+    response?: {
+      id: number;
+      name: string;
+      promotion_enabled: boolean;
+      promotion_percentage: number;
+      items_count: number;
+    };
+  };
+}
+
+export interface FeaturedSectionResponse {
+  id: number;
+  name: string;
+  promotionEnabled: boolean;
+  promotionPercentage: number;
+  itemsCount: number;
+}
+
+interface DeleteStoreItemApiResponse {
+  error: boolean;
+  code: number;
+  message: string;
+  data: {
+    response: {
+      deleted: boolean;
+      id: number | string;
+    };
+  };
+}
+
+interface UpdateStoreItemStatusApiResponse {
+  error: boolean;
+  code: number;
+  message: string;
+  data: {
+    response: {
+      id: number | string;
+      status: string;
+      updatedAt?: string;
+    };
+  };
+}
+
+// Buyer Purchase Reference API
+interface BuyerPurchaseReferenceApiResponse {
+  error: boolean;
+  code: number;
+  message: string;
+  data: {
+    response: BuyerPurchaseReferenceResponse;
+  };
+}
+
+interface BuyerPurchaseReferenceResponse {
+  total_gross_revenue: number;
+  categories: BuyerPurchaseReferenceCategory[];
+}
+
+interface BuyerPurchaseReferenceCategory {
+  category: string;
+  total_orders: number;
+  total_quantity_sold: number;
+  total_amount_made: number;
+  percentage_of_total_revenue: number;
+}
+
+export interface BuyerPurchaseReferenceData {
+  totalRevenue: number;
+  categories: {
+    name: string;
+    units: number;
+    orders: number;
+    amountMade: number;
+    color: string;
+  }[];
+  revenueShares: {
+    category: string;
+    percentage: number;
+    color: string;
+  }[];
 }

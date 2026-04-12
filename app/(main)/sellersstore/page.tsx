@@ -61,6 +61,7 @@ import {
   SellerStore,
   SellersStorePagination,
   updateSellerEligibilityStatus,
+  fetchCreatorAnalytics,
 } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
@@ -115,22 +116,32 @@ const SellersStore = () => {
       setAnalyticsLoading(true);
       setAnalyticsData(null);
 
-      // Simulate API delay (replace with real fetch)
-      const timer = setTimeout(() => {
-        // Mock analytics response
-        setAnalyticsData({
-          totalOrders: 123,
-          totalRevenue: 10300,
-          masterclassHosted: 10300,
-          hireRequests: 10300,
-          bestSellingProduct: { name: "Premium Beat Pack", image: undefined },
-          unitsSold: 7687,
-          revenue: 123849,
-        });
-        setAnalyticsLoading(false);
-      }, 1200);
+      const loadAnalytics = async () => {
+        try {
+          const analytics = await fetchCreatorAnalytics(selectedSeller.id);
+          setAnalyticsData({
+            totalOrders: analytics.statistics.totalOrders,
+            totalRevenue: analytics.statistics.totalRevenue,
+            masterclassHosted: analytics.statistics.totalMasterclassHosted,
+            hireRequests: analytics.statistics.totalHireRequest,
+            bestSellingProduct: {
+              name: "Best Selling Product",
+              image: analytics.bestSellingProduct?.image,
+            },
+            unitsSold: analytics.bestSellingProduct?.quantitySold || 0,
+            revenue: analytics.bestSellingProduct?.totalRevenue || 0,
+          });
+        } catch (error) {
+          toast({
+            variant: "destructive",
+            title: "Failed to load analytics",
+          });
+        } finally {
+          setAnalyticsLoading(false);
+        }
+      };
 
-      return () => clearTimeout(timer);
+      loadAnalytics();
     }
   }, [drawerOpen, selectedSeller]);
 

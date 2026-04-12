@@ -3,54 +3,11 @@
 import LoadingState from "@/components/LoadingState";
 import { refreshIcon } from "@/svg";
 import { useState, useEffect } from "react";
+import { fetchBuyerPurchaseReference, BuyerPurchaseReferenceData } from "@/lib/api";
 
 // ────────────────────────────────────────────────
-// Types
+// Types (using imported types from API)
 // ────────────────────────────────────────────────
-interface CategoryData {
-  name: string;
-  units: number;
-  color: string;
-}
-
-interface RevenueShare {
-  category: string;
-  percentage: number;
-  color: string;
-}
-
-interface PurchasePreferenceData {
-  categories: CategoryData[];
-  revenueShares: RevenueShare[];
-  totalRevenue: number;
-}
-
-// ────────────────────────────────────────────────
-// Mock Data
-// ────────────────────────────────────────────────
-const mockData: PurchasePreferenceData = {
-  totalRevenue: 4200000,
-  categories: [
-    { name: "Audio", units: 1200000, color: "#2CAB5B" },
-    { name: "Video", units: 900000, color: "#DD3B83" },
-    { name: "Podcast", units: 650000, color: "#249D92" },
-    { name: "E-book", units: 500000, color: "#EB6723" },
-    { name: "Masterclass", units: 350000, color: "#884CED" },
-    { name: "Merchandise", units: 250000, color: "#CE941C" },
-    { name: "Tickets", units: 220000, color: "#3971EB" },
-    { name: "Hire me", units: 130000, color: "#063D90" },
-  ],
-  revenueShares: [
-    { category: "Audio", percentage: 32.4, color: "#2CAB5B" },
-    { category: "Masterclass", percentage: 18.7, color: "#884CED" },
-    { category: "Merchandise", percentage: 13.5, color: "#CE941C" },
-    { category: "E-book", percentage: 9.8, color: "#EB6723" },
-    { category: "Video", percentage: 8.1, color: "#DD3B83" },
-    { category: "Podcast", percentage: 6.9, color: "#249D92" },
-    { category: "Tickets", percentage: 5.4, color: "#3971EB" },
-    { category: "Hire me", percentage: 5.2, color: "#063D90" },
-  ],
-};
 
 const formatCompactNumber = (num: number): string => {
   if (num === 0) return "0";
@@ -72,19 +29,22 @@ const formatCompactNumber = (num: number): string => {
 };
 
 const PurchasePreferencePage = () => {
-  const [data, setData] = useState<PurchasePreferenceData | null>(null);
+  const [data, setData] = useState<BuyerPurchaseReferenceData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Simulate API fetch
+  // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setData(mockData);
+        setError(null);
+        const result = await fetchBuyerPurchaseReference();
+        setData(result);
         setLoading(false);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching buyer purchase reference:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch data");
         setLoading(false);
       }
     };
@@ -96,6 +56,22 @@ const PurchasePreferencePage = () => {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading purchase preferences..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }

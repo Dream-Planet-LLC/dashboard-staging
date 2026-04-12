@@ -25,6 +25,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { CalendarIcon, PeopleIcon, refreshIcon, TooltipLine } from "@/svg";
+import { fetchBuyerInsightOverview } from "@/lib/api";
 
 // ────────────────────────────────────────────────
 // Types
@@ -68,18 +69,6 @@ type TimePeriod =
 // ────────────────────────────────────────────────
 // Mock Data
 // ────────────────────────────────────────────────
-const mockStats: BuyerStats = {
-  totalFans: 232000,
-  activeBuyers: 5200,
-  dormantBuyers: 10300,
-  buyerGrowth: 18.4,
-  buyerGrowthChange: 2.1,
-  buyerRetention: {
-    repeat: 1950000,
-    oneTime: 550000,
-  },
-};
-
 // Chart data for different time periods
 const chartDataByPeriod: Record<TimePeriod, ChartDataPoint[]> = {
   "This Week": [
@@ -131,42 +120,6 @@ const chartDataByPeriod: Record<TimePeriod, ChartDataPoint[]> = {
   Custom: [],
 };
 
-const mockTopBuyers: TopBuyer[] = [
-  {
-    id: "1",
-    fan: {
-      name: "Alex Morgan",
-      username: "@neonbyte",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-    },
-    totalSpent: 1320567,
-    lastPurchase: "19 Jan, 2026",
-  },
-  {
-    id: "2",
-    fan: {
-      name: "Alex Morgan",
-      username: "@neonbyte",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-    },
-    totalSpent: 1320567,
-    lastPurchase: "19 Jan, 2026",
-  },
-  {
-    id: "3",
-    fan: {
-      name: "Alex Morgan",
-      username: "@neonbyte",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-    },
-    totalSpent: 1320567,
-    lastPurchase: "19 Jan, 2026",
-  },
-];
-
 const formatCurrency = (num: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -194,6 +147,17 @@ const formatCompactNumber = (num: number): string => {
   }
 };
 
+const formatDateLabel = (value: string) => {
+  if (!value) return "-";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 const BuyersPage = () => {
   const [stats, setStats] = useState<BuyerStats | null>(null);
   const [topBuyers, setTopBuyers] = useState<TopBuyer[]>([]);
@@ -205,18 +169,34 @@ const BuyersPage = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
-  // Simulate API fetch
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setStats(mockStats);
-        setTopBuyers(mockTopBuyers);
+        const insight = await fetchBuyerInsightOverview();
+        setStats(insight.stats);
+        setTopBuyers(
+          insight.topBuyers.map((buyer) => ({
+            ...buyer,
+            lastPurchase: formatDateLabel(buyer.lastPurchase),
+          })),
+        );
         setChartData(chartDataByPeriod[timePeriod]);
         setLoading(false);
       } catch (err) {
         console.error(err);
+        setStats({
+          totalFans: 0,
+          activeBuyers: 0,
+          dormantBuyers: 0,
+          buyerGrowth: 0,
+          buyerGrowthChange: 0,
+          buyerRetention: {
+            repeat: 0,
+            oneTime: 0,
+          },
+        });
+        setTopBuyers([]);
         setLoading(false);
       }
     };
@@ -358,9 +338,13 @@ const BuyersPage = () => {
   const totalRetention =
     (stats?.buyerRetention.repeat || 0) + (stats?.buyerRetention.oneTime || 0);
   const repeatPercentage =
-    ((stats?.buyerRetention.repeat || 0) / totalRetention) * 100;
+    totalRetention > 0
+      ? ((stats?.buyerRetention.repeat || 0) / totalRetention) * 100
+      : 0;
   const oneTimePercentage =
-    ((stats?.buyerRetention.oneTime || 0) / totalRetention) * 100;
+    totalRetention > 0
+      ? ((stats?.buyerRetention.oneTime || 0) / totalRetention) * 100
+      : 0;
 
   return (
     <div className="space-y-8 pb-10">

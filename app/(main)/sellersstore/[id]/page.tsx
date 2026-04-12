@@ -9,6 +9,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   EllipsisVertical,
@@ -31,7 +40,10 @@ import {
   CreatorStoreCreator,
   CreatorStoreProduct,
   CreatorStorePagination,
+  deleteStoreItem,
+  updateStoreItemStatus,
 } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 
 // ────────────────────────────────────────────────
 const formatCurrency = (num: number) =>
@@ -73,6 +85,13 @@ const SellerStorePage = () => {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [currentPage, setCurrentPage] = useState(1);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    "delete" | "suspend" | "activate" | null
+  >(null);
+  const [confirmProduct, setConfirmProduct] =
+    useState<CreatorStoreProduct | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
   const pageSize = 20;
   const router = useRouter();
   const params = useParams();
@@ -84,36 +103,81 @@ const SellerStorePage = () => {
         : Number(creatorIdParam)
       : creatorIdParam || "";
 
-  useEffect(() => {
-    const fetchSellerStore = async () => {
-      try {
-        setLoading(true);
-        if (!creatorId) {
-          setCreator(null);
-          setProducts([]);
-          setPagination(null);
-          return;
-        }
-        const data = await fetchCreatorStoreDetails(
-          creatorId,
-          currentPage,
-          pageSize,
-        );
-        setCreator(data.creator);
-        setProducts(data.products);
-        setPagination(data.pagination);
-      } catch (err) {
-        console.error(err);
+  const fetchSellerStore = async () => {
+    try {
+      setLoading(true);
+      if (!creatorId) {
         setCreator(null);
         setProducts([]);
         setPagination(null);
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
+      const data = await fetchCreatorStoreDetails(
+        creatorId,
+        currentPage,
+        pageSize,
+      );
+      setCreator(data.creator);
+      setProducts(data.products);
+      setPagination(data.pagination);
+    } catch (err) {
+      console.error(err);
+      setCreator(null);
+      setProducts([]);
+      setPagination(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchSellerStore();
   }, [creatorId, currentPage, pageSize]);
+
+  const openConfirm = (
+    action: "delete" | "suspend" | "activate",
+    product?: CreatorStoreProduct,
+  ) => {
+    setConfirmAction(action);
+    setConfirmProduct(product || null);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmAction) return;
+    setConfirmLoading(true);
+    try {
+      if (confirmAction === "delete" && confirmProduct) {
+        await deleteStoreItem(confirmProduct.id);
+        toast({ variant: "default", title: "Item deleted" });
+      }
+      if (confirmAction === "suspend" && confirmProduct) {
+        await updateStoreItemStatus(confirmProduct.id, "suspended");
+        toast({ variant: "default", title: "Item suspended" });
+      }
+      if (confirmAction === "activate" && confirmProduct) {
+        await updateStoreItemStatus(confirmProduct.id, "active");
+        toast({ variant: "default", title: "Item activated" });
+      }
+      await fetchSellerStore();
+      setConfirmOpen(false);
+      setConfirmAction(null);
+      setConfirmProduct(null);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title:
+          confirmAction === "delete"
+            ? "Failed to delete item"
+            : confirmAction === "activate"
+              ? "Failed to activate item"
+              : "Failed to suspend item",
+        description: error instanceof Error ? error.message : undefined,
+      });
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -201,39 +265,58 @@ const SellerStorePage = () => {
     {
       id: "actions",
       header: "",
-      cell: () => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <EllipsisVertical className="h-4 w-4 text-[#5B5B5B]" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 space-y-3">
-            <DropdownMenuItem className="flex items-center gap-2 text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium">
-              <EyeOff className="h-4 w-4" />
-              Unpublish
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2 text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium">
-              {whiteProIcon}
-              View Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2 text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium">
-              <Ban className="h-4 w-4" />   
-              Suspend
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2 text-[#C83532] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium">
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
+      cell: ({ row }) => {
+        const product = row.original;
+        const isSuspended =
+          (product.status || "").toString().toLowerCase() === "suspended";
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <EllipsisVertical className="h-4 w-4 text-[#5B5B5B]" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 space-y-3">
+              <DropdownMenuItem className="flex items-center gap-2 text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium">
+                <EyeOff className="h-4 w-4" />
+                Unpublish
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-2 text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium">
+                {whiteProIcon}
+                View Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-2 text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium">
+                <Ban className="h-4 w-4" />
+                <button
+                  type="button"
+                  onClick={() =>
+                    openConfirm(isSuspended ? "activate" : "suspend", product)
+                  }
+                >
+                  {isSuspended ? "Activate" : "Suspend"}
+                </button>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-2 text-[#C83532] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium">
+                <Trash2 className="h-4 w-4" />
+                <button
+                  type="button"
+                  onClick={() => openConfirm("delete", product)}
+                >
+                  Delete
+                </button>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
   ];
 
   const ProductCard = ({ product }: { product: CreatorStoreProduct }) => {
     const hasPreview =
       product.previewImage && product.previewImage.trim() !== "";
+    const isSuspended =
+      (product.status || "").toString().toLowerCase() === "suspended";
 
     return (
       <div className="bg-white border border-[#EDEDED] w-[256px] rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -280,11 +363,23 @@ const SellerStorePage = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex items-center gap-2  text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
                     <Ban className="h-4 w-4" />
-                    Suspend
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openConfirm(isSuspended ? "activate" : "suspend", product)
+                      }
+                    >
+                      {isSuspended ? "Activate" : "Suspend"}
+                    </button>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex items-center gap-2 text-[#C83532] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
                     <Trash2 className="h-4 w-4" />
-                    Delete
+                    <button
+                      type="button"
+                      onClick={() => openConfirm("delete", product)}
+                    >
+                      Delete
+                    </button>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -474,6 +569,58 @@ const SellerStorePage = () => {
           </Button> */}
         </div>
       </div>
+
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          setConfirmOpen(open);
+          if (!open) {
+            setConfirmAction(null);
+            setConfirmProduct(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmAction === "delete"
+                ? "Delete item?"
+                : confirmAction === "activate"
+                  ? "Activate item?"
+                  : "Suspend item?"}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmAction === "delete"
+                ? confirmProduct
+                  ? `This will remove ${confirmProduct.name} from the store.`
+                  : "This will remove this item from the store."
+                : confirmAction === "activate"
+                  ? "This will make the item visible again in the store."
+                  : "This will hide the item from the store."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-end">
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              onClick={handleConfirmAction}
+              disabled={confirmLoading}
+              className={
+                confirmAction === "activate"
+                  ? "bg-[#111810] hover:bg-[#111810]"
+                  : "bg-[#C83532] hover:bg-[#C83532]"
+              }
+            >
+              {confirmAction === "delete"
+                ? "Delete"
+                : confirmAction === "activate"
+                  ? "Activate"
+                  : "Suspend"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -33,6 +33,8 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import Image from "next/image";
+import { createFeaturedSection } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 
 
 interface FeaturedProduct {
@@ -425,37 +427,56 @@ const FeaturedProductsPage = () => {
   };
 
   const handleCreate = async () => {
-    console.log("Creating/Updating category:", {
-      category: selectedCategory,
-      promotion: promotionToggle,
-      promoPercentage: promoPercentage,
-      products: selectedProducts,
-    });
+    const trimmedCategory = (selectedCategory || categoryInput).trim();
+    if (!trimmedCategory) {
+      toast({
+        variant: "destructive",
+        title: "Category name is required",
+      });
+      return;
+    }
 
-    // TODO: API call to backend
-    // const payload = {
-    //   category: selectedCategory,
-    //   productIds: selectedProducts.map(p => p.id),
-    //   productOrder: Object.fromEntries(selectedProducts.map(p => [p.id, p.order])),
-    //   promotionEnabled: promotionToggle,
-    //   promotionPercentage: promotionToggle ? parseFloat(promoPercentage) : undefined,
-    // };
+    const productIds = selectedProducts
+      .map((p) => {
+        const asNumber = Number(p.id);
+        return Number.isNaN(asNumber) ? p.id : asNumber;
+      })
+      .filter((id) => id !== "" && id !== null && id !== undefined);
 
-    // if (isEditMode) {
-    //   await fetch(`/api/featured-category/${encodeURIComponent(selectedCategory)}`, {
-    //     method: 'PUT',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(payload),
-    //   });
-    // } else {
-    //   await fetch('/api/featured-category', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(payload),
-    //   });
-    // }
+    if (productIds.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Select at least one product",
+      });
+      return;
+    }
 
-    setMainDrawerOpen(false);
+    const parsedPromo = parseFloat(promoPercentage);
+    const promotionPercentage = promotionToggle && !Number.isNaN(parsedPromo)
+      ? parsedPromo
+      : 0;
+
+    try {
+      await createFeaturedSection({
+        name: trimmedCategory,
+        productIds,
+        promotionEnabled: promotionToggle,
+        promotionPercentage,
+      });
+      toast({
+        variant: "default",
+        title: isEditMode ? "Section updated" : "Section created",
+      });
+      if (!existingCategories.includes(trimmedCategory)) {
+        setExistingCategories((prev) => [trimmedCategory, ...prev]);
+      }
+      setMainDrawerOpen(false);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to save section",
+      });
+    }
   };
 
   const handleDeleteCategory = async () => {

@@ -86,22 +86,16 @@ const OrdersPage = () => {
     setDrawerOpen(true);
   };
 
-  // Calculate totals
-  const calculateOrderTotals = (order: Order) => {
-    if (order.paymentSummary) {
-      return {
-        itemsTotal: order.paymentSummary.subtotal,
-        shipping: order.paymentSummary.shippingFee,
-        total: order.paymentSummary.totalPaid,
-      };
-    }
-    const itemsTotal = order.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0,
-    );
-    const shipping = 0;
-    const total = itemsTotal + shipping;
-    return { itemsTotal, shipping, total };
+  const getPaymentSummary = (order: Order) => {
+    const fees = order.orderFees?.fees || [];
+    const subtotal = order.paymentSummary?.subtotal ?? 0;
+    const shipping = order.paymentSummary?.shippingFee ?? 0;
+    const totalPaid =
+      order.paymentSummary?.totalPaid ??
+      order.orderFees?.userTotal ??
+      order.orderTotalAmount ??
+      0;
+    return { fees, subtotal, shipping, totalPaid };
   };
 
   const showingStart =
@@ -424,33 +418,48 @@ const OrdersPage = () => {
                       Payment Summary
                     </h4>
                     <div className="space-y-3 py-[20px]">
-                      <div className="flex justify-between">
-                        <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-                          Total Items ({selectedOrder.items.length})
-                        </span>
-                        <span className="text-[#111810] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]">
-                          {formatCurrency(
-                            calculateOrderTotals(selectedOrder).itemsTotal,
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-                          Shipping
-                        </span>
-                        <span className="text-[#111810] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]">
-                          {formatCurrency(
-                            calculateOrderTotals(selectedOrder).shipping,
-                          )}
-                        </span>
-                      </div>
+                      {getPaymentSummary(selectedOrder).fees.length > 0 ? (
+                        getPaymentSummary(selectedOrder).fees.map((fee, idx) => (
+                          <div key={idx} className="flex justify-between">
+                            <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                              {fee.name}
+                            </span>
+                            <span className="text-[#111810] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]">
+                              {formatCurrency(fee.price)}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                              Subtotal
+                            </span>
+                            <span className="text-[#111810] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]">
+                              {formatCurrency(
+                                getPaymentSummary(selectedOrder).subtotal,
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                              Shipping
+                            </span>
+                            <span className="text-[#111810] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]">
+                              {formatCurrency(
+                                getPaymentSummary(selectedOrder).shipping,
+                              )}
+                            </span>
+                          </div>
+                        </>
+                      )}
                       <div className="pt-[16px] mt-[20px] border-t border-[#E4E4E4] flex justify-between">
                         <span className="text-[#111810] INT500 font-medium text-[16px] leading-[24px] tracking-[-1.5%]">
                           Total Paid
                         </span>
                         <span className="text-[#111810] INT500 font-medium text-[16px] leading-[24px] tracking-[-1.5%]">
                           {formatCurrency(
-                            calculateOrderTotals(selectedOrder).total,
+                            getPaymentSummary(selectedOrder).totalPaid,
                           )}
                         </span>
                       </div>
