@@ -104,7 +104,7 @@ export const fetchBuyerInsightOverview = async (): Promise<BuyerInsightData> => 
     }
 
     const payload =
-      apiResponse?.data?.response ?? apiResponse?.response ?? apiResponse?.data;
+      apiResponse?.data?.response ?? apiResponse?.response ?? apiResponse?.data;      
     if (!payload) {
       throw new Error("Unexpected API response shape");
     }
@@ -207,7 +207,10 @@ export const fetchOrdersData = async (
               : `@${item.creator_username}`
             : "Unknown";
           return {
-            id: item.id || `${orderIdValue}-${itemIndex}`,
+            id:
+              item.id !== undefined && item.id !== null
+                ? String(item.id)
+                : `${orderIdValue}-${itemIndex}`,
             name: item.name || "Unknown Item",
             price: item.amount || 0,
             creator,
@@ -683,6 +686,13 @@ export const fetchCreatorStoreDetails = async (
           rawType.length > 0
             ? rawType.charAt(0).toUpperCase() + rawType.slice(1)
             : "Unknown";
+        const rawStatus = (doc.status || "").toString().toLowerCase();
+        const normalizedStatus =
+          rawStatus === "published" ||
+          rawStatus === "unpublished" ||
+          rawStatus === "suspended"
+            ? (rawStatus as CreatorStoreProduct["status"])
+            : undefined;
         return {
           id: doc.id ?? index + 1,
           name: doc.name || "Unknown Product",
@@ -693,7 +703,7 @@ export const fetchCreatorStoreDetails = async (
             typeof doc.unit_sold === "number" ? doc.unit_sold : 0,
           uploadedDate: doc.uploaded_date || "",
           previewImage: doc.image || null,
-          status: doc.status || undefined,
+          status: normalizedStatus,
         };
       },
     );
@@ -758,11 +768,17 @@ export const fetchProductCatalogueData = async (
       throw new Error(apiResponse.message || "API returned an error");
     }
 
-    const payload =
+    const rawPayload =
       apiResponse?.data?.data ??
       apiResponse?.data?.response ??
       apiResponse?.response ??
       apiResponse?.data;
+    const payload =
+      rawPayload &&
+      typeof rawPayload === "object" &&
+      Array.isArray((rawPayload as ProductCatalogueResponse).docs)
+        ? (rawPayload as ProductCatalogueResponse)
+        : undefined;
     if (!payload) {
       throw new Error("Unexpected API response shape");
     }
@@ -812,62 +828,6 @@ export const fetchProductCatalogueData = async (
   }
 };
 
-// Featured Sections API
-export const createFeaturedSection = async (payload: {
-  name: string;
-  productIds: Array<string | number>;
-  promotionEnabled: boolean;
-  promotionPercentage: number;
-}): Promise<FeaturedSectionResponse> => {
-  try {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
-    const response = await fetch(`${API_BASE_URL}/store/admin/create-sections`, {
-      method: "POST",
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: payload.name,
-        product_ids: payload.productIds,
-        promotion_enabled: payload.promotionEnabled,
-        promotion_percentage: payload.promotionPercentage,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const apiResponse: FeaturedSectionApiResponse = await response.json();
-    if (apiResponse.error) {
-      throw new Error(apiResponse.message || "API returned an error");
-    }
-
-    const section =
-      apiResponse?.data?.data ??
-      apiResponse?.data?.response ??
-      apiResponse?.response ??
-      apiResponse?.data;
-    if (!section) {
-      throw new Error("Unexpected API response shape");
-    }
-
-    return {
-      id: section.id,
-      name: section.name,
-      promotionEnabled: Boolean(section.promotion_enabled),
-      promotionPercentage: section.promotion_percentage || 0,
-      itemsCount: section.items_count || 0,
-    };
-  } catch (error) {
-    console.error("Error creating featured section:", error);
-    throw error;
-  }
-};
 
 export const deleteStoreItem = async (
   itemId: string | number,
@@ -1075,9 +1035,10 @@ interface OverviewAPIResponse {
   error: boolean;
   code: number;
   message: string;
-  data: {
-    response: OverviewResponse;
+  data?: OverviewResponse & {
+    response?: OverviewResponse;
   };
+  response?: OverviewResponse;
 }
 
 interface BuyerInsightApiResponse {
@@ -1098,6 +1059,7 @@ interface BuyerInsightApiResponse {
       top_engaging_buyers?: BuyerInsightTopBuyer[];
     };
   };
+  response?: BuyerInsightApiResponse
 }
 
 interface BuyerInsightTopBuyer {
@@ -1150,6 +1112,7 @@ interface OrdersApiResponse {
   data: {
     response: OrdersResponse;
   };
+  response?: OrdersResponse;
 }
 
 interface OrdersResponse {
@@ -1283,6 +1246,7 @@ interface PayoutsApiResponse {
   data: {
     response: PayoutsResponse;
   };
+  response?: PayoutsResponse;
 }
 
 interface PayoutsResponse {
@@ -1354,6 +1318,8 @@ interface SellersStoreApiResponse {
   data: {
     response: SellersStoreResponse;
   };
+
+  response?: SellersStoreResponse;
 }
 
 interface CreatorAnalyticsApiResponse {
@@ -1378,6 +1344,7 @@ interface CreatorAnalyticsApiResponse {
       };
     };
   };
+  response?:CreatorAnalyticsApiResponse;
 }
 
 export interface CreatorAnalytics {
@@ -1481,6 +1448,7 @@ interface CreatorStoreApiResponse {
   data: {
     response: CreatorStoreResponse;
   };
+  response?:CreatorStoreResponse
 }
 
 interface CreatorStoreResponse {
@@ -1569,7 +1537,7 @@ interface ProductCatalogueApiResponse {
     data?: ProductCatalogueResponse;
     response?: ProductCatalogueResponse;
   };
-  
+  response?: ProductCatalogueResponse;
 }
 
 interface ProductCatalogueResponse {
@@ -1601,7 +1569,7 @@ export interface ProductCatalogueItem {
   name: string;
   productType: string;
   price: number;
-  status: "LISTED" | "SUSPENDED";
+  status:string
   creator: string;
   date: string;
   image?: string;
@@ -1643,6 +1611,7 @@ interface FeaturedSectionApiResponse {
       items_count: number;
     };
   };
+  response?: FeaturedSectionResponse;
 }
 
 export interface FeaturedSectionResponse {
@@ -1684,8 +1653,10 @@ interface BuyerPurchaseReferenceApiResponse {
   code: number;
   message: string;
   data: {
+    data:any
     response: BuyerPurchaseReferenceResponse;
   };
+  response?:BuyerPurchaseReferenceApiResponse
 }
 
 interface BuyerPurchaseReferenceResponse {

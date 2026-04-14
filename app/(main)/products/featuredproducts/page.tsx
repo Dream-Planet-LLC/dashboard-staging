@@ -32,8 +32,8 @@ import {
   Check,
   Image as ImageIcon,
 } from "lucide-react";
-import Image from "next/image";
-import { createFeaturedSection } from "@/lib/api";
+// import Image from "next/image";
+// import { createFeaturedSection } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
 
@@ -457,12 +457,12 @@ const FeaturedProductsPage = () => {
       : 0;
 
     try {
-      await createFeaturedSection({
-        name: trimmedCategory,
-        productIds,
-        promotionEnabled: promotionToggle,
-        promotionPercentage,
-      });
+      // await createFeaturedSection({
+      //   name: trimmedCategory,
+      //   productIds,
+      //   promotionEnabled: promotionToggle,
+      //   promotionPercentage,
+      // });
       toast({
         variant: "default",
         title: isEditMode ? "Section updated" : "Section created",

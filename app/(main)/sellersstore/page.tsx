@@ -392,6 +392,7 @@ const SellersStore = () => {
               </DropdownMenuItem>
               {seller.status === "SUSPENDED" && (
                 <DropdownMenuItem className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#2BAC47]">
+                  <User className="h-4 w-4" />
                   <button type="button" onClick={() => openConfirm(seller, "activate")}>
                     Activate
                   </button>
