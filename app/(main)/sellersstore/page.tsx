@@ -82,6 +82,8 @@ const formatDate = (dateValue?: string | null) => {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -776,6 +778,7 @@ const SellersStore = () => {
             <Button
               onClick={handleConfirmAction}
               disabled={confirmLoading}
+              loading={confirmLoading}
               className={
                 confirmAction === "suspend"
                   ? "bg-[#C83532] hover:bg-[#C83532]"

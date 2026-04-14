@@ -62,6 +62,8 @@ const formatDate = (dateValue?: string | null) => {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -113,7 +115,7 @@ const SellerStorePage = () => {
         return;
       }
       const data = await fetchCreatorStoreDetails(
-        creatorId,
+        creatorId as any,
         currentPage,
         pageSize,
       );

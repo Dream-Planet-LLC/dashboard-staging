@@ -31,8 +31,15 @@ const useLogin = () => {
 
       console.log(response, "login response");
 
-      const adminData = response?.data?.response?.admin;
-      const rawFeatures = response.data.response.role?.features || [];
+      const payload =
+        response?.data?.data?.response ??
+        response?.data?.response ??
+        response?.data;
+      const adminData = payload?.admin || {};
+      const role = payload?.role || response?.data?.role || {};
+      const rawFeatures = Array.isArray(role?.features)
+        ? role.features
+        : [];
 
       // If user has "full_access" → give them EVERY permission available
       const permissions = rawFeatures.includes("full_access")
@@ -44,21 +51,21 @@ const useLogin = () => {
             .filter(Boolean);
 
       if (permissions.length === 0) {
-        permissions.push("/");
+        permissions.push(...Object.values(NAV_PERMISSIONS));
       }
 
       dispatch(
         updateUser({
           ...adminData,
-          role: response.data.response.role,
+          role,
           permissions,
         })
       );
 
       const token =
-        response?.data?.response?.token ??
+        payload?.token ??
+        payload?.access_token ??
         response?.data?.token ??
-        response?.data?.response?.access_token ??
         response?.data?.access_token;
       if (token && typeof window !== "undefined") {
         localStorage.setItem("auth_token", token);

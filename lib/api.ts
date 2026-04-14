@@ -54,14 +54,14 @@ export const fetchOverviewData = async (): Promise<OverviewData> => {
       sellers: stats.total_sellers || 0,
       buyers: stats.total_buyers || 0,
       liveProducts: stats.total_live_products || 0,
-      recentProducts: latest_10_products.map((product) => ({
+      recentProducts: latest_10_products.map((product:any) => ({
         id: product.id || "",
-        name: product.name || "Unknown Product",
+        name: product.title || "Unknown Product",
         type: product.type || "Unknown",
         price: product.price || 0,
-        creator: product.creator || "Unknown",
-        date: product.date || new Date().toISOString(),
-        previewImage: product.previewImage || null,
+        creator: product.creator_name || "Unknown",
+        date: product.createdAt || new Date().toISOString(),
+        previewImage: product.creator_image || null,
         mediaType: product.mediaType || null,
       })),
     };
@@ -230,6 +230,10 @@ export const fetchOrdersData = async (
         : "Unknown";
       const tier = buyer.subscription_type || "Unknown";
 
+      const address = doc.shipping_address || (doc?.shipping_info as any);
+      const add = address?.delivery_address?.formatted_address || "N/A";
+    
+
       return {
         id: String(orderIdValue),
         orderId: `Order #${orderIdValue}`,
@@ -244,10 +248,7 @@ export const fetchOrdersData = async (
           avatar: buyer.image || undefined,
           tier,
         },
-        shippingAddress:
-          typeof doc.shipping_address === "string"
-            ? doc.shipping_address
-            : "N/A",
+        shippingAddress:add,
         paymentSummary: doc.payment_summary
           ? {
               subtotal: doc.payment_summary.subtotal || 0,
@@ -770,7 +771,7 @@ export const fetchProductCatalogueData = async (
     const products: ProductCatalogueItem[] = docs.map(
       (doc: ProductCatalogueDoc, index: number) => {
         const rawStatus = (doc.status || "").toString().toLowerCase();
-        const status = rawStatus === "live" ? "LISTED" : "SUSPENDED";
+        const status = rawStatus //=== "live" ? "LISTED" : "SUSPENDED";
         const type = doc.type
           ? doc.type.charAt(0).toUpperCase() + doc.type.slice(1)
           : "Unknown";
@@ -1178,7 +1179,8 @@ interface OrdersDoc {
     subscription_type?: string;
     verification_type?: string;
   };
-  shipping_address?: string | Record<string, unknown>;
+  shipping_address?: any;
+  shipping_info?: any;
   items?: OrdersItem[];
   payment_summary?: {
     subtotal?: number;
@@ -1567,6 +1569,7 @@ interface ProductCatalogueApiResponse {
     data?: ProductCatalogueResponse;
     response?: ProductCatalogueResponse;
   };
+  
 }
 
 interface ProductCatalogueResponse {

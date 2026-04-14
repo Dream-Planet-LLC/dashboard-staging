@@ -59,6 +59,8 @@ const formatDate = (dateValue?: string) => {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -203,7 +205,12 @@ const ProductCataloguePage = () => {
       header: "Status",
       cell: ({ row }) => {
         const status = row.getValue("status") as string;
-        const bgColor = status === "LISTED" ? "bg-[#2BAC47]" : "bg-[#C83532]";
+        const bgColor =
+          status.toLowerCase() === "listed"
+            ? "bg-[#2BAC47]"
+            : status.toLowerCase() === "suspended"
+            ? "bg-[#C83532]"
+            : "bg-[#eaeaea]";
 
         return (
           <div

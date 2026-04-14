@@ -18,7 +18,10 @@ export default function ProtectedRoute({ children, feature }: Props) {
   const router = useRouter();
 
   const requiredPermission = NAV_PERMISSIONS[feature];
-  const hasAccess = permissions.includes(requiredPermission);
+  const hasAccess =
+    permissions.includes(NAV_PERMISSIONS.full_access) ||
+    permissions.includes("full_access") ||
+    permissions.includes(requiredPermission);
 
   useEffect(() => {
     if (!hasAccess) {

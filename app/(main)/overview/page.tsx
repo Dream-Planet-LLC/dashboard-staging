@@ -101,6 +101,17 @@ const formatCompactNumber = (num: number): string => {
   }
 };
 
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 // Small helper for fallback when no image
 const getTypeInitial = (type: string) => {
   const map: Record<string, string> = {
@@ -124,6 +135,8 @@ const Overview = () => {
       try {
         setLoading(true);
         const data = await fetchOverviewData();
+        console.log(data,"pop")
+      
         setData(data);
       } catch (err) {
         console.error("Failed to fetch overview data:", err);
@@ -193,6 +206,8 @@ const Overview = () => {
       header: "Product Name",
       cell: ({ row }) => {
         const product = row.original;
+        console.log(product);
+        console.log(row.getValue("name"));
         const hasPreview =
           product.previewImage && product.previewImage.trim() !== "";
 
@@ -214,7 +229,7 @@ const Overview = () => {
                 />
               ) : (
                 <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
-                  {getTypeInitial(product.type)}
+                  {getTypeInitial(product.type || "Unknown")}
                 </div>
               )}
 
@@ -265,7 +280,7 @@ const Overview = () => {
       header: "Date",
       cell: ({ row }) => (
         <span className=" text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.5%]">
-          {row.getValue("date") || 'Unknown'}
+          {formatDate(row.getValue("date") || 'Unknown')}
         </span>
       ),
     },

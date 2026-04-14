@@ -31,7 +31,13 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
 
   const hasPermission = (featureName: string) => {
     const required = NAV_PERMISSIONS[featureName];
-    return permissions.includes(required);
+    if (
+      permissions.includes(NAV_PERMISSIONS.full_access) ||
+      permissions.includes("full_access")
+    ) {
+      return true;
+    }
+    return required ? permissions.includes(required) : false;
   };
 
   const visibleLinks = NavLinks.filter((item: any) => {
