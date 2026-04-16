@@ -2,6 +2,7 @@
 
 import LoadingState from "@/components/LoadingState";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { UserTable } from "@/components/UserTable";
 
@@ -18,6 +19,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +39,7 @@ import {
   UserCheck,
   Trash2,
   MoreHorizontal,
+  Ban,
 } from "lucide-react";
 import {
   ListIcon,
@@ -40,7 +51,10 @@ import {
   fetchProductCatalogueData,
   ProductCatalogueItem,
   ProductCataloguePagination,
+  deleteStoreItem,
+  updateStoreItemStatus,
 } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 
 // ────────────────────────────────────────────────
 const formatCurrency = (num: number) =>
@@ -65,6 +79,7 @@ const formatDate = (dateValue?: string) => {
 };
 
 const ProductCataloguePage = () => {
+  const router = useRouter();
   const [products, setProducts] = useState<ProductCatalogueItem[]>([]);
   const [pagination, setPagination] = useState<ProductCataloguePagination | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,6 +88,12 @@ const ProductCataloguePage = () => {
   const [productTypeFilter, setProductTypeFilter] = useState("All Products");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [currentPage, setCurrentPage] = useState(1);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    "delete" | "suspend" | "activate" | null
+  >(null);
+  const [confirmProduct, setConfirmProduct] = useState<ProductCatalogueItem | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
   const pageSize = 10;
   const totalProducts = pagination?.totalDocs || 0;
 
@@ -121,8 +142,11 @@ const ProductCataloguePage = () => {
   };
 
   const handleViewStore = (productId: string) => {
-    console.log("View store for product:", productId);
-    // Navigate to store
+    // Find the product to get the creator/seller ID
+    const product = products.find(p => p.id === productId);
+    if (product && product.creatorId) {
+      router.push(`/sellersstore/${product.creatorId}`);
+    }
   };
 
   const handleViewProfile = (productId: string) => {
@@ -130,14 +154,67 @@ const ProductCataloguePage = () => {
     // Navigate to profile
   };
 
-  const handleActivate = (productId: string) => {
-    console.log("Activate product:", productId);
-    // API call to activate
+  const openConfirm = (
+    action: "delete" | "suspend" | "activate",
+    product?: ProductCatalogueItem,
+  ) => {
+    setConfirmAction(action);
+    setConfirmProduct(product || null);
+    setConfirmOpen(true);
   };
 
-  const handleDelete = (productId: string) => {
-    console.log("Delete product:", productId);
-    // API call to delete
+  const handleConfirmAction = async () => {
+    if (!confirmAction || !confirmProduct) return;
+    setConfirmLoading(true);
+    try {
+      if (confirmAction === "delete") {
+        await deleteStoreItem(confirmProduct.id);
+        toast({ variant: "default", title: "Item deleted" });
+      }
+      if (confirmAction === "suspend") {
+        await updateStoreItemStatus(confirmProduct.id, "suspended");
+        toast({ variant: "default", title: "Item suspended" });
+      }
+      if (confirmAction === "activate") {
+        await updateStoreItemStatus(confirmProduct.id, "listed");
+        toast({ variant: "default", title: "Item activated" });
+      }
+      // Refetch products
+      const trimmedSearch = searchQuery.trim();
+      const statusValue =
+        statusFilter === "All Status"
+          ? undefined
+          : statusFilter === "LISTED"
+          ? "live"
+          : "suspended";
+      const typeValue =
+        productTypeFilter === "All Products"
+          ? undefined
+          : productTypeFilter.toLowerCase();
+      const data = await fetchProductCatalogueData(currentPage, pageSize, {
+        status: statusValue,
+        type: typeValue,
+        searchString: trimmedSearch || undefined,
+      });
+      setProducts(data.products);
+      setPagination(data.pagination);
+      setConfirmOpen(false);
+      setConfirmAction(null);
+      setConfirmProduct(null);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title:
+          confirmAction === "delete"
+            ? "Failed to delete item"
+            : confirmAction === "activate"
+              ? "Failed to activate item"
+              : "Failed to suspend item",
+        description: error instanceof Error ? error.message : undefined,
+      });
+    } finally {
+      setConfirmLoading(false);
+    }
   };
 
   // Table columns
@@ -257,6 +334,8 @@ const ProductCataloguePage = () => {
       header: "",
       cell: ({ row }) => {
         const product = row.original;
+        const isSuspended =
+          (product.status || "").toString().toLowerCase() === "suspended";
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -286,15 +365,25 @@ const ProductCataloguePage = () => {
                 <User className="h-4 w-4" />
                 View Profile
               </DropdownMenuItem>
+              {isSuspended ? (
+                <DropdownMenuItem
+                  onClick={() => openConfirm("activate", product)}
+                  className="flex items-center gap-2 text-[#2BAC47] INT500 text-[14px] cursor-pointer"
+                >
+                  <UserCheck className="h-4 w-4" />
+                  Activate
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={() => openConfirm("suspend", product)}
+                  className="flex items-center gap-2 text-[#C83532] INT500 text-[14px] cursor-pointer"
+                >
+                  <Ban className="h-4 w-4" />
+                  Suspend
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
-                onClick={() => handleActivate(product.id)}
-                className="flex items-center gap-2 text-[#373737] INT500 text-[14px] cursor-pointer"
-              >
-                <UserCheck className="h-4 w-4" />
-                Activate
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleDelete(product.id)}
+                onClick={() => openConfirm("delete", product)}
                 className="flex items-center gap-2 text-[#C83532] INT500 text-[14px] cursor-pointer"
               >
                 <Trash2 className="h-4 w-4" />
@@ -311,6 +400,8 @@ const ProductCataloguePage = () => {
   const renderProductCard = (product: ProductCatalogueItem) => {
     const statusBgColor =
       product.status === "LISTED" ? "bg-[#2BAC47]" : "bg-[#C83532]";
+    const isSuspended =
+      (product.status || "").toString().toLowerCase() === "suspended";
 
     return (
       <div className="bg-white rounded-lg border border-[#F1F1F1] overflow-hidden md:w-[256px] w-full">
@@ -381,15 +472,25 @@ const ProductCataloguePage = () => {
                   <User className="h-4 w-4" />
                   View Profile
                 </DropdownMenuItem>
+                {isSuspended ? (
+                  <DropdownMenuItem
+                    onClick={() => openConfirm("activate", product)}
+                    className="flex items-center gap-2 text-[#2BAC47] INT500 text-[14px] cursor-pointer"
+                  >
+                    <UserCheck className="h-4 w-4" />
+                    Activate
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => openConfirm("suspend", product)}
+                    className="flex items-center gap-2 text-[#C83532] INT500 text-[14px] cursor-pointer"
+                  >
+                    <Ban className="h-4 w-4" />
+                    Suspend
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
-                  onClick={() => handleActivate(product.id)}
-                  className="flex items-center gap-2 text-[#373737] INT500 text-[14px] cursor-pointer"
-                >
-                  <UserCheck className="h-4 w-4" />
-                  Activate
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleDelete(product.id)}
+                  onClick={() => openConfirm("delete", product)}
                   className="flex items-center gap-2 text-[#C83532] INT500 text-[14px] cursor-pointer"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -600,6 +701,57 @@ const ProductCataloguePage = () => {
           </Button> */}
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={(open) => {
+        setConfirmOpen(open);
+        if (!open) {
+          setConfirmAction(null);
+          setConfirmProduct(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmAction === "delete"
+                ? "Delete item?"
+                : confirmAction === "activate"
+                  ? "Activate item?"
+                  : "Suspend item?"}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmAction === "delete"
+                ? confirmProduct
+                  ? `This will remove ${confirmProduct.name} from the store.`
+                  : "This will remove this item from the store."
+                : confirmAction === "activate"
+                  ? "This will make the item visible again in the store."
+                  : "This will hide the item from the store."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-end">
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              onClick={handleConfirmAction}
+              disabled={confirmLoading}
+              loading={confirmLoading}
+              className={
+                confirmAction === "activate"
+                  ? "bg-[#2BAC47] hover:bg-[#2BAC47]"
+                  : "bg-[#C83532] hover:bg-[#C83532]"
+              }
+            >
+              {confirmAction === "delete"
+                ? "Delete"
+                : confirmAction === "activate"
+                  ? "Activate"
+                  : "Suspend"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -803,6 +803,7 @@ export const fetchProductCatalogueData = async (
           price: doc.price || 0,
           status,
           creator,
+          creatorId: doc.creatorId,
           date: doc.createdAt || "",
           image: doc.image || undefined,
         };
@@ -866,7 +867,7 @@ export const deleteStoreItem = async (
 
 export const updateStoreItemStatus = async (
   itemId: string | number,
-  status: "suspended" | "active",
+  status: "suspended" | "active" | "listed",
 ): Promise<void> => {
   try {
     const resolvedId =
@@ -1571,6 +1572,7 @@ export interface ProductCatalogueItem {
   price: number;
   status:string
   creator: string;
+  creatorId: number | undefined;
   date: string;
   image?: string;
 }

@@ -236,6 +236,8 @@ const handleInvestorCountryChange = (value: string) => {
 
   const openSheet = () => setIsSheetOpen(true);
   const closeSheet = async() => {setIsSheetOpen(false);
+
+    
     // await getUsersAll(null);
     if(statusFilter === 'all') {
       const status = selectedStatus === "all" ? null : selectedStatus;

@@ -11,6 +11,15 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -108,6 +117,8 @@ const SellersStore = () => {
   >(null);
   const [confirmSeller, setConfirmSeller] = useState<SellerStore | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
+  const [profileData, setProfileData] = useState<any>({});
   const pageSize = 20;
   const totalSellers = pagination?.totalDocs || 0;
   const router = useRouter();
@@ -229,6 +240,33 @@ const SellersStore = () => {
     setConfirmSeller(seller);
     setConfirmAction(action);
     setConfirmOpen(true);
+  };
+
+  const openProfileSheet = (seller: SellerStore) => {
+    // Transform seller data to match profile data structure
+    const transformedProfileData = {
+      id: seller.id,
+      name: seller.name,
+      username: seller.username,
+      full_name: seller.name,
+      email: `${seller.username.replace('@', '')}@dreamplanet.org`, // Placeholder email
+      phone_number: "Not provided",
+      country: "Not provided",
+      image: seller.avatarUrl,
+      status: seller.status.toLowerCase(),
+      createdAt: new Date().toISOString(), // Placeholder
+      verification_type: seller.role || "Creator",
+      noOfMembers: "0", // Placeholder
+      noOfPosts: "0", // Placeholder
+      noOfInvestor: "0", // Placeholder
+      interested_creators: "0", // Placeholder
+    };
+    setProfileData(transformedProfileData);
+    setIsProfileSheetOpen(true);
+  };
+
+  const closeProfileSheet = () => {
+    setIsProfileSheetOpen(false);
   };
 
   const handleConfirmAction = async () => {
@@ -386,7 +424,10 @@ const SellersStore = () => {
                 </DropdownMenuItem>
               )}
 
-              <DropdownMenuItem className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#373737]">
+              <DropdownMenuItem 
+                className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#373737]"
+                onClick={() => openProfileSheet(seller)}
+              >
                 {whiteProIcon}
                 View Profile
               </DropdownMenuItem>
@@ -791,6 +832,143 @@ const SellersStore = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Profile Sheet */}
+      <Sheet open={isProfileSheetOpen} onOpenChange={closeProfileSheet}>
+        <SheetContent className="sm:max-w-[519px] overflow-y-auto scrollbar-hide">
+          <SheetHeader>
+            <SheetTitle className="flex justify-between">
+              <p className="text-[#111810] font-medium text-[20px]">
+                User Details
+              </p>
+              {/* <Image
+                src={"/icons/cancelIcon.svg"}
+                alt="cancelIcon"
+                className="cursor-pointer transition-all active:scale-95 "
+                onClick={() => {
+                  closeProfileSheet()
+                }}
+                width={26}
+                height={26}
+              /> */}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col">
+            <div className="flex items-center space-x-[12px] mt-[40px] mb-[28px]">
+            <Avatar>
+              <AvatarImage
+                className="object-cover"
+                src={profileData?.image}
+                alt="@shadcn"
+              />
+              <AvatarFallback className="bg-gray-200 text-black">
+              {profileData?.name?.[0] || ""}              </AvatarFallback>
+            </Avatar>
+              <div>
+                <p className="text-[20px] font-medium text-[#111810]">
+                  {profileData?.full_name}
+                </p>
+                <div className="flex items-center space-x-2">
+                  <p className="flex items-center space-x-1">
+                    <span className="text-[#A4A4A4]">@</span>
+                    <span className="text-[#A4A4A4]">{profileData?.username}</span>
+                  </p>
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      profileData?.status === "active" ? "bg-[#2BAC47]" : "bg-[#C83532]"
+                    }`}
+                  ></div>
+                  <span className="text-[#A4A4A4] text-[14px]">
+                    {profileData?.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-8 mb-[28px]">
+              <div className="flex flex-col space-y-1">
+                <p className="text-[#A4A4A4] text-[14px]">Members in forum</p>
+                <h2 className="font-Recoleta font-medium text-[28px]">
+                  {profileData?.noOfMembers}
+                </h2>
+              </div>
+              <div className="h-[61px] w-[1px] bg-[#E4E4E4]"></div>
+              <div className="flex flex-col space-y-1">
+                <p className="text-[#A4A4A4] text-[14px]">
+                  Post in portfolio
+                </p>
+                <h2 className="font-Recoleta font-medium text-[28px] flex ">
+                  {profileData?.noOfPosts}
+                </h2>
+              </div>
+            </div>
+
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className=" text-[#A4A4A4]">Full Name</p>
+                <p className="">{profileData?.full_name}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className=" text-[#A4A4A4]">Email</p>
+                <p className="text-[#F75803]">{profileData?.email}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className=" text-[#A4A4A4]">Phone Number</p>
+                <p className="text-[#F75803]">{profileData?.phone_number}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className=" text-[#A4A4A4]">Country</p>
+                <p className="">{profileData?.country || "Null"}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className=" text-[#A4A4A4]">Interested Creators</p>
+                <p className="">{profileData?.interested_creators}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className=" text-[#A4A4A4] line-clamp-2">Date Joined</p>
+                <p className="">{profileData?.createdAt?.substring(0, 10)}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className=" text-[#A4A4A4]">No Of Investor</p>
+                <p className="">{profileData?.noOfInvestor}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className=" text-[#A4A4A4]">Verification</p>
+                <p className="">{profileData?.verification_type}</p>
+              </div>
+            </div>
+          </div>
+          <SheetFooter>
+            {profileData?.status === "active" ? (
+              <Button
+                onClick={async () => {
+                  try {
+                 
+                    closeProfileSheet();
+                  } catch (error) {
+                  }
+                }}
+                className="bg-[#C83532] hover:bg-[#C83532]"
+              >
+                Deactivate Account
+              </Button>
+            ) : (
+              <Button
+                onClick={async () => {
+                  try {
+                   
+                    closeProfileSheet();
+                  } catch (error) {
+                  }
+                }}
+                className="bg-[#2BAC47] hover:bg-[#2BAC47]"
+              >
+                Activate Account
+              </Button>
+            )}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
