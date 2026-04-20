@@ -55,6 +55,7 @@ import {
   updateStoreItemStatus,
 } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // ────────────────────────────────────────────────
 const formatCurrency = (num: number) =>
@@ -84,6 +85,7 @@ const ProductCataloguePage = () => {
   const [pagination, setPagination] = useState<ProductCataloguePagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [productTypeFilter, setProductTypeFilter] = useState("All Products");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
@@ -101,7 +103,7 @@ const ProductCataloguePage = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const trimmedSearch = searchQuery.trim();
+        const trimmedSearch = debouncedSearch.trim();
         const statusValue =
           statusFilter === "All Status"
             ? undefined
@@ -129,11 +131,11 @@ const ProductCataloguePage = () => {
     };
 
     fetchProducts();
-  }, [currentPage, pageSize, searchQuery, statusFilter, productTypeFilter]);
+  }, [currentPage, pageSize, debouncedSearch, statusFilter, productTypeFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter, productTypeFilter]);
+  }, [debouncedSearch, statusFilter, productTypeFilter]);
 
   // Action handlers
   const handleUnpublish = (productId: string) => {
@@ -180,7 +182,7 @@ const ProductCataloguePage = () => {
         toast({ variant: "default", title: "Item activated" });
       }
       // Refetch products
-      const trimmedSearch = searchQuery.trim();
+      const trimmedSearch = debouncedSearch.trim();
       const statusValue =
         statusFilter === "All Status"
           ? undefined

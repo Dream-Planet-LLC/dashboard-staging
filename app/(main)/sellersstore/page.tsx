@@ -73,6 +73,7 @@ import {
   fetchCreatorAnalytics,
 } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // ────────────────────────────────────────────────
 const formatCurrency = (num: number) =>
@@ -103,6 +104,7 @@ const SellersStore = () => {
   );
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [selectedSeller, setSelectedSeller] = useState<SellerStore | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -165,13 +167,13 @@ const SellersStore = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [debouncedSearch, statusFilter]);
 
   useEffect(() => {
     const fetchSellers = async () => {
       try {
         setLoading(true);
-        const trimmedSearch = searchQuery.trim();
+        const trimmedSearch = debouncedSearch.trim();
         const statusValue =
           statusFilter === "All Status" ? undefined : statusFilter.toLowerCase();
         const data = await fetchSellersStoreData(currentPage, pageSize, {
@@ -190,10 +192,10 @@ const SellersStore = () => {
     };
 
     fetchSellers();
-  }, [currentPage, pageSize, searchQuery, statusFilter]);
+  }, [currentPage, pageSize, debouncedSearch, statusFilter]);
 
   const refetchSellers = async () => {
-    const trimmedSearch = searchQuery.trim();
+    const trimmedSearch = debouncedSearch.trim();
     const statusValue =
       statusFilter === "All Status" ? undefined : statusFilter.toLowerCase();
     const data = await fetchSellersStoreData(currentPage, pageSize, {

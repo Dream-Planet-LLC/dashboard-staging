@@ -23,6 +23,7 @@ import {
   PayoutStats,
   PayoutsPagination,
 } from "@/lib/api";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // ────────────────────────────────────────────────
 const formatCurrency = (num: number) =>
@@ -41,6 +42,8 @@ const formatDate = (dateValue?: string) => {
     day: "2-digit",
     month: "short",
     year: "numeric",
+      hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -69,6 +72,7 @@ const PayoutsPage = () => {
   const [pagination, setPagination] = useState<PayoutsPagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const debounceSearch = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
@@ -76,13 +80,13 @@ const PayoutsPage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [debounceSearch, statusFilter]);
 
   useEffect(() => {
     const fetchPayouts = async () => {
       try {
         setLoading(true);
-        const trimmedSearch = searchQuery.trim();
+        const trimmedSearch = debounceSearch.trim();
         const statusValue =
           statusFilter === "All Status" ? undefined : statusFilter.toLowerCase();
         const data = await fetchPayoutsData(currentPage, pageSize, {

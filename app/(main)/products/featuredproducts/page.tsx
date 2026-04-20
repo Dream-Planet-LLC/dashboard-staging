@@ -36,7 +36,6 @@ import {
 // import { createFeaturedSection } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
-
 interface FeaturedProduct {
   id: string;
   name: string;
@@ -125,7 +124,6 @@ const mockAllProducts: Product[] = [
     price: 42,
   },
   { id: "p7", name: "Studio Nights Vinyl", productType: "Audio", price: 60 },
-
 ];
 
 const mockFeaturedProducts: FeaturedProduct[] = [
@@ -233,6 +231,7 @@ const FeaturedProductsPage = () => {
     [],
   );
 
+  const [showSuggestions, setShowSuggestions] = useState(false);
   // Drawer 2 state (Product Selection)
   const [selectionDrawerOpen, setSelectionDrawerOpen] = useState(false);
   const [productSearch, setProductSearch] = useState("");
@@ -351,6 +350,7 @@ const FeaturedProductsPage = () => {
     const cleanCategory = category.replace(/^Add "/, "").replace(/"$/, "");
     setSelectedCategory(cleanCategory);
     setCategoryInput(cleanCategory);
+    setShowSuggestions(false);
   };
 
   const handleOpenSelectionDrawer = () => {
@@ -452,9 +452,8 @@ const FeaturedProductsPage = () => {
     }
 
     const parsedPromo = parseFloat(promoPercentage);
-    const promotionPercentage = promotionToggle && !Number.isNaN(parsedPromo)
-      ? parsedPromo
-      : 0;
+    const promotionPercentage =
+      promotionToggle && !Number.isNaN(parsedPromo) ? parsedPromo : 0;
 
     try {
       // await createFeaturedSection({
@@ -684,12 +683,9 @@ const FeaturedProductsPage = () => {
           {totalProducts.toLocaleString()}
         </p>
         <div className="flex items-center gap-2">
-
-
-                 <button  
+          <button
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
-         
-             disabled={currentPage === 1}
+            disabled={currentPage === 1}
             onClick={() => setCurrentPage(currentPage - 1)}
           >
             <svg
@@ -703,12 +699,11 @@ const FeaturedProductsPage = () => {
                 d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
                 fill="#111810"
               />
-            </svg> 
+            </svg>
           </button>
 
-
-          <button  
-        disabled={showingEnd >= totalProducts}
+          <button
+            disabled={showingEnd >= totalProducts}
             onClick={() => setCurrentPage(currentPage + 1)}
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
           >
@@ -725,7 +720,6 @@ const FeaturedProductsPage = () => {
               />
             </svg>
           </button>
-
 
           {/* <Button
             variant="outline"
@@ -760,7 +754,10 @@ const FeaturedProductsPage = () => {
           DRAWER 1 - CATEGORY SETUP
           ═══════════════════════════════════════════════════════════════ */}
       <Sheet open={mainDrawerOpen} onOpenChange={setMainDrawerOpen}>
-        <SheetContent className="w-full sm:max-w-[450px] p-0 [&>button]:hidden" side="right">
+        <SheetContent
+          className="w-full sm:max-w-[450px] p-0 [&>button]:hidden"
+          side="right"
+        >
           <div className="flex flex-col h-full">
             <SheetHeader className="px-6 py-5 border-b border-[#F1F1F1]">
               <div className="flex items-center justify-between">
@@ -788,13 +785,16 @@ const FeaturedProductsPage = () => {
                 <div className="relative">
                   <Input
                     value={categoryInput}
-                    onChange={(e) => setCategoryInput(e.target.value)}
+                    onChange={(e) => {
+                      setCategoryInput(e.target.value);
+                      setShowSuggestions(true);
+                    }}
                     placeholder="Enter your Category"
                     className="border-[#F1F1F1] focus-visible:ring-[#F75803]"
                   />
 
-                  {categorySuggestions.length > 0 && categoryInput && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#F1F1F1] rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+                  {showSuggestions && categorySuggestions.length > 0 && categoryInput && (
+                    <div className=" top-full left-0 right-0 mt-1 bg-white border border-[#F1F1F1] rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
                       {categorySuggestions.map((cat, index) => (
                         <button
                           key={index}
@@ -969,9 +969,12 @@ const FeaturedProductsPage = () => {
           DRAWER 2 - PRODUCT SELECTION
           ═══════════════════════════════════════════════════════════════ */}
       <Sheet open={selectionDrawerOpen} onOpenChange={setSelectionDrawerOpen}>
-        <SheetContent className="w-full sm:max-w-[80%] p-0 [&>button]:hidden" side="right">
-          <div className="flex h-full w-full">
-            <div className="bg-[#FAFAFA] w-full">
+        <SheetContent
+          className="w-full sm:max-w-[80%] h-screen p-0 [&>button]:hidden"
+          side="right"
+        >
+          <div className="flex h-full w-full relative">
+            <div className="bg-[#FAFAFA] w-full relative">
               {/* Search and Filters */}
               <div className="px-6 py-4 border-b border-[#F1F1F1] space-y-5">
                 <div className="relative bg-[#FFFFFF] ">
@@ -1003,7 +1006,7 @@ const FeaturedProductsPage = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto max-h-[700px] h-full  px-6 py-4">
+              <div className="flex-1 overflow-y-auto max-h-[400px] h-full  px-6 py-4">
                 <div className="flex flex-wrap gap-3">
                   {filteredAllProducts.map((product) => {
                     const isSelected = tempSelectedProducts.some(
@@ -1050,7 +1053,7 @@ const FeaturedProductsPage = () => {
                 </div>
               </div>
 
-              <div className="px-6 py-4 border-t border-[#F1F1F1] w-full flex items-center gap-3 justify-between ">
+              <div className="absolute bg-[#FAFAFA]  bottom-0 left-0 right-0 px-6 py-3 border-t border-[#F1F1F1] w-full flex items-center gap-3 justify-between ">
                 <Button
                   onClick={() => setSelectionDrawerOpen(false)}
                   variant="outline"
