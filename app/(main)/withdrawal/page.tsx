@@ -581,7 +581,7 @@ const WithdrawalPage = () => {
         </p>
       </div>
 
-      {/* Stats Cards - Only show for automatic withdrawals */}
+      {/* Stats Cards - Only show for automatic withdrawal */}
       {/* {activeTab === "automatic" && stats && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-[24px]">
           <div className="flex items-center gap-[12px]">
