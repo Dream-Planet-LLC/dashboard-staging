@@ -72,7 +72,7 @@ import {
   updateSellerEligibilityStatus,
   fetchCreatorAnalytics,
 } from "@/lib/api";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
 
 // ────────────────────────────────────────────────
@@ -103,6 +103,7 @@ const SellersStore = () => {
     null,
   );
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -147,10 +148,7 @@ const SellersStore = () => {
             revenue: analytics.bestSellingProduct?.totalRevenue || 0,
           });
         } catch (error) {
-          toast({
-            variant: "destructive",
-            title: "Failed to load analytics",
-          });
+          toast.error("Failed to load analytics");
         } finally {
           setAnalyticsLoading(false);
         }
@@ -172,7 +170,10 @@ const SellersStore = () => {
   useEffect(() => {
     const fetchSellers = async () => {
       try {
-        setLoading(true);
+        // Only show loader on initial load
+        if (isInitialLoad) {
+          setLoading(true);
+        }
         const trimmedSearch = debouncedSearch.trim();
         const statusValue =
           statusFilter === "All Status" ? undefined : statusFilter.toLowerCase();
@@ -188,6 +189,7 @@ const SellersStore = () => {
         setPagination(null);
       } finally {
         setLoading(false);
+        setIsInitialLoad(false);
       }
     };
 
@@ -209,32 +211,20 @@ const SellersStore = () => {
   const handleSuspendSeller = async (seller: SellerStore) => {
     try {
       await updateSellerEligibilityStatus(seller.id, "suspended");
-      toast({
-        variant: "default",
-        title: "Seller suspended",
-      });
+      toast.success("Seller suspended");
       await refetchSellers();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to suspend seller",
-      });
+      toast.error("Failed to suspend seller");
     }
   };
 
   const handleActivateSeller = async (seller: SellerStore) => {
     try {
       await updateSellerEligibilityStatus(seller.id, "active");
-      toast({
-        variant: "default",
-        title: "Seller activated",
-      });
+      toast.success("Seller activated");
       await refetchSellers();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to activate seller",
-      });
+      toast.error("Failed to activate seller");
     }
   };
 
@@ -408,7 +398,7 @@ const SellersStore = () => {
             <DropdownMenuContent align="end" className="w-48 space-y-3">
               {seller.status !== "INACTIVE" && (
                 <DropdownMenuItem
-                  className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#373737]"
+                  className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#373737] cursor-pointer"
                   onClick={() => handleOpenAnalytics(seller)}
                 >
                   {WhiteanaBaricon}
@@ -418,7 +408,7 @@ const SellersStore = () => {
 
               {seller.status !== "INACTIVE" && (
                 <DropdownMenuItem
-                  className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#373737]"
+                  className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#373737] cursor-pointer"
                   onClick={() => router.push(`/sellersstore/${seller.id}`)}
                 >
                   {whiteStoreIcon}
@@ -427,7 +417,7 @@ const SellersStore = () => {
               )}
 
               <DropdownMenuItem 
-                className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#373737]"
+                className="flex items-center gap-2 INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] text-[#373737] cursor-pointer"
                 onClick={() => openProfileSheet(seller)}
               >
                 {whiteProIcon}

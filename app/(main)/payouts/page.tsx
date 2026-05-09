@@ -23,6 +23,7 @@ import {
   PayoutStats,
   PayoutsPagination,
 } from "@/lib/api";
+import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
 
 // ────────────────────────────────────────────────
@@ -71,6 +72,7 @@ const PayoutsPage = () => {
   const [stats, setStats] = useState<PayoutStats | null>(null);
   const [pagination, setPagination] = useState<PayoutsPagination | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const debounceSearch = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -79,13 +81,12 @@ const PayoutsPage = () => {
   const totalPayouts = pagination?.totalDocs || 0;
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [debounceSearch, statusFilter]);
-
-  useEffect(() => {
     const fetchPayouts = async () => {
       try {
-        setLoading(true);
+        // Only show loader on initial load
+        if (isInitialLoad) {
+          setLoading(true);
+        }
         const trimmedSearch = debounceSearch.trim();
         const statusValue =
           statusFilter === "All Status" ? undefined : statusFilter.toLowerCase();
@@ -103,11 +104,12 @@ const PayoutsPage = () => {
         setPagination(null);
       } finally {
         setLoading(false);
+        setIsInitialLoad(false);
       }
     };
 
     fetchPayouts();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, debounceSearch, statusFilter]);
 
   // Define table columns
   const columns: ColumnDef<Payout>[] = [
@@ -258,11 +260,20 @@ const PayoutsPage = () => {
           <Input
             placeholder="Search..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             className="pl-10 border-[#F1F1F1] focus-visible:ring-[#F75803] bg-[#F7F7F7] text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select
+          value={statusFilter}
+          onValueChange={(value) => {
+            setStatusFilter(value);
+            setCurrentPage(1);
+          }}
+        >
           <SelectTrigger className="w-[180px] border-[#F1F1F1]">
             <SelectValue
               placeholder="All Status"
@@ -309,38 +320,49 @@ const PayoutsPage = () => {
 
       {/* Pagination */}
       <div className="flex items-center justify-between text-sm text-[#808080] flex-1">
-        <p className="INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+        <p>
           SHOWING {payouts.length > 0 ? showingStart : 0}-
           {payouts.length > 0 ? showingEnd : 0} OF{" "}
           {totalPayouts.toLocaleString()}
         </p>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!pagination?.hasPrevPage}
+          <button  
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={!pagination?.hasPrevPage}
           >
-            <Image
-              src="/icons/backbutton.svg"
-              height={20}
-              width={20}
-              alt="previous"
-            />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                fill="#111810"
+              />
+            </svg> 
+          </button>
+
+          <button  
             disabled={!pagination?.hasNextPage}
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
             onClick={() => setCurrentPage((prev) => prev + 1)}
           >
-            <Image
-              src="/icons/forwardbutton.svg"
-              height={20}
-              width={20}
-              alt="next"
-            />
-          </Button>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                fill="#111810"
+              />
+            </svg>
+          </button>
         </div>
       </div>
     </div>

@@ -157,52 +157,62 @@ const Forum = () => {
           data={allForums}
           columns={columns}
         />
-         {totalDocs !== 0 && 
-                   <div className="flex items-center justify-start space-x-2 px-4 py-4">
-                   <div>
-                   <p className="text-[14px]">
-                  {(page - 1) * limit + 1} -{" "}
-                  {Math.min(page * limit, totalDocs)} of {totalDocs}
-                  </p>
+         {totalDocs !== 0 && (
+                   <div className="flex items-center justify-between text-sm text-[#808080] flex-1 px-4 py-4">
+                     <p>
+                       SHOWING {allForums.length > 0 ? (page - 1) * limit + 1 : 0}-
+                       {allForums.length > 0 ? Math.min(page * limit, totalDocs) : 0} OF{" "}
+                       {totalDocs.toLocaleString()}
+                     </p>
+                     <div className="flex items-center gap-2">
+                       <button  
+                         className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+                         onClick={() => {
+                           if (hasPrevPage) {
+                             setForumPage((prevPage) => prevPage - 1); 
+                           }
+                         }}
+                         disabled={!hasPrevPage}
+                       >
+                         <svg
+                           width="16"
+                           height="16"
+                           viewBox="0 0 16 16"
+                           fill="none"
+                           xmlns="http://www.w3.org/2000/svg"
+                         >
+                           <path
+                             d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                             fill="#111810"
+                           />
+                         </svg> 
+                       </button>
+
+                       <button  
+                         disabled={!hasNextPage}
+                         className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+                         onClick={() => {
+                           if (hasNextPage) {
+                             setForumPage((prevPage) => prevPage + 1); 
+                           }
+                         }}
+                       >
+                         <svg
+                           width="16"
+                           height="16"
+                           viewBox="0 0 16 16"
+                           fill="none"
+                           xmlns="http://www.w3.org/2000/svg"
+                         >
+                           <path
+                             d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                             fill="#111810"
+                           />
+                         </svg>
+                       </button>
+                     </div>
                    </div>
-                   <Button
-                     className="p-0 bg-transparent hover:bg-transparent"
-                     size="sm"
-                     onClick={() => {
-                       if (hasPrevPage) {
-                         setForumPage((prevPage) => prevPage - 1); 
-                       }
-                     }}
-                     disabled={page <= 1}
-                   >
-                     <Image
-                       src={"/icons/backbutton.svg"}
-                       height={20}
-                       width={20}
-                       alt="backbutton"
-                     />
-                   </Button>
-                   <Button
-                     className="p-0 bg-transparent hover:bg-transparent"
-                     size="sm"
-                     onClick={() => {
-                       if (hasNextPage) {
-                         setForumPage((prevPage) => prevPage + 1); 
-                       }
-                     }}
-                     disabled={page * limit >=
-                     totalDocs
-                     }
-                   >
-                     <Image
-                       src={"/icons/forwardbutton.svg"}
-                       height={20}
-                       width={20}
-                       alt="forwardbutton"
-                     />
-                   </Button>
-                 </div>
-                }
+                )}
       </div>
     </div>
   );

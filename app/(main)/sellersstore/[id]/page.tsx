@@ -52,7 +52,7 @@ import {
   deleteStoreItem,
   updateStoreItemStatus,
 } from "@/lib/api";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // ────────────────────────────────────────────────
 const formatCurrency = (num: number) =>
@@ -162,31 +162,27 @@ const SellerStorePage = () => {
     try {
       if (confirmAction === "delete" && confirmProduct) {
         await deleteStoreItem(confirmProduct.id);
-        toast({ variant: "default", title: "Item deleted" });
+        toast.success("Item deleted");
       }
       if (confirmAction === "suspend" && confirmProduct) {
         await updateStoreItemStatus(confirmProduct.id, "suspended");
-        toast({ variant: "default", title: "Item suspended" });
+        toast.success("Item suspended");
       }
       if (confirmAction === "activate" && confirmProduct) {
         await updateStoreItemStatus(confirmProduct.id, "active");
-        toast({ variant: "default", title: "Item activated" });
+        toast.success("Item activated");
       }
       await fetchSellerStore();
       setConfirmOpen(false);
       setConfirmAction(null);
       setConfirmProduct(null);
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title:
-          confirmAction === "delete"
-            ? "Failed to delete item"
-            : confirmAction === "activate"
-              ? "Failed to activate item"
-              : "Failed to suspend item",
-        description: error instanceof Error ? error.message : undefined,
-      });
+      const errorMessage = confirmAction === "delete"
+        ? "Failed to delete item"
+        : confirmAction === "activate"
+          ? "Failed to activate item"
+          : "Failed to suspend item";
+      toast.error(errorMessage);
     } finally {
       setConfirmLoading(false);
     }
@@ -324,7 +320,7 @@ const SellerStorePage = () => {
                 Unpublish
               </DropdownMenuItem>
               <DropdownMenuItem 
-                className="flex items-center gap-2 text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium"
+                className="flex items-center gap-2 text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium cursor-pointer"
                 onClick={() => openProfileSheet()}
               >
                 {whiteProIcon}
@@ -403,7 +399,7 @@ const SellerStorePage = () => {
                     Unpublish
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="flex items-center gap-2 text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]"
+                    className="flex items-center gap-2 text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%] cursor-pointer"
                     onClick={() => openProfileSheet()}
                   >
                     <User className="h-4 w-4" />
@@ -494,7 +490,7 @@ const SellerStorePage = () => {
             <div className="flex rounded overflow-hidden">
               <button
                 onClick={() => setViewMode("table")}
-                className={`flex items-center justify-center h-[32px] w-[42px] transition-colors ${
+                className={`flex items-center justify-center h-[32px] w-[42px] transition-colors cursor-pointer ${
                   viewMode === "table"
                     ? "bg-[#F75803] text-white"
                     : "bg-[#F1F1F1] text-[#5B5B5B] hover:bg-[#FFEEE6]"
@@ -504,7 +500,7 @@ const SellerStorePage = () => {
               </button>
               <button
                 onClick={() => setViewMode("grid")}
-                className={`flex items-center justify-center h-[32px] w-[42px] transition-colors ${
+                className={`flex items-center justify-center h-[32px] w-[42px] transition-colors cursor-pointer ${
                   viewMode === "grid"
                     ? "bg-[#F75803] text-white"
                     : "bg-[#F1F1F1] text-[#5B5B5B] hover:bg-[#FFEEE6]"

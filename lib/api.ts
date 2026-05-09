@@ -1001,6 +1001,15 @@ export const createFeaturedSection = async (payload: {
     const token =
       typeof window != "undefined" ? localStorage.getItem("auth_token") : null;
 
+    const requestBody = {
+      name: payload.name,
+      product_ids: payload.productIds,
+      promotion_enabled: payload.promotionEnabled,
+      promotion_percentage: payload.promotionPercentage,
+    };
+    
+    console.log("Creating section with payload:", requestBody);
+    
     const response = await fetch(
       `${API_BASE_URL}/store/admin/create-sections`,
       {
@@ -1009,12 +1018,7 @@ export const createFeaturedSection = async (payload: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({
-          name: payload.name,
-          productIds: payload.productIds,
-          promotionEnabled: payload.promotionEnabled,
-          promotionPercentage: payload.promotionPercentage,
-        }),
+        body: JSON.stringify(requestBody),
       },
     );
 
@@ -1030,13 +1034,10 @@ export const createFeaturedSection = async (payload: {
       throw new Error(apiResponse.message || "API returned an error");
     }
 
-    const raw = 
-    apiResponse?.data?.data ??
-    apiResponse?.data?.response ??
-    apiResponse?.response;
+    const raw = apiResponse?.data;
 
     if (!raw) {
-      throw new Error ("Unexxpected API response")
+      throw new Error ("Unexpected API response")
     }
 
     // Use any type to handle dynamic response structure
@@ -1046,7 +1047,7 @@ export const createFeaturedSection = async (payload: {
       id: responseData.id,
       name: responseData.name,
       promotionEnabled: responseData.promotion_enabled,
-      promotionPercentage: responseData.promotion_percentage || 0,
+      promotionPercentage: parseFloat(String(responseData.promotion_percentage || "0")) || 0,
       itemsCount: responseData.items_count || 0,
     };
 
@@ -1737,4 +1738,360 @@ export interface BuyerPurchaseReferenceData {
     percentage: number;
     color: string;
   }[];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION MANAGEMENT API
+// ═══════════════════════════════════════════════════════════════
+
+// Get all sections
+export const fetchSections = async (): Promise<SectionsData> => {
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    
+    const response = await fetch(`${API_BASE_URL}/store/admin/get-sections`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: SectionsApiResponse = await response.json();
+    
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const payload = apiResponse?.data;
+    
+    if (!payload || !Array.isArray(payload)) {
+      // If no sections exist, return empty array
+      if (Array.isArray(apiResponse?.data) && apiResponse.data.length === 0) {
+        return { sections: [] };
+      }
+      throw new Error("Unexpected API response shape");
+    }
+
+    const sections: Section[] = payload.map((section: SectionDoc) => ({
+      id: section.id,
+      name: section.name,
+      promotionEnabled: section.promotion_enabled,
+      promotionPercentage: parseFloat(String(section.promotion_percentage || "0")) || 0,
+      itemsCount: section.items_count || 0,
+      createdAt: section.createdAt,
+      updatedAt: section.updatedAt,
+    }));
+
+    return { sections };
+  } catch (error) {
+    console.error("Error fetching sections:", error);
+    throw error;
+  }
+};
+
+// Update section
+export const updateSection = async (payload: {
+  id: number | string;
+  name: string;
+  productIds: (string | number)[];
+  promotionEnabled: boolean;
+  promotionPercentage: number;
+}): Promise<SectionResponse> => {
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+
+    const response = await fetch(`${API_BASE_URL}/store/admin/update-section`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: payload.id,
+        name: payload.name,
+        product_ids: payload.productIds,
+        promotion_enabled: payload.promotionEnabled,
+        promotion_percentage: payload.promotionPercentage,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: SectionApiResponse = await response.json();
+    
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const responseData = apiResponse?.data;
+    if (!responseData) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    return {
+      id: responseData.id,
+      name: responseData.name,
+      promotionEnabled: responseData.promotion_enabled,
+      promotionPercentage: parseFloat(String(responseData.promotion_percentage || "0")) || 0,
+      itemsCount: responseData.items_count || 0,
+    };
+  } catch (error) {
+    console.error("Error updating section:", error);
+    throw error;
+  }
+};
+
+// Get section items by ID
+export const getSectionItems = async (sectionId: number | string): Promise<SectionItemsData> => {
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+
+    const response = await fetch(`${API_BASE_URL}/store/admin/get-product-items-by-section-id`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ section_id: sectionId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: SectionItemsApiResponse = await response.json();
+    
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const payload = apiResponse?.data;
+    if (!payload) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    const sectionData: Section = {
+      id: payload.section.id,
+      name: payload.section.name,
+      promotionEnabled: payload.section.promotion_enabled,
+      promotionPercentage: parseFloat(String(payload.section.promotion_percentage || "0")) || 0,
+      itemsCount: payload.section.items_count || 0,
+      createdAt: payload.section.createdAt,
+      updatedAt: payload.section.updatedAt,
+    };
+
+    console.log("Raw section items:", payload.items);
+    
+    const items: SectionItem[] = Array.isArray(payload.items) 
+      ? payload.items.map((item: SectionItemDoc, index) => {
+          // Handle different product types and extract appropriate data
+          let name = "";
+          let price = 0;
+          let image = "";
+          let productType = item.type || "";
+          
+          console.log(`Processing item ${index}:`, item.type, item);
+          
+          if (item.type === "merchandise" && item.merchandise_title) {
+            name = item.merchandise_title;
+            price = parseFloat(String(item.merchandise_price || "0")) || 0;
+            image = item.merchandise_cover_image || item.merchandise_product_mockup_image || "";
+          } else if (item.type === "video" && item.video_title) {
+            name = item.video_title;
+            price = parseFloat(String(item.video_price || "0")) || 0;
+            image = item.video_cover_image || "";
+          } else if (item.type === "audio" && item.audio_title) {
+            name = item.audio_title;
+            price = parseFloat(String(item.audio_price || "0")) || 0;
+            image = item.audio_cover_image || "";
+          } else if (item.type === "ebooks" && item.ebooks_title) {
+            name = item.ebooks_title;
+            price = parseFloat(String(item.ebooks_price || "0")) || 0;
+            image = item.ebooks_cover_image || "";
+          } else if (item.type === "podcast" && item.podcast_title) {
+            name = item.podcast_title;
+            price = parseFloat(String(item.podcast_price || "0")) || 0;
+            image = item.podcast_cover_image || "";
+          } else if (item.type === "tickets" && item.tickets_title) {
+            name = item.tickets_title;
+            price = parseFloat(String(item.tickets_price || "0")) || 0;
+            image = item.tickets_cover_image || "";
+          } else {
+            // Fallback for other types - use empty values since these fields don't exist
+            name = "";
+            price = 0;
+            image = "";
+          }
+
+          return {
+            id: item.id,
+            name: name,
+            price: price,
+            image: image,
+            creator: item.creator?.name || "",
+            productType: productType,
+            status: item.status,
+            date: item.createdAt,
+          };
+        })
+      : [];
+
+    return { section: sectionData, items };
+  } catch (error) {
+    console.error("Error fetching section items:", error);
+    throw error;
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION API TYPES
+// ═══════════════════════════════════════════════════════════════
+
+export interface Section {
+  id: number | string;
+  name: string;
+  promotionEnabled: boolean;
+  promotionPercentage: number;
+  itemsCount: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SectionItem {
+  id: number | string;
+  name: string;
+  price: number;
+  image?: string;
+  creator: string;
+  productType: string;
+  status?: string;
+  date?: string;
+}
+
+export interface SectionsData {
+  sections: Section[];
+}
+
+export interface SectionItemsData {
+  section: Section;
+  items: SectionItem[];
+}
+
+export interface SectionResponse {
+  id: number | string;
+  name: string;
+  promotionEnabled: boolean;
+  promotionPercentage: number;
+  itemsCount: number;
+}
+
+// API Response Types
+interface SectionsApiResponse {
+  error: boolean;
+  code?: number;
+  message: string;
+  data: SectionDoc[];
+}
+
+interface SectionApiResponse {
+  error: boolean;
+  code?: number;
+  message: string;
+  data: SectionDoc;
+}
+
+interface SectionItemsApiResponse {
+  error: boolean;
+  code?: number;
+  message: string;
+  data: {
+    section: SectionDoc;
+    items: SectionItemDoc[];
+  };
+}
+
+interface SectionDoc {
+  id: number | string;
+  name: string;
+  promotion_enabled: boolean;
+  promotion_percentage?: string | number;
+  items_count: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface SectionItemDoc {
+  id: number | string;
+  creators_id?: number;
+  type: string;
+  // Video fields
+  video_title?: string;
+  video_price?: string;
+  video_description?: string;
+  video_files?: string[];
+  video_cover_image?: string;
+  // Audio fields
+  audio_title?: string;
+  audio_price?: string;
+  audio_description?: string;
+  audio_cover_image?: string;
+  audio_tracks?: any[];
+  // Podcast fields
+  podcast_title?: string;
+  podcast_number_of_episodes?: number;
+  podcast_price?: string;
+  podcast_description?: string;
+  podcast_cover_image?: string;
+  podcast_episodes?: any[];
+  // Merchandise fields
+  merchandise_title?: string;
+  merchandise_price?: string;
+  merchandise_cover_image?: string;
+  merchandise_size?: any[];
+  merchandise_product_mockup_image?: string;
+  merchandise_print_artwork_image?: string;
+  // Ebooks fields
+  ebooks_title?: string;
+  ebooks_price?: string;
+  ebooks_cover_image?: string;
+  ebooks_description?: string;
+  ebooks_files?: string[];
+  // Tickets fields
+  tickets_title?: string;
+  tickets_price?: string;
+  tickets_cover_image?: string;
+  tickets_description?: string;
+  tickets_date?: string;
+  tickets_time?: string;
+  tickets_location?: string;
+  tickets_type?: string;
+  tickets_files?: string[];
+  // Common fields
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  creator?: {
+    id: number;
+    name: string;
+    username: string;
+  };
+}
+
+export interface FeaturedSectionResponse {
+  id: number;
+  name: string;
+  promotionEnabled: boolean;
+  promotionPercentage: number;
+  itemsCount: number;
 }

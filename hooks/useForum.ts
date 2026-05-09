@@ -4,7 +4,7 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { useState, useCallback } from "react";
 import { debounce } from "lodash";
-import { toast } from "./use-toast";
+import { toast } from "sonner";
 
 const useForum = () => {
   const base_url = process.env.NEXT_PUBLIC_BASE_URL;
@@ -100,11 +100,7 @@ const useForum = () => {
       });
 
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: 'Delete Action Failed',
-        description: "Something went wrong",
-      })
+      toast.error("Delete Action Failed: Something went wrong");
     } finally {
       setForumSheetLoading(false);
     }

@@ -507,52 +507,62 @@ const Campaign = () => {
                 data={campaignActive}
                 columns={columns}
               />
-               {paginationActive?.totalDocs !== 0 && 
-                         <div className="flex items-center justify-start space-x-2 px-4 py-4">
-                         <div>
-                         <p className="text-[14px]">
-                        {(paginationActive?.page - 1) * paginationActive?.limit + 1} -{" "}
-                        {Math.min(paginationActive?.page * paginationActive?.limit, paginationActive?.totalDocs)} of {paginationActive?.totalDocs}
-                        </p>
+               {paginationActive?.totalDocs !== 0 && (
+                         <div className="flex items-center justify-between text-sm text-[#808080] flex-1 px-4 py-4">
+                           <p>
+                             SHOWING {campaignActive.length > 0 ? (paginationActive?.page - 1) * paginationActive?.limit + 1 : 0}-
+                             {campaignActive.length > 0 ? Math.min(paginationActive?.page * paginationActive?.limit, paginationActive?.totalDocs) : 0} OF{" "}
+                             {paginationActive?.totalDocs?.toLocaleString()}
+                           </p>
+                           <div className="flex items-center gap-2">
+                             <button  
+                               className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+                               onClick={() => {
+                                 if (paginationActive?.hasPrevPage) {
+                                   setActivePage((prevPage) => prevPage - 1); 
+                                 }
+                               }}
+                               disabled={!paginationActive?.hasPrevPage}
+                             >
+                               <svg
+                                 width="16"
+                                 height="16"
+                                 viewBox="0 0 16 16"
+                                 fill="none"
+                                 xmlns="http://www.w3.org/2000/svg"
+                               >
+                                 <path
+                                   d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                                   fill="#111810"
+                                 />
+                               </svg> 
+                             </button>
+
+                             <button  
+                               disabled={!paginationActive?.hasNextPage}
+                               className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+                               onClick={() => {
+                                 if (paginationActive?.hasNextPage) {
+                                   setActivePage((prevPage) => prevPage + 1); 
+                                 }
+                               }}
+                             >
+                               <svg
+                                 width="16"
+                                 height="16"
+                                 viewBox="0 0 16 16"
+                                 fill="none"
+                                 xmlns="http://www.w3.org/2000/svg"
+                               >
+                                 <path
+                                   d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                                   fill="#111810"
+                                 />
+                               </svg>
+                             </button>
+                           </div>
                          </div>
-                         <Button
-                           className="p-0 bg-transparent hover:bg-transparent"
-                           size="sm"
-                           onClick={() => {
-                             if (paginationActive?.hasPrevPage) {
-                               setActivePage((prevPage) => prevPage - 1); 
-                             }
-                           }}
-                           disabled={paginationActive?.page <= 1}
-                         >
-                           <Image
-                             src={"/icons/backbutton.svg"}
-                             height={20}
-                             width={20}
-                             alt="backbutton"
-                           />
-                         </Button>
-                         <Button
-                           className="p-0 bg-transparent hover:bg-transparent"
-                           size="sm"
-                           onClick={() => {
-                             if (paginationActive?.hasNextPage) {
-                               setActivePage((prevPage) => prevPage + 1); 
-                             }
-                           }}
-                           disabled={paginationActive?.page * paginationActive?.limit >=
-                            paginationActive?.totalDocs
-                           }
-                         >
-                           <Image
-                             src={"/icons/forwardbutton.svg"}
-                             height={20}
-                             width={20}
-                             alt="forwardbutton"
-                           />
-                         </Button>
-                       </div>
-                      }
+                      )}
             </TabsContent>
             <TabsContent value="processing">
               <UserTable
@@ -560,52 +570,62 @@ const Campaign = () => {
                 data={campaignProcessing}
                 columns={columns}
               />
-               {paginationOther?.totalDocs !== 0 && 
-                         <div className="flex items-center justify-start space-x-2 px-4 py-4">
-                         <div>
-                         <p className="text-[14px]">
-                        {(paginationOther?.page - 1) * paginationOther?.limit + 1} -{" "}
-                        {Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs)} of {paginationOther?.totalDocs}
-                        </p>
+               {paginationOther?.totalDocs !== 0 && (
+                         <div className="flex items-center justify-between text-sm text-[#808080] flex-1 px-4 py-4">
+                           <p>
+                             SHOWING {campaignProcessing.length > 0 ? (paginationOther?.page - 1) * paginationOther?.limit + 1 : 0}-
+                             {campaignProcessing.length > 0 ? Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs) : 0} OF{" "}
+                             {paginationOther?.totalDocs?.toLocaleString()}
+                           </p>
+                           <div className="flex items-center gap-2">
+                             <button  
+                               className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+                               onClick={() => {
+                                 if (paginationOther?.hasPrevPage) {
+                                   setProcessingPage((prevPage) => prevPage - 1); 
+                                 }
+                               }}
+                               disabled={!paginationOther?.hasPrevPage}
+                             >
+                               <svg
+                                 width="16"
+                                 height="16"
+                                 viewBox="0 0 16 16"
+                                 fill="none"
+                                 xmlns="http://www.w3.org/2000/svg"
+                               >
+                                 <path
+                                   d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                                   fill="#111810"
+                                 />
+                               </svg> 
+                             </button>
+
+                             <button  
+                               disabled={!paginationOther?.hasNextPage}
+                               className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+                               onClick={() => {
+                                 if (paginationOther?.hasNextPage) {
+                                   setProcessingPage((prevPage) => prevPage + 1); 
+                                 }
+                               }}
+                             >
+                               <svg
+                                 width="16"
+                                 height="16"
+                                 viewBox="0 0 16 16"
+                                 fill="none"
+                                 xmlns="http://www.w3.org/2000/svg"
+                               >
+                                 <path
+                                   d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                                   fill="#111810"
+                                 />
+                               </svg>
+                             </button>
+                           </div>
                          </div>
-                         <Button
-                           className="p-0 bg-transparent hover:bg-transparent"
-                           size="sm"
-                           onClick={() => {
-                             if (paginationOther?.hasPrevPage) {
-                               setProcessingPage((prevPage) => prevPage - 1); 
-                             }
-                           }}
-                           disabled={paginationOther?.page <= 1}
-                         >
-                           <Image
-                             src={"/icons/backbutton.svg"}
-                             height={20}
-                             width={20}
-                             alt="backbutton"
-                           />
-                         </Button>
-                         <Button
-                           className="p-0 bg-transparent hover:bg-transparent"
-                           size="sm"
-                           onClick={() => {
-                             if (paginationOther?.hasNextPage) {
-                               setProcessingPage((prevPage) => prevPage + 1); 
-                             }
-                           }}
-                           disabled={paginationOther?.page * paginationOther?.limit >=
-                            paginationOther?.totalDocs
-                           }
-                         >
-                           <Image
-                             src={"/icons/forwardbutton.svg"}
-                             height={20}
-                             width={20}
-                             alt="forwardbutton"
-                           />
-                         </Button>
-                       </div>
-                      }
+                      )}
             </TabsContent>
             <TabsContent value="stopped">
               <UserTable
@@ -613,52 +633,62 @@ const Campaign = () => {
                 data={campaignStopped}
                 columns={stoppedColumns}
               />
-                {paginationOther?.totalDocs !== 0 && 
-                         <div className="flex items-center justify-start space-x-2 px-4 py-4">
-                         <div>
-                         <p className="text-[14px]">
-                        {(paginationOther?.page - 1) * paginationOther?.limit + 1} -{" "}
-                        {Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs)} of {paginationOther?.totalDocs}
-                        </p>
+                {paginationOther?.totalDocs !== 0 && (
+                         <div className="flex items-center justify-between text-sm text-[#808080] flex-1 px-4 py-4">
+                           <p>
+                             SHOWING {campaignStopped.length > 0 ? (paginationOther?.page - 1) * paginationOther?.limit + 1 : 0}-
+                             {campaignStopped.length > 0 ? Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs) : 0} OF{" "}
+                             {paginationOther?.totalDocs?.toLocaleString()}
+                           </p>
+                           <div className="flex items-center gap-2">
+                             <button  
+                               className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+                               onClick={() => {
+                                 if (paginationOther?.hasPrevPage) {
+                                   setStoppedPage((prevPage) => prevPage - 1); 
+                                 }
+                               }}
+                               disabled={!paginationOther?.hasPrevPage}
+                             >
+                               <svg
+                                 width="16"
+                                 height="16"
+                                 viewBox="0 0 16 16"
+                                 fill="none"
+                                 xmlns="http://www.w3.org/2000/svg"
+                               >
+                                 <path
+                                   d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                                   fill="#111810"
+                                 />
+                               </svg> 
+                             </button>
+
+                             <button  
+                               disabled={!paginationOther?.hasNextPage}
+                               className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+                               onClick={() => {
+                                 if (paginationOther?.hasNextPage) {
+                                   setStoppedPage((prevPage) => prevPage + 1); 
+                                 }
+                               }}
+                             >
+                               <svg
+                                 width="16"
+                                 height="16"
+                                 viewBox="0 0 16 16"
+                                 fill="none"
+                                 xmlns="http://www.w3.org/2000/svg"
+                               >
+                                 <path
+                                   d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                                   fill="#111810"
+                                 />
+                               </svg>
+                             </button>
+                           </div>
                          </div>
-                         <Button
-                           className="p-0 bg-transparent hover:bg-transparent"
-                           size="sm"
-                           onClick={() => {
-                             if (paginationOther?.hasPrevPage) {
-                               setStoppedPage((prevPage) => prevPage - 1); 
-                             }
-                           }}
-                           disabled={paginationOther?.page <= 1}
-                         >
-                           <Image
-                             src={"/icons/backbutton.svg"}
-                             height={20}
-                             width={20}
-                             alt="backbutton"
-                           />
-                         </Button>
-                         <Button
-                           className="p-0 bg-transparent hover:bg-transparent"
-                           size="sm"
-                           onClick={() => {
-                             if (paginationOther?.hasNextPage) {
-                               setStoppedPage((prevPage) => prevPage + 1); 
-                             }
-                           }}
-                           disabled={paginationOther?.page * paginationOther?.limit >=
-                            paginationOther?.totalDocs
-                           }
-                         >
-                           <Image
-                             src={"/icons/forwardbutton.svg"}
-                             height={20}
-                             width={20}
-                             alt="forwardbutton"
-                           />
-                         </Button>
-                       </div>
-                      }
+                      )}
             </TabsContent>
             <TabsContent value="performed">
               <UserTable
@@ -666,52 +696,62 @@ const Campaign = () => {
                 data={campaignMostPerformed}
                 columns={columns}
               />
-                {paginationOther?.totalDocs !== 0 && 
-                         <div className="flex items-center justify-start space-x-2 px-4 py-4">
-                         <div>
-                         <p className="text-[14px]">
-                        {(paginationOther?.page - 1) * paginationOther?.limit + 1} -{" "}
-                        {Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs)} of {paginationOther?.totalDocs}
-                        </p>
+                {paginationOther?.totalDocs !== 0 && (
+                         <div className="flex items-center justify-between text-sm text-[#808080] flex-1 px-4 py-4">
+                           <p>
+                             SHOWING {campaignMostPerformed.length > 0 ? (paginationOther?.page - 1) * paginationOther?.limit + 1 : 0}-
+                             {campaignMostPerformed.length > 0 ? Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs) : 0} OF{" "}
+                             {paginationOther?.totalDocs?.toLocaleString()}
+                           </p>
+                           <div className="flex items-center gap-2">
+                             <button  
+                               className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+                               onClick={() => {
+                                 if (paginationOther?.hasPrevPage) {
+                                   setMostPerformedPage((prevPage) => prevPage - 1); 
+                                 }
+                               }}
+                               disabled={!paginationOther?.hasPrevPage}
+                             >
+                               <svg
+                                 width="16"
+                                 height="16"
+                                 viewBox="0 0 16 16"
+                                 fill="none"
+                                 xmlns="http://www.w3.org/2000/svg"
+                               >
+                                 <path
+                                   d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                                   fill="#111810"
+                                 />
+                               </svg> 
+                             </button>
+
+                             <button  
+                               disabled={!paginationOther?.hasNextPage}
+                               className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+                               onClick={() => {
+                                 if (paginationOther?.hasNextPage) {
+                                   setMostPerformedPage((prevPage) => prevPage + 1); 
+                                 }
+                               }}
+                             >
+                               <svg
+                                 width="16"
+                                 height="16"
+                                 viewBox="0 0 16 16"
+                                 fill="none"
+                                 xmlns="http://www.w3.org/2000/svg"
+                               >
+                                 <path
+                                   d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                                   fill="#111810"
+                                 />
+                               </svg>
+                             </button>
+                           </div>
                          </div>
-                         <Button
-                           className="p-0 bg-transparent hover:bg-transparent"
-                           size="sm"
-                           onClick={() => {
-                             if (paginationOther?.hasPrevPage) {
-                               setMostPerformedPage((prevPage) => prevPage - 1); 
-                             }
-                           }}
-                           disabled={paginationOther?.page <= 1}
-                         >
-                           <Image
-                             src={"/icons/backbutton.svg"}
-                             height={20}
-                             width={20}
-                             alt="backbutton"
-                           />
-                         </Button>
-                         <Button
-                           className="p-0 bg-transparent hover:bg-transparent"
-                           size="sm"
-                           onClick={() => {
-                             if (paginationOther?.hasNextPage) {
-                               setMostPerformedPage((prevPage) => prevPage + 1); 
-                             }
-                           }}
-                           disabled={paginationOther?.page * paginationOther?.limit >=
-                            paginationOther?.totalDocs
-                           }
-                         >
-                           <Image
-                             src={"/icons/forwardbutton.svg"}
-                             height={20}
-                             width={20}
-                             alt="forwardbutton"
-                           />
-                         </Button>
-                       </div>
-                      }
+                      )}
             </TabsContent>
             <TabsContent value="completed">
               <UserTable

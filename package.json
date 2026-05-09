@@ -45,6 +45,7 @@
     "recharts": "^3.7.0",
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^2.4.0",
     "tailwind-scrollbar-hide": "^1.1.7",
     "tailwindcss-animate": "^1.0.7",

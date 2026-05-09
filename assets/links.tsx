@@ -21,6 +21,7 @@ import {
   BuyersIcon,
   OverviewIcon,
   SellersStoreIcon,
+  WithdrawalIcon,
 
 } from "@/components/icons";
 
@@ -173,6 +174,13 @@ export const NavLinks = [
     name: "Payouts",
     icon: <PayoutsIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
     href: "/payouts",
+    accordion: false,
+  },
+
+  {
+    name: "Withdrawal",
+    icon: <WithdrawalIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/withdrawal",
     accordion: false,
   },
 

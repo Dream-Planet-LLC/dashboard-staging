@@ -2,7 +2,7 @@
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import LoadingState from "@/components/LoadingState";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
 import { RootState } from "@/redux/store";
 import { AeonikFont, RecoletaFont } from "@/utils/customFonts";
@@ -91,7 +91,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
       </div>
-      <Toaster />
+      <Toaster richColors />
     </div>
   );
 };

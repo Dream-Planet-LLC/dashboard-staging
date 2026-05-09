@@ -3,7 +3,7 @@ import React, { Dispatch, SetStateAction, useCallback, useState } from "react";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import LoadingState from "@/components/LoadingState";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface FileWithPreview {
   preview: string;
@@ -60,10 +60,7 @@ export default function Dropzone({
           ]);
         }
       } catch (error: any) {
-        toast({
-          variant: "destructive",
-          description: error?.message || "Something went wrong",
-        });
+        toast.error(error?.message || "Something went wrong");
       } finally {
         setLoading(false);
       }

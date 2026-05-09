@@ -10,7 +10,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { useState } from "react";
-import { toast } from "./use-toast";
+import { toast } from "sonner";
 
 const useAdminsetting = () => {
   const base_url = process.env.NEXT_PUBLIC_BASE_URL;
@@ -98,15 +98,9 @@ const useAdminsetting = () => {
         name,
         features,
       });
-      toast({
-        variant: "default",
-        description: "Role Created successfully",
-      });
+      toast.success("Role Created successfully");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        description: "Something went wrong",
-      });
+      toast.error("Something went wrong");
     } finally {
       setadminLoading(false);
     }
@@ -131,15 +125,9 @@ const useAdminsetting = () => {
         status: "pending",
         role_id: roleId,
       });
-      toast({
-        variant: "default",
-        description: "Admin Created successfully",
-      });
+      toast.success("Admin Created successfully");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        description: error.response.data.message || "Couldn't create Admin",
-      });
+      toast.error(error.response.data.message || "Couldn't create Admin");
     } finally {
       setadminLoading(false);
     }
@@ -152,15 +140,9 @@ const useAdminsetting = () => {
         admin_id: id,
         status: "accepted",
       });
-      toast({
-        variant: "default",
-        description: "Admin Updated successfully",
-      });
+      toast.success("Admin Updated successfully");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        description: "Status Update Failed",
-      });
+      toast.error("Status Update Failed");
     } finally {
       setadminLoading(false);
     }
@@ -191,16 +173,10 @@ const useAdminsetting = () => {
         role_id: roleId,
         role_name: roleName,
       });
-      toast({
-        variant: "default",
-        description: "Admin Role Updated successfully",
-      });
+      toast.success("Admin Role Updated successfully");
       await getAdminAccepted();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        description: "Admin Role Update Failed",
-      });
+      toast.error("Admin Role Update Failed");
     } finally {
       setadminLoading(false);
     }
@@ -213,17 +189,9 @@ const useAdminsetting = () => {
         email: email,
         link: "www.dreamplanet.org",
       });
-      toast({
-        variant: "default",
-        description: "Link Sent Successfully",
-      });
+      toast.success("Link Sent Successfully");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description:
-          error.response?.data?.message || "An unexpected error occurred.",
-      });
+      toast.error(error.response?.data?.message || "An unexpected error occurred.");
     } finally {
       setadminLoading(false);
     }
@@ -242,17 +210,11 @@ const updateRole = async (
       features,
     });
 
-    toast({
-      variant: "default",
-      description: "Role updated successfully",
-    });
+    toast.success("Role updated successfully");
 
     await getAdminAccepted(); // refresh roles
   } catch (error: any) {
-    toast({
-      variant: "destructive",
-      description: error.response?.data?.message || "Failed to update role",
-    });
+    toast.error(error.response?.data?.message || "Failed to update role");
   } finally {
     setadminLoading(false);
   }
@@ -264,17 +226,11 @@ const deleteRole = async (id: number) => {
   try {
     await axios.post(`${base_url}/admin-settings/delete-role`, { id });
 
-    toast({
-      variant: "default",
-      description: "Role deleted successfully",
-    });
+    toast.success("Role deleted successfully");
 
     await getAdminAccepted(); // refresh roles
   } catch (error: any) {
-    toast({
-      variant: "destructive",
-      description: "Failed to delete role",
-    });
+    toast.error("Failed to delete role");
   } finally {
     setadminLoading(false);
   }

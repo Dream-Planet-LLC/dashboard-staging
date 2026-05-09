@@ -49,6 +49,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
       item.name === "Events" ||
       item.name === "Orders" ||
       item.name === "Payouts" ||
+      item.name === "Withdrawal" ||
       item.name === "Hire" ||
       item.name === "Buyers" ||
       item.name === "Wallet" ||
@@ -83,6 +84,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
       "Events",
       "Orders",
       "Payouts",
+      "Withdrawal",
       "Hire",
       "Buyers",
       "Moderation",
