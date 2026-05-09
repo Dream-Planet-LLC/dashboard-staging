@@ -21,6 +21,7 @@ export const NAV_PERMISSIONS: Record<string, string> = {
   Events: "Events",
   Orders: "Orders",
   Payouts: "Payouts",
+  Withdrawal: "Withdrawal",
   Hire: "Hire",
   Buyers: "Buyers",
   Wallet: "Wallet",
