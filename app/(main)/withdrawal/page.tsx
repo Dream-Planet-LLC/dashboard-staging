@@ -916,7 +916,7 @@ const WithdrawalPage = () => {
                     </div>
                   </div>
 
-                  {/* Dates */}
+              
                   <div>
                     <h4 className="text-[#808080] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] mb-4">
                       Timeline
