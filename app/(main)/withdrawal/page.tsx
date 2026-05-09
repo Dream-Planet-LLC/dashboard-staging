@@ -711,6 +711,8 @@ const WithdrawalPage = () => {
         </Select>
       </div>
 
+      
+
       {/* Table */}
       {/* <div className="bg-white overflow-hidden">
         {activeTab === "automatic" ? (
