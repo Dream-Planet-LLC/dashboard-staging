@@ -585,49 +585,59 @@ View and Manage a list of Onboarded Users
                   columns={columns}
                   placeholder="Search username, full name..."
                 />
-                 <div className="flex items-center justify-start space-x-2 px-4 py-4">
-        <div>
-          <p className="text-[14px]">
-          {(pagination?.page - 1) * pagination?.limit + 1} -{" "}
-          {Math.min(pagination?.page * pagination?.limit, pagination?.totalDocs)} of {pagination?.totalDocs}
-          </p>
+                 <div className="flex items-center justify-between text-sm text-[#808080] flex-1 px-4 py-4">
+        <p>
+          SHOWING {usersAll.length > 0 ? (pagination?.page - 1) * pagination?.limit + 1 : 0}-
+          {usersAll.length > 0 ? Math.min(pagination?.page * pagination?.limit, pagination?.totalDocs) : 0} OF{" "}
+          {pagination?.totalDocs?.toLocaleString()}
+        </p>
+        <div className="flex items-center gap-2">
+          <button  
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+            onClick={() => {
+              if (pagination?.hasPrevPage) {
+                setAllPage((prevPage) => prevPage - 1); 
+              }
+            }}
+            disabled={!pagination?.hasPrevPage}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                fill="#111810"
+              />
+            </svg> 
+          </button>
+
+          <button  
+            disabled={!pagination?.hasNextPage}
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+            onClick={() => {
+              if (pagination?.hasNextPage) {
+                setAllPage((prevPage) => prevPage + 1); 
+              }
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                fill="#111810"
+              />
+            </svg>
+          </button>
         </div>
-        <Button
-          className="p-0 bg-transparent hover:bg-transparent"
-          size="sm"
-          onClick={() => {
-            if (pagination?.hasPrevPage) {
-              setAllPage((prevPage) => prevPage - 1); 
-            }
-          }}
-          disabled={pagination?.page <= 1}
-        >
-          <Image
-            src={"/icons/backbutton.svg"}
-            height={20}
-            width={20}
-            alt="backbutton"
-          />
-        </Button>
-        <Button
-          className="p-0 bg-transparent hover:bg-transparent"
-          size="sm"
-          onClick={() => {
-            if (pagination?.hasNextPage) {
-              setAllPage((prevPage) => prevPage + 1); 
-            }
-          }}
-          disabled={pagination?.page * pagination?.limit >=
-            pagination?.totalDocs
-          }
-        >
-          <Image
-            src={"/icons/forwardbutton.svg"}
-            height={20}
-            width={20}
-            alt="forwardbutton"
-          />
-        </Button>
       </div>
               
 
@@ -705,49 +715,59 @@ View and Manage a list of Onboarded Users
                   columns={columns}
                   placeholder="Search username, full name..."
                 />
-                  <div className="flex items-center justify-start space-x-2 px-4 py-4">
-        <div>
-          <p className="text-[14px]">
-          {(paginationOther?.page - 1) * paginationOther?.limit + 1} -{" "}
-          {Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs)} of {paginationOther?.totalDocs}
-          </p>
+                  <div className="flex items-center justify-between text-sm text-[#808080] flex-1 px-4 py-4">
+        <p>
+          SHOWING {usersInvestor.length > 0 ? (paginationOther?.page - 1) * paginationOther?.limit + 1 : 0}-
+          {usersInvestor.length > 0 ? Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs) : 0} OF{" "}
+          {paginationOther?.totalDocs?.toLocaleString()}
+        </p>
+        <div className="flex items-center gap-2">
+          <button  
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+            onClick={() => {
+              if (paginationOther?.hasPrevPage) {
+                setInvestorPage((prevPage) => prevPage - 1); 
+              }
+            }}
+            disabled={!paginationOther?.hasPrevPage}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                fill="#111810"
+              />
+            </svg> 
+          </button>
+
+          <button  
+            disabled={!paginationOther?.hasNextPage}
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+            onClick={() => {
+              if (paginationOther?.hasNextPage) {
+                setInvestorPage((prevPage) => prevPage + 1); 
+              }
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                fill="#111810"
+              />
+            </svg>
+          </button>
         </div>
-        <Button
-          className="p-0 bg-transparent hover:bg-transparent"
-          size="sm"
-          onClick={() => {
-            if (paginationOther?.hasPrevPage) {
-              setInvestorPage((prevPage) => prevPage - 1); 
-            }
-          }}
-          disabled={paginationOther?.page <= 1}
-        >
-          <Image
-            src={"/icons/backbutton.svg"}
-            height={20}
-            width={20}
-            alt="backbutton"
-          />
-        </Button>
-        <Button
-          className="p-0 bg-transparent hover:bg-transparent"
-          size="sm"
-          onClick={() => {
-            if (paginationOther?.hasNextPage) {
-              setInvestorPage((prevPage) => prevPage + 1); 
-            }
-          }}
-          disabled={paginationOther?.page * paginationOther?.limit >=
-            paginationOther?.totalDocs
-          }
-        >
-          <Image
-            src={"/icons/forwardbutton.svg"}
-            height={20}
-            width={20}
-            alt="forwardbutton"
-          />
-        </Button>
       </div>
               
            
@@ -824,49 +844,59 @@ View and Manage a list of Onboarded Users
                   columns={columns}
                   placeholder="Search username, full name..."
                 />
-                 <div className="flex items-center justify-start space-x-2 px-4 py-4">
-        <div>
-          <p className="text-[14px]">
-          {(paginationOther?.page - 1) * paginationOther?.limit + 1} -{" "}
-          {Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs)} of {paginationOther?.totalDocs}
-          </p>
+                 <div className="flex items-center justify-between text-sm text-[#808080] flex-1 px-4 py-4">
+        <p>
+          SHOWING {usersCreator.length > 0 ? (paginationOther?.page - 1) * paginationOther?.limit + 1 : 0}-
+          {usersCreator.length > 0 ? Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs) : 0} OF{" "}
+          {paginationOther?.totalDocs?.toLocaleString()}
+        </p>
+        <div className="flex items-center gap-2">
+          <button  
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+            onClick={() => {
+              if (paginationOther?.hasPrevPage) {
+                setCreatorPage((prevPage) => prevPage - 1); 
+              }
+            }}
+            disabled={!paginationOther?.hasPrevPage}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                fill="#111810"
+              />
+            </svg> 
+          </button>
+
+          <button  
+            disabled={!paginationOther?.hasNextPage}
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+            onClick={() => {
+              if (paginationOther?.hasNextPage) {
+                setCreatorPage((prevPage) => prevPage + 1); 
+              }
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                fill="#111810"
+              />
+            </svg>
+          </button>
         </div>
-        <Button
-          className="p-0 bg-transparent hover:bg-transparent"
-          size="sm"
-          onClick={() => {
-            if (paginationOther?.hasPrevPage) {
-              setCreatorPage((prevPage) => prevPage - 1); 
-            }
-          }}
-          disabled={paginationOther?.page <= 1}
-        >
-          <Image
-            src={"/icons/backbutton.svg"}
-            height={20}
-            width={20}
-            alt="backbutton"
-          />
-        </Button>
-        <Button
-          className="p-0 bg-transparent hover:bg-transparent"
-          size="sm"
-          onClick={() => {
-            if (paginationOther?.hasNextPage) {
-              setCreatorPage((prevPage) => prevPage + 1); 
-            }
-          }}
-          disabled={paginationOther?.page * paginationOther?.limit >=
-            paginationOther?.totalDocs
-          }
-        >
-          <Image
-            src={"/icons/forwardbutton.svg"}
-            height={20}
-            width={20}
-            alt="forwardbutton"
-          />
-        </Button>
       </div>
           </TabsContent>
           <TabsContent value="fan">
@@ -942,49 +972,59 @@ View and Manage a list of Onboarded Users
                   columns={columns}
                   placeholder="Search username, full name..."
                 />
-                  <div className="flex items-center justify-start space-x-2 px-4 py-4">
-        <div>
-          <p className="text-[14px]">
-          {(paginationOther?.page - 1) * paginationOther?.limit + 1} -{" "}
-          {Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs)} of {paginationOther?.totalDocs}
-          </p>
+                  <div className="flex items-center justify-between text-sm text-[#808080] flex-1 px-4 py-4">
+        <p>
+          SHOWING {usersFan.length > 0 ? (paginationOther?.page - 1) * paginationOther?.limit + 1 : 0}-
+          {usersFan.length > 0 ? Math.min(paginationOther?.page * paginationOther?.limit, paginationOther?.totalDocs) : 0} OF{" "}
+          {paginationOther?.totalDocs?.toLocaleString()}
+        </p>
+        <div className="flex items-center gap-2">
+          <button  
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+            onClick={() => {
+              if (paginationOther?.hasPrevPage) {
+                setFanPage((prevPage) => prevPage - 1); 
+              }
+            }}
+            disabled={!paginationOther?.hasPrevPage}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                fill="#111810"
+              />
+            </svg> 
+          </button>
+
+          <button  
+            disabled={!paginationOther?.hasNextPage}
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8 rounded-full flex items-center justify-center cursor-pointer"
+            onClick={() => {
+              if (paginationOther?.hasNextPage) {
+                setFanPage((prevPage) => prevPage + 1); 
+              }
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                fill="#111810"
+              />
+            </svg>
+          </button>
         </div>
-        <Button
-          className="p-0 bg-transparent hover:bg-transparent"
-          size="sm"
-          onClick={() => {
-            if (paginationOther?.hasPrevPage) {
-              setFanPage((prevPage) => prevPage - 1); 
-            }
-          }}
-          disabled={paginationOther?.page <= 1}
-        >
-          <Image
-            src={"/icons/backbutton.svg"}
-            height={20}
-            width={20}
-            alt="backbutton"
-          />
-        </Button>
-        <Button
-          className="p-0 bg-transparent hover:bg-transparent"
-          size="sm"
-          onClick={() => {
-            if (paginationOther?.hasNextPage) {
-              setFanPage((prevPage) => prevPage + 1); 
-            }
-          }}
-          disabled={paginationOther?.page * paginationOther?.limit >=
-            paginationOther?.totalDocs
-          }
-        >
-          <Image
-            src={"/icons/forwardbutton.svg"}
-            height={20}
-            width={20}
-            alt="forwardbutton"
-          />
-        </Button>
       </div>
              
           </TabsContent>

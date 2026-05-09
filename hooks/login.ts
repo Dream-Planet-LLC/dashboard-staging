@@ -3,7 +3,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "./use-toast";
+import { toast } from "sonner";
 import { updateUser } from "@/redux/slices/adminslice";
 import { NAV_PERMISSIONS } from "@/constants/permission";
 
@@ -74,12 +74,7 @@ const useLogin = () => {
       // dispatch(updateUser(response?.data?.response?.admin));
       router.push("/");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description:
-          error.response?.data?.message || "An unexpected error occurred.",
-      });
+      toast.error(error.response?.data?.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
@@ -98,12 +93,7 @@ const useLogin = () => {
       );
       setisOpen(true);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description:
-          error.response?.data?.message || "An unexpected error occurred.",
-      });
+      toast.error(error.response?.data?.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }

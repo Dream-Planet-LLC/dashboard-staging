@@ -6,9 +6,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "";
 export const fetchOverviewData = async (): Promise<OverviewData> => {
   try {
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     const url = `${API_BASE_URL}/admin/digital-store-overview`;
     const headers = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -24,18 +22,18 @@ export const fetchOverviewData = async (): Promise<OverviewData> => {
       postResponse.status === 404 || postResponse.status === 405
         ? await fetch(url, { method: "GET", headers })
         : postResponse;
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const apiResponse: OverviewAPIResponse = await response.json();
-    
+
     // Check if API returned an error
     if (apiResponse.error) {
       throw new Error(apiResponse.message || "API returned an error");
     }
-    
+
     // Transform API response to match our OverviewData interface
     const payload =
       apiResponse?.data?.response ?? apiResponse?.response ?? apiResponse?.data;
@@ -46,7 +44,7 @@ export const fetchOverviewData = async (): Promise<OverviewData> => {
     const latest_10_products = Array.isArray(payload.latest_10_products)
       ? payload.latest_10_products
       : [];
-    
+
     return {
       salesRevenue: stats.total_sales_revenue || 0,
       platformRevenue: stats.platform_revenue || 0,
@@ -54,7 +52,7 @@ export const fetchOverviewData = async (): Promise<OverviewData> => {
       sellers: stats.total_sellers || 0,
       buyers: stats.total_buyers || 0,
       liveProducts: stats.total_live_products || 0,
-      recentProducts: latest_10_products.map((product:any) => ({
+      recentProducts: latest_10_products.map((product: any) => ({
         id: product.id || "",
         name: product.title || "Unknown Product",
         type: product.type || "Unknown",
@@ -72,86 +70,91 @@ export const fetchOverviewData = async (): Promise<OverviewData> => {
 };
 
 // Buyer Insight Overview API
-export const fetchBuyerInsightOverview = async (): Promise<BuyerInsightData> => {
-  try {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
-    const url = `${API_BASE_URL}/admin/get-buyer-insight-overview`;
-    const headers = {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      "Content-Type": "application/json",
-    };
+export const fetchBuyerInsightOverview =
+  async (): Promise<BuyerInsightData> => {
+    try {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("auth_token")
+          : null;
+      const url = `${API_BASE_URL}/admin/get-buyer-insight-overview`;
+      const headers = {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      };
 
-    const postResponse = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({}),
-    });
-    const response =
-      postResponse.status === 404 || postResponse.status === 405
-        ? await fetch(url, { method: "GET", headers })
-        : postResponse;
+      const postResponse = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({}),
+      });
+      const response =
+        postResponse.status === 404 || postResponse.status === 405
+          ? await fetch(url, { method: "GET", headers })
+          : postResponse;
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    const apiResponse: BuyerInsightApiResponse = await response.json();
-    if (apiResponse.error) {
-      throw new Error(apiResponse.message || "API returned an error");
-    }
+      const apiResponse: BuyerInsightApiResponse = await response.json();
+      if (apiResponse.error) {
+        throw new Error(apiResponse.message || "API returned an error");
+      }
 
-    const payload =
-      apiResponse?.data?.response ?? apiResponse?.response ?? apiResponse?.data;      
-    if (!payload) {
-      throw new Error("Unexpected API response shape");
-    }
+      const payload =
+        apiResponse?.data?.response ??
+        apiResponse?.response ??
+        apiResponse?.data;
+      if (!payload) {
+        throw new Error("Unexpected API response shape");
+      }
 
-    const stats = payload.stats || {};
-    const retention = payload.buyer_retention || {};
-    const topEngaging = Array.isArray(payload.top_engaging_buyers)
-      ? payload.top_engaging_buyers
-      : [];
+      const stats = payload.stats || {};
+      const retention = payload.buyer_retention || {};
+      const topEngaging = Array.isArray(payload.top_engaging_buyers)
+        ? payload.top_engaging_buyers
+        : [];
 
-    return {
-      stats: {
-        totalFans: stats.total_fans || 0,
-        activeBuyers: stats.total_active_buyers || 0,
-        dormantBuyers: stats.total_dormant_buyers || 0,
-        buyerGrowth: 0,
-        buyerGrowthChange: 0,
-        buyerRetention: {
-          repeat: retention.total_repeat_buyers || 0,
-          oneTime: retention.total_one_time_buyers || 0,
-        },
-      },
-      topBuyers: topEngaging.map((buyer: BuyerInsightTopBuyer, index: number) => {
-        const rawUsername = buyer.username || "";
-        const username =
-          rawUsername.length > 0
-            ? rawUsername.startsWith("@")
-              ? rawUsername
-              : `@${rawUsername}`
-            : "@unknown";
-        return {
-          id: buyer.buyer_id ? String(buyer.buyer_id) : String(index + 1),
-          fan: {
-            name: buyer.name || "Unknown Buyer",
-            username,
-            avatar: buyer.image || undefined,
+      return {
+        stats: {
+          totalFans: stats.total_fans || 0,
+          activeBuyers: stats.total_active_buyers || 0,
+          dormantBuyers: stats.total_dormant_buyers || 0,
+          buyerGrowth: 0,
+          buyerGrowthChange: 0,
+          buyerRetention: {
+            repeat: retention.total_repeat_buyers || 0,
+            oneTime: retention.total_one_time_buyers || 0,
           },
-          totalSpent: buyer.total_spent || 0,
-          lastPurchase: buyer.last_purchase_date || "",
-        };
-      }),
-    };
-  } catch (error) {
-    console.error("Error fetching buyer insight overview:", error);
-    throw error;
-  }
-};
+        },
+        topBuyers: topEngaging.map(
+          (buyer: BuyerInsightTopBuyer, index: number) => {
+            const rawUsername = buyer.username || "";
+            const username =
+              rawUsername.length > 0
+                ? rawUsername.startsWith("@")
+                  ? rawUsername
+                  : `@${rawUsername}`
+                : "@unknown";
+            return {
+              id: buyer.buyer_id ? String(buyer.buyer_id) : String(index + 1),
+              fan: {
+                name: buyer.name || "Unknown Buyer",
+                username,
+                avatar: buyer.image || undefined,
+              },
+              totalSpent: buyer.total_spent || 0,
+              lastPurchase: buyer.last_purchase_date || "",
+            };
+          },
+        ),
+      };
+    } catch (error) {
+      console.error("Error fetching buyer insight overview:", error);
+      throw error;
+    }
+  };
 
 // Orders API
 export const fetchOrdersData = async (
@@ -160,9 +163,7 @@ export const fetchOrdersData = async (
 ): Promise<OrdersData> => {
   try {
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     const response = await fetch(`${API_BASE_URL}/admin/get-all-orders`, {
       method: "POST",
       headers: {
@@ -222,10 +223,7 @@ export const fetchOrdersData = async (
       );
 
       const buyerName =
-        buyer.name ||
-        buyer.username ||
-        buyer.email ||
-        "Unknown Customer";
+        buyer.name || buyer.username || buyer.email || "Unknown Customer";
       const username = buyer.username
         ? buyer.username.startsWith("@")
           ? buyer.username
@@ -235,7 +233,6 @@ export const fetchOrdersData = async (
 
       const address = doc.shipping_address || (doc?.shipping_info as any);
       const add = address?.delivery_address?.formatted_address || "N/A";
-    
 
       return {
         id: String(orderIdValue),
@@ -251,7 +248,7 @@ export const fetchOrdersData = async (
           avatar: buyer.image || undefined,
           tier,
         },
-        shippingAddress:add,
+        shippingAddress: add,
         paymentSummary: doc.payment_summary
           ? {
               subtotal: doc.payment_summary.subtotal || 0,
@@ -310,9 +307,7 @@ export const fetchPayoutsData = async (
 ): Promise<PayoutsData> => {
   try {
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     const requestBody: {
       page: number;
       perPage: number;
@@ -409,9 +404,7 @@ export const fetchSellersStoreData = async (
 ): Promise<SellersStoreData> => {
   try {
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     const requestBody: {
       page: number;
       perPage: number;
@@ -510,17 +503,18 @@ export const fetchCreatorAnalytics = async (
 ): Promise<CreatorAnalytics> => {
   try {
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
-    const response = await fetch(`${API_BASE_URL}/admin/get-creators-analytics`, {
-      method: "POST",
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        "Content-Type": "application/json",
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    const response = await fetch(
+      `${API_BASE_URL}/admin/get-creators-analytics`,
+      {
+        method: "POST",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ creator_id: creatorId }),
       },
-      body: JSON.stringify({ creator_id: creatorId }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -532,9 +526,7 @@ export const fetchCreatorAnalytics = async (
     }
 
     const payload =
-      apiResponse?.data?.response ??
-      apiResponse?.response ??
-      apiResponse?.data;
+      apiResponse?.data?.response ?? apiResponse?.response ?? apiResponse?.data;
     if (!payload) {
       throw new Error("Unexpected API response shape");
     }
@@ -570,9 +562,7 @@ export const updateSellerEligibilityStatus = async (
 ): Promise<void> => {
   try {
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     const response = await fetch(
       `${API_BASE_URL}/admin/creators/update-seller-eligibility`,
       {
@@ -612,9 +602,7 @@ export const fetchCreatorStoreDetails = async (
 ): Promise<CreatorStoreData> => {
   try {
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     const requestBody: {
       creator_id: string | number;
       page: number;
@@ -699,8 +687,7 @@ export const fetchCreatorStoreDetails = async (
           type: normalizedType,
           price: doc.price || 0,
           creator: username,
-          unitsSold:
-            typeof doc.unit_sold === "number" ? doc.unit_sold : 0,
+          unitsSold: typeof doc.unit_sold === "number" ? doc.unit_sold : 0,
           uploadedDate: doc.uploaded_date || "",
           previewImage: doc.image || null,
           status: normalizedStatus,
@@ -736,9 +723,7 @@ export const fetchProductCatalogueData = async (
 ): Promise<ProductCatalogueData> => {
   try {
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     const requestBody: {
       page: number;
       perPage: number;
@@ -787,7 +772,7 @@ export const fetchProductCatalogueData = async (
     const products: ProductCatalogueItem[] = docs.map(
       (doc: ProductCatalogueDoc, index: number) => {
         const rawStatus = (doc.status || "").toString().toLowerCase();
-        const status = rawStatus //=== "live" ? "LISTED" : "SUSPENDED";
+        const status = rawStatus; //=== "live" ? "LISTED" : "SUSPENDED";
         const type = doc.type
           ? doc.type.charAt(0).toUpperCase() + doc.type.slice(1)
           : "Unknown";
@@ -829,19 +814,18 @@ export const fetchProductCatalogueData = async (
   }
 };
 
-
 export const deleteStoreItem = async (
   itemId: string | number,
 ): Promise<void> => {
   try {
     const resolvedId =
-      typeof itemId === "string" && itemId.trim() !== "" && !Number.isNaN(Number(itemId))
+      typeof itemId === "string" &&
+      itemId.trim() !== "" &&
+      !Number.isNaN(Number(itemId))
         ? Number(itemId)
         : itemId;
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     const response = await fetch(`${API_BASE_URL}/admin/delete-store-item`, {
       method: "POST",
       headers: {
@@ -871,13 +855,13 @@ export const updateStoreItemStatus = async (
 ): Promise<void> => {
   try {
     const resolvedId =
-      typeof itemId === "string" && itemId.trim() !== "" && !Number.isNaN(Number(itemId))
+      typeof itemId === "string" &&
+      itemId.trim() !== "" &&
+      !Number.isNaN(Number(itemId))
         ? Number(itemId)
         : itemId;
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     const response = await fetch(`${API_BASE_URL}/admin/items/update-status`, {
       method: "POST",
       headers: {
@@ -891,8 +875,7 @@ export const updateStoreItemStatus = async (
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const apiResponse: UpdateStoreItemStatusApiResponse =
-      await response.json();
+    const apiResponse: UpdateStoreItemStatusApiResponse = await response.json();
     if (apiResponse.error) {
       throw new Error(apiResponse.message || "API returned an error");
     }
@@ -903,105 +886,172 @@ export const updateStoreItemStatus = async (
 };
 
 // Buyer Purchase Reference API
-export const fetchBuyerPurchaseReference = async (): Promise<BuyerPurchaseReferenceData> => {
+export const fetchBuyerPurchaseReference =
+  async (): Promise<BuyerPurchaseReferenceData> => {
+    try {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("auth_token")
+          : null;
+      const url = `${API_BASE_URL}/admin/buyer-purchase-reference`;
+      const headers = {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      };
+
+      const postResponse = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({}),
+      });
+      const response =
+        postResponse.status === 404 || postResponse.status === 405
+          ? await fetch(url, { method: "GET", headers })
+          : postResponse;
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const apiResponse: BuyerPurchaseReferenceApiResponse =
+        await response.json();
+      if (apiResponse.error) {
+        throw new Error(apiResponse.message || "API returned an error");
+      }
+
+      const payload =
+        apiResponse?.data?.response ??
+        apiResponse?.data?.data ??
+        apiResponse?.response ??
+        apiResponse?.data;
+      if (!payload) {
+        throw new Error("Unexpected API response shape");
+      }
+
+      // Color mapping for categories
+      const getColorForCategory = (category: string): string => {
+        const colors: Record<string, string> = {
+          audio: "#2CAB5B",
+          video: "#DD3B83",
+          podcast: "#249D92",
+          ebook: "#EB6723",
+          masterclass: "#884CED",
+          merchandise: "#CE941C",
+          tickets: "#3971EB",
+          hire: "#063D90",
+        };
+        return colors[category.toLowerCase()] || "#A8A8A8";
+      };
+
+      // Transform categories data
+      const categoriesPayload = Array.isArray(payload.categories)
+        ? payload.categories
+        : [];
+      const categories = categoriesPayload.map(
+        (cat: BuyerPurchaseReferenceCategory) => {
+          const rawCategory = (cat.category || "Unknown").toString();
+          const name =
+            rawCategory.length > 0
+              ? rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1)
+              : "Unknown";
+          return {
+            name,
+            units: Number(cat.total_quantity_sold) || 0,
+            orders: Number(cat.total_orders) || 0,
+            amountMade: Number(cat.total_amount_made) || 0,
+            color: getColorForCategory(rawCategory),
+          };
+        },
+      );
+
+      // Transform revenue shares
+      const revenueShares = categoriesPayload.map(
+        (cat: BuyerPurchaseReferenceCategory) => {
+          const rawCategory = (cat.category || "Unknown").toString();
+          const category =
+            rawCategory.length > 0
+              ? rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1)
+              : "Unknown";
+          return {
+            category,
+            percentage: Number(cat.percentage_of_total_revenue) || 0,
+            color: getColorForCategory(rawCategory),
+          };
+        },
+      );
+
+      return {
+        totalRevenue: Number(payload.total_gross_revenue) || 0,
+        categories,
+        revenueShares,
+      };
+    } catch (error) {
+      console.error("Error fetching buyer purchase reference:", error);
+      throw error;
+    }
+  };
+
+export const createFeaturedSection = async (payload: {
+  name: string;
+  productIds: (string | number)[];
+  promotionEnabled: boolean;
+  promotionPercentage: number;
+}): Promise<FeaturedSectionResponse> => {
   try {
     const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
-    const url = `${API_BASE_URL}/admin/buyer-purchase-reference`;
-    const headers = {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      "Content-Type": "application/json",
-    };
+      typeof window != "undefined" ? localStorage.getItem("auth_token") : null;
 
-    const postResponse = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({}),
-    });
-    const response =
-      postResponse.status === 404 || postResponse.status === 405
-        ? await fetch(url, { method: "GET", headers })
-        : postResponse;
+    const requestBody = {
+      name: payload.name,
+      product_ids: payload.productIds,
+      promotion_enabled: payload.promotionEnabled,
+      promotion_percentage: payload.promotionPercentage,
+    };
+    
+    console.log("Creating section with payload:", requestBody);
+    
+    const response = await fetch(
+      `${API_BASE_URL}/store/admin/create-sections`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(requestBody),
+      },
+    );
+
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const apiResponse: BuyerPurchaseReferenceApiResponse = await response.json();
-    if (apiResponse.error) {
+    const apiResponse: FeaturedSectionApiResponse = await response.json();
+
+
+    if(apiResponse.error) {
       throw new Error(apiResponse.message || "API returned an error");
     }
 
-    const payload =
-      apiResponse?.data?.response ??
-      apiResponse?.data?.data ??
-      apiResponse?.response ??
-      apiResponse?.data;
-    if (!payload) {
-      throw new Error("Unexpected API response shape");
+    const raw = apiResponse?.data;
+
+    if (!raw) {
+      throw new Error ("Unexpected API response")
     }
 
-    // Color mapping for categories
-    const getColorForCategory = (category: string): string => {
-      const colors: Record<string, string> = {
-        audio: "#2CAB5B",
-        video: "#DD3B83",
-        podcast: "#249D92",
-        ebook: "#EB6723",
-        masterclass: "#884CED",
-        merchandise: "#CE941C",
-        tickets: "#3971EB",
-        hire: "#063D90",
-      };
-      return colors[category.toLowerCase()] || "#A8A8A8";
-    };
-
-    // Transform categories data
-    const categoriesPayload = Array.isArray(payload.categories)
-      ? payload.categories
-      : [];
-    const categories = categoriesPayload.map(
-      (cat: BuyerPurchaseReferenceCategory) => {
-        const rawCategory = (cat.category || "Unknown").toString();
-        const name =
-          rawCategory.length > 0
-            ? rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1)
-            : "Unknown";
-        return {
-          name,
-          units: Number(cat.total_quantity_sold) || 0,
-          orders: Number(cat.total_orders) || 0,
-          amountMade: Number(cat.total_amount_made) || 0,
-          color: getColorForCategory(rawCategory),
-        };
-      },
-    );
-
-    // Transform revenue shares
-    const revenueShares = categoriesPayload.map(
-      (cat: BuyerPurchaseReferenceCategory) => {
-        const rawCategory = (cat.category || "Unknown").toString();
-        const category =
-          rawCategory.length > 0
-            ? rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1)
-            : "Unknown";
-        return {
-          category,
-          percentage: Number(cat.percentage_of_total_revenue) || 0,
-          color: getColorForCategory(rawCategory),
-        };
-      },
-    );
-
+    // Use any type to handle dynamic response structure
+    const responseData = raw as any;
+    
     return {
-      totalRevenue: Number(payload.total_gross_revenue) || 0,
-      categories,
-      revenueShares,
+      id: responseData.id,
+      name: responseData.name,
+      promotionEnabled: responseData.promotion_enabled,
+      promotionPercentage: parseFloat(String(responseData.promotion_percentage || "0")) || 0,
+      itemsCount: responseData.items_count || 0,
     };
+
   } catch (error) {
-    console.error("Error fetching buyer purchase reference:", error);
     throw error;
   }
 };
@@ -1060,7 +1110,7 @@ interface BuyerInsightApiResponse {
       top_engaging_buyers?: BuyerInsightTopBuyer[];
     };
   };
-  response?: BuyerInsightApiResponse
+  response?: BuyerInsightApiResponse;
 }
 
 interface BuyerInsightTopBuyer {
@@ -1345,7 +1395,7 @@ interface CreatorAnalyticsApiResponse {
       };
     };
   };
-  response?:CreatorAnalyticsApiResponse;
+  response?: CreatorAnalyticsApiResponse;
 }
 
 export interface CreatorAnalytics {
@@ -1449,7 +1499,7 @@ interface CreatorStoreApiResponse {
   data: {
     response: CreatorStoreResponse;
   };
-  response?:CreatorStoreResponse
+  response?: CreatorStoreResponse;
 }
 
 interface CreatorStoreResponse {
@@ -1570,7 +1620,7 @@ export interface ProductCatalogueItem {
   name: string;
   productType: string;
   price: number;
-  status:string
+  status: string;
   creator: string;
   creatorId: number | undefined;
   date: string;
@@ -1602,18 +1652,18 @@ interface FeaturedSectionApiResponse {
       id: number;
       name: string;
       promotion_enabled: boolean;
-      promotion_percentage: number;
-      items_count: number;
     };
-    response?: {
-      id: number;
-      name: string;
-      promotion_enabled: boolean;
-      promotion_percentage: number;
-      items_count: number;
-    };
+    response?: FeaturedSectionRawResponse;
   };
-  response?: FeaturedSectionResponse;
+  response?: FeaturedSectionRawResponse;
+}
+
+interface FeaturedSectionRawResponse {
+  id: number;
+  name: string;
+  promotion_enabled: boolean;
+  promotion_percentage: number;
+  items_count: number;
 }
 
 export interface FeaturedSectionResponse {
@@ -1655,10 +1705,10 @@ interface BuyerPurchaseReferenceApiResponse {
   code: number;
   message: string;
   data: {
-    data:any
+    data: any;
     response: BuyerPurchaseReferenceResponse;
   };
-  response?:BuyerPurchaseReferenceApiResponse
+  response?: BuyerPurchaseReferenceApiResponse;
 }
 
 interface BuyerPurchaseReferenceResponse {
@@ -1688,4 +1738,360 @@ export interface BuyerPurchaseReferenceData {
     percentage: number;
     color: string;
   }[];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION MANAGEMENT API
+// ═══════════════════════════════════════════════════════════════
+
+// Get all sections
+export const fetchSections = async (): Promise<SectionsData> => {
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    
+    const response = await fetch(`${API_BASE_URL}/store/admin/get-sections`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: SectionsApiResponse = await response.json();
+    
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const payload = apiResponse?.data;
+    
+    if (!payload || !Array.isArray(payload)) {
+      // If no sections exist, return empty array
+      if (Array.isArray(apiResponse?.data) && apiResponse.data.length === 0) {
+        return { sections: [] };
+      }
+      throw new Error("Unexpected API response shape");
+    }
+
+    const sections: Section[] = payload.map((section: SectionDoc) => ({
+      id: section.id,
+      name: section.name,
+      promotionEnabled: section.promotion_enabled,
+      promotionPercentage: parseFloat(String(section.promotion_percentage || "0")) || 0,
+      itemsCount: section.items_count || 0,
+      createdAt: section.createdAt,
+      updatedAt: section.updatedAt,
+    }));
+
+    return { sections };
+  } catch (error) {
+    console.error("Error fetching sections:", error);
+    throw error;
+  }
+};
+
+// Update section
+export const updateSection = async (payload: {
+  id: number | string;
+  name: string;
+  productIds: (string | number)[];
+  promotionEnabled: boolean;
+  promotionPercentage: number;
+}): Promise<SectionResponse> => {
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+
+    const response = await fetch(`${API_BASE_URL}/store/admin/update-section`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: payload.id,
+        name: payload.name,
+        product_ids: payload.productIds,
+        promotion_enabled: payload.promotionEnabled,
+        promotion_percentage: payload.promotionPercentage,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: SectionApiResponse = await response.json();
+    
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const responseData = apiResponse?.data;
+    if (!responseData) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    return {
+      id: responseData.id,
+      name: responseData.name,
+      promotionEnabled: responseData.promotion_enabled,
+      promotionPercentage: parseFloat(String(responseData.promotion_percentage || "0")) || 0,
+      itemsCount: responseData.items_count || 0,
+    };
+  } catch (error) {
+    console.error("Error updating section:", error);
+    throw error;
+  }
+};
+
+// Get section items by ID
+export const getSectionItems = async (sectionId: number | string): Promise<SectionItemsData> => {
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+
+    const response = await fetch(`${API_BASE_URL}/store/admin/get-product-items-by-section-id`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ section_id: sectionId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: SectionItemsApiResponse = await response.json();
+    
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const payload = apiResponse?.data;
+    if (!payload) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    const sectionData: Section = {
+      id: payload.section.id,
+      name: payload.section.name,
+      promotionEnabled: payload.section.promotion_enabled,
+      promotionPercentage: parseFloat(String(payload.section.promotion_percentage || "0")) || 0,
+      itemsCount: payload.section.items_count || 0,
+      createdAt: payload.section.createdAt,
+      updatedAt: payload.section.updatedAt,
+    };
+
+    console.log("Raw section items:", payload.items);
+    
+    const items: SectionItem[] = Array.isArray(payload.items) 
+      ? payload.items.map((item: SectionItemDoc, index) => {
+          // Handle different product types and extract appropriate data
+          let name = "";
+          let price = 0;
+          let image = "";
+          let productType = item.type || "";
+          
+          console.log(`Processing item ${index}:`, item.type, item);
+          
+          if (item.type === "merchandise" && item.merchandise_title) {
+            name = item.merchandise_title;
+            price = parseFloat(String(item.merchandise_price || "0")) || 0;
+            image = item.merchandise_cover_image || item.merchandise_product_mockup_image || "";
+          } else if (item.type === "video" && item.video_title) {
+            name = item.video_title;
+            price = parseFloat(String(item.video_price || "0")) || 0;
+            image = item.video_cover_image || "";
+          } else if (item.type === "audio" && item.audio_title) {
+            name = item.audio_title;
+            price = parseFloat(String(item.audio_price || "0")) || 0;
+            image = item.audio_cover_image || "";
+          } else if (item.type === "ebooks" && item.ebooks_title) {
+            name = item.ebooks_title;
+            price = parseFloat(String(item.ebooks_price || "0")) || 0;
+            image = item.ebooks_cover_image || "";
+          } else if (item.type === "podcast" && item.podcast_title) {
+            name = item.podcast_title;
+            price = parseFloat(String(item.podcast_price || "0")) || 0;
+            image = item.podcast_cover_image || "";
+          } else if (item.type === "tickets" && item.tickets_title) {
+            name = item.tickets_title;
+            price = parseFloat(String(item.tickets_price || "0")) || 0;
+            image = item.tickets_cover_image || "";
+          } else {
+            // Fallback for other types - use empty values since these fields don't exist
+            name = "";
+            price = 0;
+            image = "";
+          }
+
+          return {
+            id: item.id,
+            name: name,
+            price: price,
+            image: image,
+            creator: item.creator?.name || "",
+            productType: productType,
+            status: item.status,
+            date: item.createdAt,
+          };
+        })
+      : [];
+
+    return { section: sectionData, items };
+  } catch (error) {
+    console.error("Error fetching section items:", error);
+    throw error;
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION API TYPES
+// ═══════════════════════════════════════════════════════════════
+
+export interface Section {
+  id: number | string;
+  name: string;
+  promotionEnabled: boolean;
+  promotionPercentage: number;
+  itemsCount: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SectionItem {
+  id: number | string;
+  name: string;
+  price: number;
+  image?: string;
+  creator: string;
+  productType: string;
+  status?: string;
+  date?: string;
+}
+
+export interface SectionsData {
+  sections: Section[];
+}
+
+export interface SectionItemsData {
+  section: Section;
+  items: SectionItem[];
+}
+
+export interface SectionResponse {
+  id: number | string;
+  name: string;
+  promotionEnabled: boolean;
+  promotionPercentage: number;
+  itemsCount: number;
+}
+
+// API Response Types
+interface SectionsApiResponse {
+  error: boolean;
+  code?: number;
+  message: string;
+  data: SectionDoc[];
+}
+
+interface SectionApiResponse {
+  error: boolean;
+  code?: number;
+  message: string;
+  data: SectionDoc;
+}
+
+interface SectionItemsApiResponse {
+  error: boolean;
+  code?: number;
+  message: string;
+  data: {
+    section: SectionDoc;
+    items: SectionItemDoc[];
+  };
+}
+
+interface SectionDoc {
+  id: number | string;
+  name: string;
+  promotion_enabled: boolean;
+  promotion_percentage?: string | number;
+  items_count: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface SectionItemDoc {
+  id: number | string;
+  creators_id?: number;
+  type: string;
+  // Video fields
+  video_title?: string;
+  video_price?: string;
+  video_description?: string;
+  video_files?: string[];
+  video_cover_image?: string;
+  // Audio fields
+  audio_title?: string;
+  audio_price?: string;
+  audio_description?: string;
+  audio_cover_image?: string;
+  audio_tracks?: any[];
+  // Podcast fields
+  podcast_title?: string;
+  podcast_number_of_episodes?: number;
+  podcast_price?: string;
+  podcast_description?: string;
+  podcast_cover_image?: string;
+  podcast_episodes?: any[];
+  // Merchandise fields
+  merchandise_title?: string;
+  merchandise_price?: string;
+  merchandise_cover_image?: string;
+  merchandise_size?: any[];
+  merchandise_product_mockup_image?: string;
+  merchandise_print_artwork_image?: string;
+  // Ebooks fields
+  ebooks_title?: string;
+  ebooks_price?: string;
+  ebooks_cover_image?: string;
+  ebooks_description?: string;
+  ebooks_files?: string[];
+  // Tickets fields
+  tickets_title?: string;
+  tickets_price?: string;
+  tickets_cover_image?: string;
+  tickets_description?: string;
+  tickets_date?: string;
+  tickets_time?: string;
+  tickets_location?: string;
+  tickets_type?: string;
+  tickets_files?: string[];
+  // Common fields
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  creator?: {
+    id: number;
+    name: string;
+    username: string;
+  };
+}
+
+export interface FeaturedSectionResponse {
+  id: number;
+  name: string;
+  promotionEnabled: boolean;
+  promotionPercentage: number;
+  itemsCount: number;
 }

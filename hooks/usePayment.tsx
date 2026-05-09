@@ -11,7 +11,7 @@ import { AppDispatch, RootState } from "@/redux/store";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useState } from "react";
-import { toast } from "./use-toast";
+import { toast } from "sonner";
 
 const usePayment = () => {
   const base_url = process.env.NEXT_PUBLIC_BASE_URL;
@@ -144,17 +144,10 @@ const usePayment = () => {
         "expiry": expiry, 
         "type": type, 
     });
-    toast({
-      variant: "default",
-      description: 'Updated Sucessfully', 
-    })
+    toast.success('Updated Successfully');
       
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: error.response?.data?.message || 'An unexpected error occurred.', 
-      })
+      toast.error(error.response?.data?.message || 'An unexpected error occurred.');
     }finally{
       setPaymentLoading(false)
     }

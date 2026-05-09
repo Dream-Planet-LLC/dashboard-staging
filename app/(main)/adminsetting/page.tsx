@@ -396,7 +396,7 @@ const AdminSetting = () => {
                   await deleteAdmin(profile?.id);
                   await getAdminPending();
                 }}
-                className="flex items-center space-x-2"
+             
               >
                 <span>
                   <Image

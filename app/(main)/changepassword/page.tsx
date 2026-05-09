@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import useLogin from "@/hooks/login";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const changePassword = () => {
   const { changePassword, isOpen, setisOpen, loading } = useLogin();
@@ -39,10 +39,7 @@ const changePassword = () => {
 
   const handleChangePassword = async () => {
     if (newpassword !== renewpassword) {
-      toast({
-        variant: "destructive",
-        description: "Your new passwords don't match",
-      });
+      toast.error("Your new passwords don't match");
       return;
     }
 

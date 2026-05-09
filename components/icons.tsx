@@ -472,6 +472,30 @@ export function PayoutsIcon({
   );
 }
 
+export function WithdrawalIcon({
+  className,
+  pathColor,
+}: {
+  className: string;
+  pathColor: string;
+}) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path
+        d="M4.16667 18.3327C3.70643 18.3327 3.33333 17.9596 3.33333 17.4993V2.49935C3.33333 2.03912 3.70643 1.66602 4.16667 1.66602H15.8333C16.2936 1.66602 16.6667 2.03912 16.6667 2.49935V17.4993C16.6667 17.9596 16.2936 18.3327 15.8333 18.3327H4.16667ZM15 16.666V3.33268H5V16.666H15ZM7.5 7.49935H12.5V9.16602H7.5V7.49935ZM7.5 10.8327H12.5V12.4993H7.5V10.8327ZM11.6667 14.9993L8.33333 14.9993C7.8731 14.9993 7.5 14.6262 7.5 14.166C7.5 13.7058 7.8731 13.3327 8.33333 13.3327L11.6667 13.3327C12.1269 13.3327 12.5 13.7058 12.5 14.166C12.5 14.6262 12.1269 14.9993 11.6667 14.9993Z"
+        fill={pathColor}
+      />
+    </svg>
+  );
+}
+
 export function HireIcon({
   className,
   pathColor,

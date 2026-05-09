@@ -4,7 +4,7 @@ import React, { Dispatch, SetStateAction, useCallback, useState } from "react";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import LoadingState from "@/components/LoadingState";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface FileWithPreview {
   preview: string;   // Will be real Cloudinary secure_url with fl_attachment
@@ -65,16 +65,11 @@ export default function GeneralDropzone({
             },
           ]);
 
-          toast({
-            description: `${file.name} uploaded successfully`,
-          });
+          toast.success(`${file.name} uploaded successfully`);
         }
       } catch (error: any) {
         console.error(error);
-        toast({
-          variant: "destructive",
-          description: error?.message || "Failed to upload file",
-        });
+        toast.error(error?.message || "Failed to upload file");
       } finally {
         setLoading(false);
       }
@@ -89,15 +84,9 @@ export default function GeneralDropzone({
       setLoading(false);
       fileRejections.forEach((rejection) => {
         if (rejection.errors.some((err) => err.code === "file-too-large")) {
-          toast({
-            variant: "destructive",
-            description: `File "${rejection.file.name}" is too large (max 1GB)`,
-          });
+          toast.error(`File "${rejection.file.name}" is too large (max 1GB)`);
         } else {
-          toast({
-            variant: "destructive",
-            description: `File "${rejection.file.name}" rejected`,
-          });
+          toast.error(`File "${rejection.file.name}" rejected`);
         }
       });
     },
