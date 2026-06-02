@@ -199,7 +199,7 @@ const WithdrawalPage = () => {
   const pageSize = 20;
   const totalWithdrawals = pagination?.totalDocs || 0;
 
-  // API functions
+  // API functio
   const fetchWithdrawals = async () => {
     try {
       if (isInitialLoad) {
