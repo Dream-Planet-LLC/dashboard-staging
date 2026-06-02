@@ -69,25 +69,34 @@ import {
   whiteStoreIcon,
   salRevIcon,
 } from "@/svg";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
 
 // Types based on API documentation
 interface Withdrawal {
   withdrawal_id: number;
+  creator_id: number;
   creator_name: string;
   creator_image: string;
   creator_username: string;
   amount: number;
   status: "pending" | "processing" | "completed" | "failed";
   date: string;
+  balance?: WalletBalance;
+}
+
+interface WalletBalance {
+  wallet_balance: number;
+  cashback_balance: number;
+  investment_cashback_balance: number;
+  referral_balance: number;
 }
 
 interface ManualWithdrawal {
   id: number;
   withdrawal_id: number;
   user_id: number;
+  creator_id: number;
   user_name: string;
   username: string;
   user_image: string;
@@ -105,6 +114,7 @@ interface ManualWithdrawal {
   rejection_reason?: string;
   processedAt?: string;
   createdAt: string;
+  balance?: WalletBalance;
 }
 
 interface WithdrawalStats {
@@ -184,6 +194,8 @@ const WithdrawalPage = () => {
   const [rejectLoading, setRejectLoading] = useState(false);
   const [completedDialogOpen, setCompletedDialogOpen] = useState(false);
   const [completedLoading, setCompletedLoading] = useState(false);
+  const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
+  const [profileData, setProfileData] = useState<any>({});
   const pageSize = 20;
   const totalWithdrawals = pagination?.totalDocs || 0;
 
@@ -216,17 +228,19 @@ const WithdrawalPage = () => {
         const data = await response.json();
         if (data.error) throw new Error(data.message);
         
-        setWithdrawals(data.response.docs);
-        setStats(data.response.stats);
+        const responseData = data?.data?.response ?? data?.response;
+
+        setWithdrawals(responseData.docs);
+        setStats(responseData.stats);
         setPagination({
-          totalDocs: data.response.totalDocs,
-          limit: data.response.limit,
-          page: data.response.page,
-          totalPages: data.response.totalPages,
-          hasPrevPage: data.response.hasPrevPage,
-          hasNextPage: data.response.hasNextPage,
-          prevPage: data.response.prevPage,
-          nextPage: data.response.nextPage,
+          totalDocs: responseData.totalDocs,
+          limit: responseData.limit,
+          page: responseData.page,
+          totalPages: responseData.totalPages,
+          hasPrevPage: responseData.hasPrevPage,
+          hasNextPage: responseData.hasNextPage,
+          prevPage: responseData.prevPage,
+          nextPage: responseData.nextPage,
         });
       } else {
         const response = await fetch(`${baseUrl}/admin/get-manual-withdrawals`, {
@@ -248,16 +262,18 @@ const WithdrawalPage = () => {
         const data = await response.json();
         if (data.error) throw new Error(data.message);
         
-        setManualWithdrawals(data.response.docs);
+        const responseData = data?.data?.response ?? data?.response;
+
+        setManualWithdrawals(responseData.docs);
         setPagination({
-          totalDocs: data.response.totalDocs,
-          limit: data.response.limit,
-          page: data.response.page,
-          totalPages: data.response.totalPages,
-          hasPrevPage: data.response.hasPrevPage,
-          hasNextPage: data.response.hasNextPage,
-          prevPage: data.response.prevPage,
-          nextPage: data.response.nextPage,
+          totalDocs: responseData.totalDocs,
+          limit: responseData.limit,
+          page: responseData.page,
+          totalPages: responseData.totalPages,
+          hasPrevPage: responseData.hasPrevPage,
+          hasNextPage: responseData.hasNextPage,
+          prevPage: responseData.prevPage,
+          nextPage: responseData.nextPage,
         });
       }
     } catch (error) {
@@ -334,6 +350,39 @@ const WithdrawalPage = () => {
   const openCompletedDialog = (withdrawal: ManualWithdrawal) => {
     setSelectedWithdrawal(withdrawal);
     setCompletedDialogOpen(true);
+  };
+
+  const openProfileSheet = () => {
+    if (!selectedWithdrawal) return;
+
+    const username = selectedWithdrawal.username || "";
+    const transformedProfileData = {
+      id: selectedWithdrawal.user_id || selectedWithdrawal.creator_id,
+      name: selectedWithdrawal.user_name,
+      username,
+      full_name: selectedWithdrawal.user_name,
+      email: username
+        ? `${username.replace("@", "")}@dreamplanet.org`
+        : "Not provided",
+      phone_number: "Not provided",
+      country: "Not provided",
+      image: selectedWithdrawal.user_image,
+      status:
+        selectedWithdrawal.status === "rejected" ? "inactive" : "active",
+      createdAt: selectedWithdrawal.createdAt,
+      verification_type: "Creator",
+      noOfMembers: "0",
+      noOfPosts: "0",
+      noOfInvestor: "0",
+      interested_creators: "0",
+    };
+
+    setProfileData(transformedProfileData);
+    setIsProfileSheetOpen(true);
+  };
+
+  const closeProfileSheet = () => {
+    setIsProfileSheetOpen(false);
   };
 
   const handleReject = () => {
@@ -471,6 +520,19 @@ const WithdrawalPage = () => {
           {formatCurrency(row.getValue("amount"))}
         </span>
       ),
+    },
+    {
+      accessorKey: "balance",
+      header: "Wallet Balance",
+      cell: ({ row }) => {
+        const withdrawal = row.original;
+
+        return (
+          <span className="font-medium text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
+            {formatCurrency(withdrawal.balance?.wallet_balance ?? 0)}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "status",
@@ -822,12 +884,20 @@ const WithdrawalPage = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="text-[#111810] INT500 font-medium text-[18px] leading-[24px] tracking-[-1.5%]">
+                      <button
+                        type="button"
+                        onClick={openProfileSheet}
+                        className="block text-left text-[#111810] INT500 font-medium text-[18px] leading-[24px] tracking-[-1.5%] hover:text-[#F75803] hover:underline"
+                      >
                         {selectedWithdrawal.user_name}
-                      </h3>
-                      <p className="text-[#808080] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                      </button>
+                      <button
+                        type="button"
+                        onClick={openProfileSheet}
+                        className="text-[#F75803] INT400 text-[14px] leading-[20px] tracking-[-1.8%] hover:underline"
+                      >
                         @{selectedWithdrawal.username}
-                      </p>
+                      </button>
                     </div>
                   </div>
 
@@ -855,6 +925,46 @@ const WithdrawalPage = () => {
                         }`}
                       >
                         {selectedWithdrawal.status}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Wallet Balances */}
+                  <div>
+                    <h4 className="text-[#808080] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] mb-4">
+                  Balances
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                          Wallet Balance
+                        </span>
+                        <span className="text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
+                          {formatCurrency(
+                            selectedWithdrawal.balance?.wallet_balance ?? 0,
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                          Referral Balance
+                        </span>
+                        <span className="text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
+                          {formatCurrency(
+                            selectedWithdrawal.balance?.referral_balance ?? 0,
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#A4A4A4] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
+                          Investment Cashback Balance
+                        </span>
+                        <span className="text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
+                          {formatCurrency(
+                            selectedWithdrawal.balance
+                              ?.investment_cashback_balance ?? 0,
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -962,6 +1072,109 @@ const WithdrawalPage = () => {
           </div>
         </DrawerContent>
       </Drawer>
+
+      {/* Profile Sheet */}
+      <Sheet open={isProfileSheetOpen} onOpenChange={closeProfileSheet}>
+        <SheetContent className="sm:max-w-[519px] overflow-y-auto scrollbar-hide">
+          <SheetHeader>
+            <SheetTitle className="flex justify-between">
+              <p className="text-[#111810] font-medium text-[20px]">
+                User Details
+              </p>
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col">
+            <div className="flex items-center space-x-[12px] mt-[40px] mb-[28px]">
+              <Avatar>
+                <AvatarImage
+                  className="object-cover"
+                  src={profileData?.image}
+                  alt={profileData?.full_name || "User"}
+                />
+                <AvatarFallback className="bg-gray-200 text-black">
+                  {profileData?.name?.[0] || ""}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-[20px] font-medium text-[#111810]">
+                  {profileData?.full_name}
+                </p>
+                <div className="flex items-center space-x-2">
+                  <p className="flex items-center space-x-1">
+                    <span className="text-[#A4A4A4]">@</span>
+                    <span className="text-[#A4A4A4]">
+                      {profileData?.username}
+                    </span>
+                  </p>
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      profileData?.status === "active"
+                        ? "bg-[#2BAC47]"
+                        : "bg-[#C83532]"
+                    }`}
+                  ></div>
+                  <span className="text-[#A4A4A4] text-[14px]">
+                    {profileData?.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-8 mb-[28px]">
+              <div className="flex flex-col space-y-1">
+                <p className="text-[#A4A4A4] text-[14px]">Members in forum</p>
+                <h2 className="font-Recoleta font-medium text-[28px]">
+                  {profileData?.noOfMembers}
+                </h2>
+              </div>
+              <div className="h-[61px] w-[1px] bg-[#E4E4E4]"></div>
+              <div className="flex flex-col space-y-1">
+                <p className="text-[#A4A4A4] text-[14px]">
+                  Post in portfolio
+                </p>
+                <h2 className="font-Recoleta font-medium text-[28px] flex">
+                  {profileData?.noOfPosts}
+                </h2>
+              </div>
+            </div>
+
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className="text-[#A4A4A4]">Full Name</p>
+                <p>{profileData?.full_name}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className="text-[#A4A4A4]">Email</p>
+                <p className="text-[#F75803]">{profileData?.email}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className="text-[#A4A4A4]">Phone Number</p>
+                <p className="text-[#F75803]">{profileData?.phone_number}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className="text-[#A4A4A4]">Country</p>
+                <p>{profileData?.country || "Null"}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className="text-[#A4A4A4]">Interested Creators</p>
+                <p>{profileData?.interested_creators}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className="text-[#A4A4A4] line-clamp-2">Date Joined</p>
+                <p>{profileData?.createdAt?.substring(0, 10)}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className="text-[#A4A4A4]">No Of Investor</p>
+                <p>{profileData?.noOfInvestor}</p>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <p className="text-[#A4A4A4]">Verification</p>
+                <p>{profileData?.verification_type}</p>
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
