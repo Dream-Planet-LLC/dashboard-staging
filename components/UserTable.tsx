@@ -29,6 +29,7 @@ interface DataTableProps<TData, TValue> {
   placeholder?: string;
   top?: boolean;
   bottom?: boolean;
+  loading?: boolean;
 }
 
 export function UserTable<TData, TValue>({
@@ -37,6 +38,7 @@ export function UserTable<TData, TValue>({
   placeholder,
   top,
   bottom,
+  loading,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   
@@ -135,7 +137,18 @@ export function UserTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody className="mt-10">
-            {table.getRowModel().rows?.length ? (
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-20"
+                >
+                  <div className="flex items-center justify-center py-20">
+                    <div className="animate-spin h-8 w-8 border-4 border-[#F75803] border-t-transparent rounded-full" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
