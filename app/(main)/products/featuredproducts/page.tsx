@@ -17,6 +17,15 @@ import {
   SheetTitle,
   SheetClose,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -37,6 +46,7 @@ import {
   fetchSections,
   createFeaturedSection,
   updateSection,
+  deleteSection,
   getSectionItems,
   fetchProductCatalogueData,
   type Section,
@@ -231,9 +241,12 @@ const FeaturedProductsPage = () => {
   );
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sectionItemsLoading, setSectionItemsLoading] = useState(false);
   const [productsLoading, setProductsLoading] = useState(false);
   const [savingSection, setSavingSection] = useState(false);
   const [updatingSection, setUpdatingSection] = useState(false);
+  const [deletingSection, setDeletingSection] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<CategoryTab>("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -259,7 +272,6 @@ const FeaturedProductsPage = () => {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   const pageSize = 16;
-  const totalProducts = 12560;
 
   // ═══════════════════════════════════════════════════════════════
   // FETCH DATA FROM BACKEND
@@ -323,6 +335,7 @@ const FeaturedProductsPage = () => {
 
     const loadSectionItems = async () => {
       try {
+        setSectionItemsLoading(true);
         const activeSection = sections.find((s) => s.name === activeTab);
         if (!activeSection) return;
 
@@ -337,11 +350,17 @@ const FeaturedProductsPage = () => {
       } catch (err) {
         console.error(err);
         toast.error("Failed to load section items");
+      } finally {
+        setSectionItemsLoading(false);
       }
     };
 
     loadSectionItems();
   }, [activeTab, sections]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
 
   // ═══════════════════════════════════════════════════════════════
   // HELPER FUNCTIONS
@@ -376,6 +395,12 @@ const FeaturedProductsPage = () => {
 
   const filteredFeaturedProducts = featuredProducts.filter(
     (product) => product.category === activeTab,
+  );
+  const totalFeaturedProducts = filteredFeaturedProducts.length;
+  const totalPages = Math.ceil(totalFeaturedProducts / pageSize);
+  const paginatedFeaturedProducts = filteredFeaturedProducts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
   );
 
   const filteredAllProducts = allProducts.filter((product) => {
@@ -599,10 +624,39 @@ const FeaturedProductsPage = () => {
     }
   };
 
+  const openDeleteCategoryDialog = () => {
+    if (!sections.find((s) => s.name === activeTab)) {
+      toast.error("No category selected");
+      return;
+    }
+
+    setDeleteDialogOpen(true);
+  };
+
   const handleDeleteCategory = async () => {
-    console.log("Deleting category:", selectedCategory);
-    // TODO: await fetch(`/api/featured-category/${encodeURIComponent(selectedCategory)}`, { method: 'DELETE' });
-    setMainDrawerOpen(false);
+    const activeSection = sections.find((s) => s.name === activeTab);
+    if (!activeSection) {
+      toast.error("No category selected");
+      return;
+    }
+
+    try {
+      setDeletingSection(true);
+      await deleteSection(activeSection.id);
+      toast.success("Section deleted");
+
+      const sectionsData = await fetchSections();
+      setSections(sectionsData.sections);
+      setFeaturedProducts([]);
+      setActiveTab(sectionsData.sections[0]?.name || "");
+      setMainDrawerOpen(false);
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete section");
+    } finally {
+      setDeletingSection(false);
+    }
   };
 
   // ═══════════════════════════════════════════════════════════════
@@ -727,11 +781,12 @@ const FeaturedProductsPage = () => {
     // },
   ];
 
-  const showingStart = (currentPage - 1) * pageSize + 1;
-  const showingEnd = Math.min(
-    Math.min(showingStart + pageSize - 1, totalProducts),
-    showingStart + filteredFeaturedProducts.length - 1,
-  );
+  const showingStart =
+    totalFeaturedProducts === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const showingEnd =
+    totalFeaturedProducts === 0
+      ? 0
+      : Math.min(currentPage * pageSize, totalFeaturedProducts);
 
   if (loading) {
     return (
@@ -795,24 +850,24 @@ const FeaturedProductsPage = () => {
       {/* Products Table */}
       <div className="bg-white overflow-hidden">
         <UserTable
-          data={filteredFeaturedProducts}
+          data={paginatedFeaturedProducts}
           columns={columns}
           placeholder="Search products..."
+          loading={sectionItemsLoading}
         />
       </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-between text-sm text-[#808080]">
         <p className="INT400 text-[14px]">
-          SHOWING {filteredFeaturedProducts.length > 0 ? showingStart : 0}-
-          {filteredFeaturedProducts.length > 0 ? showingEnd : 0} OF{" "}
-          {totalProducts.toLocaleString()}
+          SHOWING {showingStart}-{showingEnd} OF{" "}
+          {totalFeaturedProducts.toLocaleString()}
         </p>
         <div className="flex items-center gap-2">
           <button
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
           >
             <svg
               width="16"
@@ -829,8 +884,10 @@ const FeaturedProductsPage = () => {
           </button>
 
           <button
-            disabled={showingEnd >= totalProducts}
-            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={totalPages === 0 || currentPage >= totalPages}
+            onClick={() =>
+              setCurrentPage((page) => Math.min(totalPages, page + 1))
+            }
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
           >
             <svg
@@ -945,56 +1002,62 @@ const FeaturedProductsPage = () => {
 
               {/* Selected Products Grid */}
               <div className="flex flex-wrap gap-3 w-full">
-                {selectedProducts
-                  .sort((a, b) => a.order - b.order)
-                  .map((product) => (
-                    <div
-                      key={product.id}
-                      className="relative w-[115px] h-[120px] rounded-[3px] overflow-hidden bg-[#D9D9D9]"
-                    >
-                      {product.image ? (
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <ImageIcon className="h-8 w-8 text-gray-400" />
-                        </div>
-                      )}
-                      <button
-                        onClick={() => handleRemoveProduct(product.id)}
-                        className="absolute top-2 right-2 h-6 w-6 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center cursor-pointer"
-                      >
-                        <X className="h-3 w-3 text-white" />
-                      </button>
-                    </div>
-                  ))}
-
-                <button
-                  onClick={handleOpenSelectionDrawer}
-                  className="INT500  text-[#808080] text-[14px] leading-[20px] track9ing-[-1.5%] w-full flex items-center justify-center gap-2 h-[80px] rounded-[12px] border-[2px] border-[#E4E4E4] border-dashed cursor-pointer"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+                {selectedProducts.length === 0 ? (
+                  <button
+                    onClick={handleOpenSelectionDrawer}
+                    className="INT500  text-[#808080] text-[14px] leading-[20px] track9ing-[-1.5%] w-full flex items-center justify-center gap-2 h-[80px] rounded-[12px] border-[2px] border-[#E4E4E4] border-dashed cursor-pointer"
                   >
-                    <path
-                      d="M10.0003 18.3327C5.39795 18.3327 1.66699 14.6017 1.66699 9.99935C1.66699 5.39697 5.39795 1.66602 10.0003 1.66602C14.6027 1.66602 18.3337 5.39697 18.3337 9.99935C18.3337 14.6017 14.6027 18.3327 10.0003 18.3327ZM9.16699 9.16602H5.83366V10.8327H9.16699V14.166H10.8337V10.8327H14.167V9.16602H10.8337V5.83268H9.16699V9.16602Z"
-                      fill="#808080"
-                    />
-                  </svg>
-                  Select Featured Product
-                </button>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M10.0003 18.3327C5.39795 18.3327 1.66699 14.6017 1.66699 9.99935C1.66699 5.39697 5.39795 1.66602 10.0003 1.66602C14.6027 1.66602 18.3337 5.39697 18.3337 9.99935C18.3337 14.6017 14.6027 18.3327 10.0003 18.3327ZM9.16699 9.16602H5.83366V10.8327H9.16699V14.166H10.8337V10.8327H14.167V9.16602H10.8337V5.83268H9.16699V9.16602Z"
+                        fill="#808080"
+                      />
+                    </svg>
+                    Select Featured Product
+                  </button>
+                ) : (
+                  <>
+                    {[...selectedProducts]
+                      .sort((a, b) => a.order - b.order)
+                      .map((product) => (
+                        <div
+                          key={product.id}
+                          className="relative w-[115px] h-[120px] rounded-[3px] overflow-hidden bg-[#D9D9D9]"
+                        >
+                          {product.image ? (
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon className="h-8 w-8 text-gray-400" />
+                            </div>
+                          )}
+                          <button
+                            onClick={() => handleRemoveProduct(product.id)}
+                            className="absolute top-2 right-2 h-6 w-6 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center cursor-pointer"
+                          >
+                            <X className="h-3 w-3 text-white" />
+                          </button>
+                        </div>
+                      ))}
 
-                                
-                <button onClick={handleOpenSelectionDrawer} className="aspect-square  bg-[#FEF5EE] hover:bg-[#FFEEE6] transition-colors flex items-center justify-center w-[115px] h-[120px] rounded-[3px] ">
-                  <Plus className="h-8 w-8 text-[#F75803]" />
-                </button>
+                    <button
+                      onClick={handleOpenSelectionDrawer}
+                      className="aspect-square bg-[#FEF5EE] hover:bg-[#FFEEE6] transition-colors flex items-center justify-center w-[115px] h-[120px] rounded-[3px]"
+                    >
+                      <Plus className="h-8 w-8 text-[#F75803]" />
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Promotion Toggle */}
@@ -1058,7 +1121,7 @@ const FeaturedProductsPage = () => {
               {isEditMode ? (
                 <>
                   <Button
-                    onClick={handleDeleteCategory}
+                    onClick={openDeleteCategoryDialog}
                     variant="ghost"
                     className="text-[#C83532] rounded-[12px] hover:text-[#C83532] hover:bg-[#FEF2F2] INT500 text-[14px] cursor-pointer"
                   >
@@ -1148,6 +1211,33 @@ const FeaturedProductsPage = () => {
       {/* ═══════════════════════════════════════════════════════════════
           DRAWER 2 - PRODUCT SELECTION
           ═══════════════════════════════════════════════════════════════ */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete category?</DialogTitle>
+            <DialogDescription>
+              This will delete {activeTab ? `"${activeTab}"` : "this category"}.
+              Store items linked to it will not be deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-end">
+            <DialogClose asChild>
+              <Button variant="outline" disabled={deletingSection}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              onClick={handleDeleteCategory}
+              disabled={deletingSection}
+              loading={deletingSection}
+              className="bg-[#C83532] hover:bg-[#C83532] text-white"
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Sheet open={selectionDrawerOpen} onOpenChange={setSelectionDrawerOpen}>
         <SheetContent
           className="w-full sm:max-w-[80%] h-screen p-0 [&>button]:hidden"

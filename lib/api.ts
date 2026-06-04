@@ -2,6 +2,83 @@
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "";
 
+export interface AdminUserDetails {
+  id: string | number;
+  email?: string;
+  full_name?: string;
+  username?: string;
+  user_type?: string;
+  image?: string;
+  status?: string;
+  phone_number?: string;
+  country?: string;
+  noOfMembers?: number;
+  noOfPosts?: number;
+  noOfInvestor?: number;
+  interested_creators?: number;
+  createdAt?: string;
+  referral_link?: string;
+}
+
+interface AdminUserDetailsApiResponse {
+  error: boolean;
+  code?: number;
+  message?: string;
+  data?: AdminUserDetails | { response?: AdminUserDetails };
+  response?: AdminUserDetails;
+}
+
+export const fetchAdminUserDetails = async (
+  userId: string | number,
+): Promise<AdminUserDetails> => {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/users/details`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ user_id: userId }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: AdminUserDetailsApiResponse = await response.json();
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+
+    const dataPayload = apiResponse.data as
+      | AdminUserDetails
+      | { response?: AdminUserDetails }
+      | undefined;
+    const nestedPayload =
+      dataPayload && "response" in dataPayload
+        ? dataPayload.response
+        : undefined;
+    const payload: AdminUserDetails | undefined =
+      apiResponse.response ??
+      nestedPayload ??
+      (dataPayload as AdminUserDetails | undefined);
+
+    if (!payload || !payload.id) {
+      throw new Error("Unexpected API response shape");
+    }
+
+    return payload as AdminUserDetails;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+};
+
 // Overview API
 export const fetchOverviewData = async (): Promise<OverviewData> => {
   try {
@@ -1851,6 +1928,36 @@ export const updateSection = async (payload: {
   }
 };
 
+export const deleteSection = async (sectionId: number | string): Promise<void> => {
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+
+    const response = await fetch(`${API_BASE_URL}/store/admin/delete-section`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: sectionId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiResponse: { error: boolean; message?: string } =
+      await response.json();
+
+    if (apiResponse.error) {
+      throw new Error(apiResponse.message || "API returned an error");
+    }
+  } catch (error) {
+    console.error("Error deleting section:", error);
+    throw error;
+  }
+};
+
 // Get section items by ID
 export const getSectionItems = async (sectionId: number | string): Promise<SectionItemsData> => {
   try {
@@ -1891,58 +1998,72 @@ export const getSectionItems = async (sectionId: number | string): Promise<Secti
       updatedAt: payload.section.updatedAt,
     };
 
-    console.log("Raw section items:", payload.items);
-    
     const items: SectionItem[] = Array.isArray(payload.items) 
-      ? payload.items.map((item: SectionItemDoc, index) => {
-          // Handle different product types and extract appropriate data
-          let name = "";
-          let price = 0;
-          let image = "";
-          let productType = item.type || "";
-          
-          console.log(`Processing item ${index}:`, item.type, item);
-          
-          if (item.type === "merchandise" && item.merchandise_title) {
-            name = item.merchandise_title;
-            price = parseFloat(String(item.merchandise_price || "0")) || 0;
-            image = item.merchandise_cover_image || item.merchandise_product_mockup_image || "";
-          } else if (item.type === "video" && item.video_title) {
-            name = item.video_title;
-            price = parseFloat(String(item.video_price || "0")) || 0;
-            image = item.video_cover_image || "";
-          } else if (item.type === "audio" && item.audio_title) {
-            name = item.audio_title;
-            price = parseFloat(String(item.audio_price || "0")) || 0;
-            image = item.audio_cover_image || "";
-          } else if (item.type === "ebooks" && item.ebooks_title) {
-            name = item.ebooks_title;
-            price = parseFloat(String(item.ebooks_price || "0")) || 0;
-            image = item.ebooks_cover_image || "";
-          } else if (item.type === "podcast" && item.podcast_title) {
-            name = item.podcast_title;
-            price = parseFloat(String(item.podcast_price || "0")) || 0;
-            image = item.podcast_cover_image || "";
-          } else if (item.type === "tickets" && item.tickets_title) {
-            name = item.tickets_title;
-            price = parseFloat(String(item.tickets_price || "0")) || 0;
-            image = item.tickets_cover_image || "";
-          } else {
-            // Fallback for other types - use empty values since these fields don't exist
-            name = "";
-            price = 0;
-            image = "";
-          }
+      ? payload.items.map((item: SectionItemDoc) => {
+          const rawItem = item as Record<string, any>;
+          const type = String(item.type || "").trim().toLowerCase();
+          const titleKeysByType: Record<string, string[]> = {
+            audio: ["audio_title", "audio_category_name"],
+            ebooks: ["ebooks_title"],
+            ebook: ["ebooks_title"],
+            instrumental: ["instrumental_name"],
+            masterclass: ["masterclass_title"],
+            merchandise: ["merchandise_title"],
+            podcast: ["podcast_title"],
+            tickets: ["tickets_title"],
+            ticket: ["tickets_title"],
+            video: ["video_title"],
+          };
+          const priceKeysByType: Record<string, string[]> = {
+            audio: ["audio_price"],
+            ebooks: ["ebooks_price"],
+            ebook: ["ebooks_price"],
+            instrumental: [],
+            masterclass: ["masterclass_price"],
+            merchandise: ["merchandise_price"],
+            podcast: ["podcast_price"],
+            tickets: ["tickets_price"],
+            ticket: ["tickets_price"],
+            video: ["video_price"],
+          };
+          const imageKeysByType: Record<string, string[]> = {
+            audio: ["audio_cover_image"],
+            ebooks: ["ebooks_cover_image"],
+            ebook: ["ebooks_cover_image"],
+            instrumental: ["instrumental_cover_image"],
+            masterclass: ["masterclass_cover_image"],
+            merchandise: [
+              "merchandise_cover_image",
+              "merchandise_product_mockup_image",
+            ],
+            podcast: ["podcast_cover_image"],
+            tickets: ["tickets_cover_image"],
+            ticket: ["tickets_cover_image"],
+            video: ["video_cover_image"],
+          };
+          const firstValue = (keys: string[]) =>
+            keys.map((key) => rawItem[key]).find((value) => value);
+          const name =
+            firstValue(["name", "title", ...(titleKeysByType[type] || [])]) ||
+            "Unknown Product";
+          const priceValue = firstValue([
+            "price",
+            ...(priceKeysByType[type] || []),
+          ]);
+          const image =
+            firstValue(["image", "cover_image", ...(imageKeysByType[type] || [])]) ||
+            "";
+          const productType = item.type || "unknown";
 
           return {
             id: item.id,
-            name: name,
-            price: price,
-            image: image,
+            name: String(name),
+            price: parseFloat(String(priceValue || "0")) || 0,
+            image: String(image),
             creator: item.creator?.name || "",
             productType: productType,
             status: item.status,
-            date: item.createdAt,
+            date: sectionData.createdAt || item.createdAt,
           };
         })
       : [];

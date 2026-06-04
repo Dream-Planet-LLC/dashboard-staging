@@ -71,6 +71,7 @@ import {
   SellersStorePagination,
   updateSellerEligibilityStatus,
   fetchCreatorAnalytics,
+  fetchAdminUserDetails,
 } from "@/lib/api";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -122,8 +123,10 @@ const SellersStore = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [profileData, setProfileData] = useState<any>({});
+  const [profileLoading, setProfileLoading] = useState(false);
   const pageSize = 20;
   const totalSellers = pagination?.totalDocs || 0;
+  const isInitialLoading = loading && isInitialLoad;
   const router = useRouter();
 
   // Simulate fetching analytics when drawer opens
@@ -170,10 +173,7 @@ const SellersStore = () => {
   useEffect(() => {
     const fetchSellers = async () => {
       try {
-        // Only show loader on initial load
-        if (isInitialLoad) {
-          setLoading(true);
-        }
+        setLoading(true);
         const trimmedSearch = debouncedSearch.trim();
         const statusValue =
           statusFilter === "All Status" ? undefined : statusFilter.toLowerCase();
@@ -234,27 +234,54 @@ const SellersStore = () => {
     setConfirmOpen(true);
   };
 
-  const openProfileSheet = (seller: SellerStore) => {
-    // Transform seller data to match profile data structure
-    const transformedProfileData = {
+  const openProfileSheet = async (seller: SellerStore) => {
+    setIsProfileSheetOpen(true);
+    setProfileLoading(true);
+    setProfileData({
       id: seller.id,
       name: seller.name,
       username: seller.username,
       full_name: seller.name,
-      email: `${seller.username.replace('@', '')}@dreamplanet.org`, // Placeholder email
+      email: `${seller.username.replace("@", "")}@dreamplanet.org`,
       phone_number: "Not provided",
       country: "Not provided",
       image: seller.avatarUrl,
       status: seller.status.toLowerCase(),
-      createdAt: new Date().toISOString(), // Placeholder
+      createdAt: new Date().toISOString(),
       verification_type: seller.role || "Creator",
-      noOfMembers: "0", // Placeholder
-      noOfPosts: "0", // Placeholder
-      noOfInvestor: "0", // Placeholder
-      interested_creators: "0", // Placeholder
-    };
-    setProfileData(transformedProfileData);
-    setIsProfileSheetOpen(true);
+      noOfMembers: "0",
+      noOfPosts: "0",
+      noOfInvestor: "0",
+      interested_creators: "0",
+    });
+
+    try {
+      const details = await fetchAdminUserDetails(seller.id);
+      setProfileData((current: any) => ({
+        ...current,
+        id: details.id,
+        name: details.full_name || current.name,
+        username: details.username || current.username,
+        full_name: details.full_name || current.full_name,
+        email: details.email || current.email,
+        phone_number: details.phone_number || current.phone_number,
+        country: details.country || current.country,
+        image: details.image || current.image,
+        status: details.status || current.status,
+        createdAt: details.createdAt || current.createdAt,
+        verification_type: details.user_type || current.verification_type,
+        noOfMembers: details.noOfMembers ?? current.noOfMembers,
+        noOfPosts: details.noOfPosts ?? current.noOfPosts,
+        noOfInvestor: details.noOfInvestor ?? current.noOfInvestor,
+        interested_creators:
+          details.interested_creators ?? current.interested_creators,
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load user details");
+    } finally {
+      setProfileLoading(false);
+    }
   };
 
   const closeProfileSheet = () => {
@@ -278,7 +305,7 @@ const SellersStore = () => {
     }
   };
 
-  if (loading) {
+  if (isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading sellers..." />
@@ -524,6 +551,7 @@ const SellersStore = () => {
           data={sellers}
           columns={columns}
           placeholder="Search sellers..."
+          loading={loading}
         />
       </div>
 
@@ -845,6 +873,11 @@ const SellersStore = () => {
               /> */}
             </SheetTitle>
           </SheetHeader>
+          {profileLoading ? (
+            <div className="flex min-h-[320px] items-center justify-center">
+              <LoadingState message="Loading user details..." />
+            </div>
+          ) : (
           <div className="flex flex-col">
             <div className="flex items-center space-x-[12px] mt-[40px] mb-[28px]">
             <Avatar>
@@ -930,7 +963,8 @@ const SellersStore = () => {
               </div>
             </div>
           </div>
-          <SheetFooter>
+          )}
+          {/* <SheetFooter>
             {profileData?.status === "active" ? (
               <Button
                 onClick={async () => {
@@ -958,7 +992,7 @@ const SellersStore = () => {
                 Activate Account
               </Button>
             )}
-          </SheetFooter>
+          </SheetFooter> */}
         </SheetContent>
       </Sheet>
     </div>

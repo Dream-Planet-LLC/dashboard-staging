@@ -28,8 +28,15 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Search,
   MoreVertical,
@@ -53,6 +60,7 @@ import {
   ProductCataloguePagination,
   deleteStoreItem,
   updateStoreItemStatus,
+  fetchAdminUserDetails,
 } from "@/lib/api";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -82,7 +90,8 @@ const formatDate = (dateValue?: string) => {
 const ProductCataloguePage = () => {
   const router = useRouter();
   const [products, setProducts] = useState<ProductCatalogueItem[]>([]);
-  const [pagination, setPagination] = useState<ProductCataloguePagination | null>(null);
+  const [pagination, setPagination] =
+    useState<ProductCataloguePagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 500);
@@ -94,10 +103,15 @@ const ProductCataloguePage = () => {
   const [confirmAction, setConfirmAction] = useState<
     "delete" | "suspend" | "activate" | null
   >(null);
-  const [confirmProduct, setConfirmProduct] = useState<ProductCatalogueItem | null>(null);
+  const [confirmProduct, setConfirmProduct] =
+    useState<ProductCatalogueItem | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
+  const [profileData, setProfileData] = useState<any>({});
+  const [profileLoading, setProfileLoading] = useState(false);
   const pageSize = 10;
   const totalProducts = pagination?.totalDocs || 0;
+  const isInitialLoading = loading && !pagination;
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -108,8 +122,8 @@ const ProductCataloguePage = () => {
           statusFilter === "All Status"
             ? undefined
             : statusFilter === "LISTED"
-            ? "live"
-            : "suspended";
+              ? "live"
+              : "suspended";
         const typeValue =
           productTypeFilter === "All Products"
             ? undefined
@@ -145,15 +159,69 @@ const ProductCataloguePage = () => {
 
   const handleViewStore = (productId: string) => {
     // Find the product to get the creator/seller ID
-    const product = products.find(p => p.id === productId);
+    const product = products.find((p) => p.id === productId);
     if (product && product.creatorId) {
       router.push(`/sellersstore/${product.creatorId}`);
     }
   };
 
-  const handleViewProfile = (productId: string) => {
-    console.log("View profile for product:", productId);
-    // Navigate to profile
+  const handleViewProfile = async (productId: string) => {
+    const product = products.find((p) => p.id === productId);
+    if (!product?.creatorId) {
+      toast.error("User profile is not available");
+      return;
+    }
+
+    const username = product.creator || "";
+    setIsProfileSheetOpen(true);
+    setProfileLoading(true);
+    setProfileData({
+      id: product.creatorId,
+      name: username.replace("@", "") || "Creator",
+      username,
+      full_name: username.replace("@", "") || "Creator",
+      email: username
+        ? `${username.replace("@", "")}@dreamplanet.org`
+        : "Not provided",
+      phone_number: "Not provided",
+      country: "Not provided",
+      image: "",
+      status: "active",
+      createdAt: product.date || new Date().toISOString(),
+      verification_type: "Creator",
+      noOfMembers: "0",
+      noOfPosts: "0",
+      noOfInvestor: "0",
+      interested_creators: "0",
+    });
+
+    try {
+      const details = await fetchAdminUserDetails(product.creatorId);
+      setProfileData((current: any) => ({
+        ...current,
+        id: details.id,
+        name: details.full_name || current.name,
+        username: details.username || current.username,
+        full_name: details.full_name || current.full_name,
+        email: details.email || current.email,
+        phone_number: details.phone_number || current.phone_number,
+        country: details.country || current.country,
+        image: details.image || current.image,
+        status: details.status || current.status,
+        createdAt: details.createdAt || current.createdAt,
+        verification_type: details.user_type || current.verification_type,
+        noOfMembers: details.noOfMembers ?? current.noOfMembers,
+        noOfPosts: details.noOfPosts ?? current.noOfPosts,
+        noOfInvestor: details.noOfInvestor ?? current.noOfInvestor,
+        interested_creators:
+          details.interested_creators ?? current.interested_creators,
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load user details");
+    } finally {
+      setProfileLoading(false);
+    }
   };
 
   const openConfirm = (
@@ -187,8 +255,8 @@ const ProductCataloguePage = () => {
         statusFilter === "All Status"
           ? undefined
           : statusFilter === "LISTED"
-          ? "live"
-          : "suspended";
+            ? "live"
+            : "suspended";
       const typeValue =
         productTypeFilter === "All Products"
           ? undefined
@@ -204,11 +272,12 @@ const ProductCataloguePage = () => {
       setConfirmAction(null);
       setConfirmProduct(null);
     } catch (error) {
-      const errorMessage = confirmAction === "delete"
-        ? "Failed to delete item"
-        : confirmAction === "activate"
-          ? "Failed to activate item"
-          : "Failed to suspend item";
+      const errorMessage =
+        confirmAction === "delete"
+          ? "Failed to delete item"
+          : confirmAction === "activate"
+            ? "Failed to activate item"
+            : "Failed to suspend item";
       toast.error(errorMessage);
     } finally {
       setConfirmLoading(false);
@@ -284,8 +353,8 @@ const ProductCataloguePage = () => {
           status.toLowerCase() === "listed"
             ? "bg-[#2BAC47]"
             : status.toLowerCase() === "suspended"
-            ? "bg-[#C83532]"
-            : "bg-[#eaeaea]";
+              ? "bg-[#C83532]"
+              : "bg-[#eaeaea]";
 
         return (
           <div
@@ -439,16 +508,16 @@ const ProductCataloguePage = () => {
               </p>
             </div>
 
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                 <Button
+                <Button
                   variant="ghost"
                   className="h-6 w-6 p-0 text-[#373737] hover:bg-white/20 rounded"
                 >
-  <MoreHorizontal/>
+                  <MoreHorizontal />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              {/* <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
                   onClick={() => handleUnpublish(product.id)}
                   className="flex items-center gap-2 text-[#373737] INT500 text-[14px] cursor-pointer"
@@ -494,7 +563,55 @@ const ProductCataloguePage = () => {
                   <Trash2 className="h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
-              </DropdownMenuContent>
+              </DropdownMenuContent> */}
+
+                  <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                onClick={() => handleUnpublish(product.id)}
+                className="flex items-center gap-2 text-[#373737] INT500 text-[14px] cursor-pointer"
+              >
+                <EyeOff className="h-4 w-4" />
+                Unpublish
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleViewStore(product.id)}
+                className="flex items-center gap-2 text-[#373737] INT500 text-[14px] cursor-pointer"
+              >
+                <Store className="h-4 w-4" />
+                View Store
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleViewProfile(product.id)}
+                className="flex items-center gap-2 text-[#373737] INT500 text-[14px] cursor-pointer"
+              >
+                <User className="h-4 w-4" />
+                View Profile
+              </DropdownMenuItem>
+              {isSuspended ? (
+                <DropdownMenuItem
+                  onClick={() => openConfirm("activate", product)}
+                  className="flex items-center gap-2 text-[#2BAC47] INT500 text-[14px] cursor-pointer"
+                >
+                  <UserCheck className="h-4 w-4" />
+                  Activate
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={() => openConfirm("suspend", product)}
+                  className="flex items-center gap-2 text-[#C83532] INT500 text-[14px] cursor-pointer"
+                >
+                  <Ban className="h-4 w-4" />
+                  Suspend
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={() => openConfirm("delete", product)}
+                className="flex items-center gap-2 text-[#C83532] INT500 text-[14px] cursor-pointer"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
             </DropdownMenu>
           </div>
 
@@ -518,7 +635,7 @@ const ProductCataloguePage = () => {
       ? 0
       : Math.min(showingStart + pageSize - 1, totalProducts);
 
-  if (loading) {
+  if (isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading products..." />
@@ -534,7 +651,7 @@ const ProductCataloguePage = () => {
           Product Catalogue
         </h2>
         <p className="mt-1.5 text-[#A8A8A8] INT400 font-normal text-[14px] tracking-[-1.8%] leading-[20px]">
-        Manage Marketplace Inventory and monitor listing statuses
+          Manage Marketplace Inventory and monitor listing statuses
         </p>
       </div>
 
@@ -553,12 +670,30 @@ const ProductCataloguePage = () => {
         <div className="flex items-center gap-3">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[140px] border-[#F1F1F1]">
-              <SelectValue className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"  placeholder="All Status" />
+              <SelectValue
+                className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"
+                placeholder="All Status"
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]" value="All Status">All Status</SelectItem>
-              <SelectItem className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]" value="LISTED">Listed</SelectItem>
-              <SelectItem className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]" value="SUSPENDED">Suspended</SelectItem>
+              <SelectItem
+                className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]"
+                value="All Status"
+              >
+                All Status
+              </SelectItem>
+              <SelectItem
+                className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]"
+                value="LISTED"
+              >
+                Listed
+              </SelectItem>
+              <SelectItem
+                className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]"
+                value="SUSPENDED"
+              >
+                Suspended
+              </SelectItem>
             </SelectContent>
           </Select>
 
@@ -567,15 +702,48 @@ const ProductCataloguePage = () => {
             onValueChange={setProductTypeFilter}
           >
             <SelectTrigger className="w-[160px] border-[#F1F1F1]">
-              <SelectValue className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"  placeholder="All Products" />
+              <SelectValue
+                className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"
+                placeholder="All Products"
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]" value="All Products">All Products</SelectItem>
-              <SelectItem className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]" value="Merchandise">Merchandise</SelectItem>
-              <SelectItem className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]" value="Audio">Audio</SelectItem>
-              <SelectItem className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]" value="Video">Video</SelectItem>
-              <SelectItem className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]" value="Podcast">Podcast</SelectItem>
-              <SelectItem className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]" value="Tickets">Tickets</SelectItem>
+              <SelectItem
+                className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]"
+                value="All Products"
+              >
+                All Products
+              </SelectItem>
+              <SelectItem
+                className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]"
+                value="Merchandise"
+              >
+                Merchandise
+              </SelectItem>
+              <SelectItem
+                className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]"
+                value="Audio"
+              >
+                Audio
+              </SelectItem>
+              <SelectItem
+                className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]"
+                value="Video"
+              >
+                Video
+              </SelectItem>
+              <SelectItem
+                className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]"
+                value="Podcast"
+              >
+                Podcast
+              </SelectItem>
+              <SelectItem
+                className="text-[#373737] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%]"
+                value="Tickets"
+              >
+                Tickets
+              </SelectItem>
             </SelectContent>
           </Select>
 
@@ -612,13 +780,22 @@ const ProductCataloguePage = () => {
             data={products}
             columns={columns}
             placeholder="Search products..."
+            loading={loading}
           />
         </div>
       ) : (
-        <div className="flex flex-wrap gap-[26px]">
-          {products.map((product) => (
-            <div key={product.id}>{renderProductCard(product)}</div>
-          ))}
+        <div className="min-h-[320px]">
+          {loading ? (
+            <div className="flex min-h-[320px] items-center justify-center">
+              <div className="animate-spin h-8 w-8 border-4 border-[#F75803] border-t-transparent rounded-full" />
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-[26px]">
+              {products.map((product) => (
+                <div key={product.id}>{renderProductCard(product)}</div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -630,9 +807,7 @@ const ProductCataloguePage = () => {
           {totalProducts.toLocaleString()}
         </p>
         <div className="flex items-center gap-2">
-
-          
-          <button  
+          <button
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
             disabled={!pagination?.hasPrevPage}
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
@@ -648,11 +823,10 @@ const ProductCataloguePage = () => {
                 d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
                 fill="#111810"
               />
-            </svg> 
+            </svg>
           </button>
 
-
-          <button  
+          <button
             disabled={!pagination?.hasNextPage}
             onClick={() => setCurrentPage((prev) => prev + 1)}
             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
@@ -670,7 +844,7 @@ const ProductCataloguePage = () => {
               />
             </svg>
           </button>
-{/* 
+          {/* 
           <Button
             variant="outline"
             size="sm"
@@ -700,14 +874,128 @@ const ProductCataloguePage = () => {
         </div>
       </div>
 
+      {/* Profile Sheet */}
+      <Sheet open={isProfileSheetOpen} onOpenChange={setIsProfileSheetOpen}>
+        <SheetContent className="sm:max-w-[519px] overflow-y-auto scrollbar-hide">
+          <SheetHeader>
+            <SheetTitle className="flex justify-between">
+              <p className="text-[#111810] font-medium text-[20px]">
+                User Details
+              </p>
+            </SheetTitle>
+          </SheetHeader>
+          {profileLoading ? (
+            <div className="flex min-h-[320px] items-center justify-center">
+              <LoadingState message="Loading user details..." />
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              <div className="flex items-center space-x-[12px] mt-[40px] mb-[28px]">
+                <Avatar>
+                  <AvatarImage
+                    className="object-cover"
+                    src={profileData?.image}
+                    alt={profileData?.full_name || "User"}
+                  />
+                  <AvatarFallback className="bg-gray-200 text-black">
+                    {profileData?.name?.[0] || ""}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-[20px] font-medium text-[#111810]">
+                    {profileData?.full_name}
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <p className="flex items-center space-x-1">
+                      <span className="text-[#A4A4A4]">@</span>
+                      <span className="text-[#A4A4A4]">
+                        {profileData?.username}
+                      </span>
+                    </p>
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        profileData?.status === "active"
+                          ? "bg-[#2BAC47]"
+                          : "bg-[#C83532]"
+                      }`}
+                    ></div>
+                    <span className="text-[#A4A4A4] text-[14px]">
+                      {profileData?.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-8 mb-[28px]">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-[#A4A4A4] text-[14px]">
+                    Members in forum
+                  </p>
+                  <h2 className="font-Recoleta font-medium text-[28px]">
+                    {profileData?.noOfMembers}
+                  </h2>
+                </div>
+                <div className="h-[61px] w-[1px] bg-[#E4E4E4]"></div>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-[#A4A4A4] text-[14px]">
+                    Post in portfolio
+                  </p>
+                  <h2 className="font-Recoleta font-medium text-[28px] flex">
+                    {profileData?.noOfPosts}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Full Name</p>
+                  <p>{profileData?.full_name}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Email</p>
+                  <p className="text-[#F75803]">{profileData?.email}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Phone Number</p>
+                  <p className="text-[#F75803]">{profileData?.phone_number}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Country</p>
+                  <p>{profileData?.country || "Null"}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Interested Creators</p>
+                  <p>{profileData?.interested_creators}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4] line-clamp-2">Date Joined</p>
+                  <p>{profileData?.createdAt?.substring(0, 10)}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">No Of Investor</p>
+                  <p>{profileData?.noOfInvestor}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Verification</p>
+                  <p>{profileData?.verification_type}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
       {/* Confirmation Dialog */}
-      <Dialog open={confirmOpen} onOpenChange={(open) => {
-        setConfirmOpen(open);
-        if (!open) {
-          setConfirmAction(null);
-          setConfirmProduct(null);
-        }
-      }}>
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          setConfirmOpen(open);
+          if (!open) {
+            setConfirmAction(null);
+            setConfirmProduct(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>

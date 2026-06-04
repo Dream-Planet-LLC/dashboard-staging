@@ -51,6 +51,7 @@ import {
   CreatorStorePagination,
   deleteStoreItem,
   updateStoreItemStatus,
+  fetchAdminUserDetails,
 } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -105,6 +106,7 @@ const SellerStorePage = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [profileData, setProfileData] = useState<any>({});
+  const [profileLoading, setProfileLoading] = useState(false);
   const pageSize = 20;
   const router = useRouter();
   const params = useParams();
@@ -188,29 +190,56 @@ const SellerStorePage = () => {
     }
   };
 
-  const openProfileSheet = () => {
+  const openProfileSheet = async () => {
     if (!creator) return;
-    
-    // Transform creator data to match profile data structure
-    const transformedProfileData = {
+
+    setIsProfileSheetOpen(true);
+    setProfileLoading(true);
+    setProfileData({
       id: creator.id,
       name: creator.name,
       username: creator.username,
       full_name: creator.name,
-      email: `${creator.username.replace('@', '')}@dreamplanet.org`, // Placeholder email
+      email: `${creator.username.replace("@", "")}@dreamplanet.org`,
       phone_number: "Not provided",
       country: "Not provided",
       image: creator.avatarUrl,
-      status: "active", // Default status for creator
-      createdAt: new Date().toISOString(), // Placeholder
+      status: "active",
+      createdAt: new Date().toISOString(),
       verification_type: creator.role || "Creator",
-      noOfMembers: "0", // Placeholder
-      noOfPosts: "0", // Placeholder
-      noOfInvestor: "0", // Placeholder
-      interested_creators: "0", // Placeholder
-    };
-    setProfileData(transformedProfileData);
-    setIsProfileSheetOpen(true);
+      noOfMembers: "0",
+      noOfPosts: "0",
+      noOfInvestor: "0",
+      interested_creators: "0",
+    });
+
+    try {
+      const details = await fetchAdminUserDetails(creator.id);
+      setProfileData((current: any) => ({
+        ...current,
+        id: details.id,
+        name: details.full_name || current.name,
+        username: details.username || current.username,
+        full_name: details.full_name || current.full_name,
+        email: details.email || current.email,
+        phone_number: details.phone_number || current.phone_number,
+        country: details.country || current.country,
+        image: details.image || current.image,
+        status: details.status || current.status,
+        createdAt: details.createdAt || current.createdAt,
+        verification_type: details.user_type || current.verification_type,
+        noOfMembers: details.noOfMembers ?? current.noOfMembers,
+        noOfPosts: details.noOfPosts ?? current.noOfPosts,
+        noOfInvestor: details.noOfInvestor ?? current.noOfInvestor,
+        interested_creators:
+          details.interested_creators ?? current.interested_creators,
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load user details");
+    } finally {
+      setProfileLoading(false);
+    }
   };
 
   const closeProfileSheet = () => {
@@ -650,6 +679,7 @@ const SellerStorePage = () => {
             <Button
               onClick={handleConfirmAction}
               disabled={confirmLoading}
+              loading={confirmLoading}
               className={
                 confirmAction === "activate"
                   ? "bg-[#111810] hover:bg-[#111810]"
@@ -676,6 +706,11 @@ const SellerStorePage = () => {
               </p>
             </SheetTitle>
           </SheetHeader>
+          {profileLoading ? (
+            <div className="flex min-h-[320px] items-center justify-center">
+              <LoadingState message="Loading user details..." />
+            </div>
+          ) : (
           <div className="flex flex-col">
             <div className="flex items-center space-x-[12px] mt-[40px] mb-[28px]">
             <Avatar>
@@ -761,6 +796,7 @@ const SellerStorePage = () => {
               </div>
             </div>
           </div>
+          )}
         </SheetContent>
       </Sheet>
     </div>

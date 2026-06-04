@@ -71,6 +71,7 @@ import {
 } from "@/svg";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
+import { fetchAdminUserDetails } from "@/lib/api";
 
 // Types based on API documentation
 interface Withdrawal {
@@ -196,15 +197,15 @@ const WithdrawalPage = () => {
   const [completedLoading, setCompletedLoading] = useState(false);
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [profileData, setProfileData] = useState<any>({});
+  const [profileLoading, setProfileLoading] = useState(false);
   const pageSize = 20;
   const totalWithdrawals = pagination?.totalDocs || 0;
+  const isInitialLoading = loading && isInitialLoad;
 
   // API functionss
   const fetchWithdrawals = async () => {
     try {
-      if (isInitialLoad) {
-        setLoading(true);
-      }
+      setLoading(true);
       const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
       
@@ -352,7 +353,7 @@ const WithdrawalPage = () => {
     setCompletedDialogOpen(true);
   };
 
-  const openProfileSheet = () => {
+  const openProfileSheet = async () => {
     if (!selectedWithdrawal) return;
 
     const username = selectedWithdrawal.username || "";
@@ -379,6 +380,38 @@ const WithdrawalPage = () => {
 
     setProfileData(transformedProfileData);
     setIsProfileSheetOpen(true);
+    setProfileLoading(true);
+
+    try {
+      const details = await fetchAdminUserDetails(
+        selectedWithdrawal.user_id || selectedWithdrawal.creator_id,
+      );
+      setProfileData((current: any) => ({
+        ...current,
+        id: details.id,
+        name: details.full_name || current.name,
+        username: details.username || current.username,
+        full_name: details.full_name || current.full_name,
+        email: details.email || current.email,
+        phone_number: details.phone_number || current.phone_number,
+        country: details.country || current.country,
+        image: details.image || current.image,
+        status: details.status || current.status,
+        createdAt: details.createdAt || current.createdAt,
+        verification_type: details.user_type || current.verification_type,
+        noOfMembers: details.noOfMembers ?? current.noOfMembers,
+        noOfPosts: details.noOfPosts ?? current.noOfPosts,
+        noOfInvestor: details.noOfInvestor ?? current.noOfInvestor,
+        interested_creators:
+          details.interested_creators ?? current.interested_creators,
+        referral_link: details.referral_link || current.referral_link,
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load user details");
+    } finally {
+      setProfileLoading(false);
+    }
   };
 
   const closeProfileSheet = () => {
@@ -623,7 +656,7 @@ const WithdrawalPage = () => {
       ? 0
       : Math.min(showingStart + pageSize - 1, totalWithdrawals);
 
-  if (loading) {
+  if (isInitialLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading withdrawals..." />
@@ -800,6 +833,7 @@ const WithdrawalPage = () => {
             data={manualWithdrawals}
             columns={manualColumns}
             placeholder="Search withdrawals..."
+            loading={loading}
           />
 
 
@@ -1083,6 +1117,11 @@ const WithdrawalPage = () => {
               </p>
             </SheetTitle>
           </SheetHeader>
+          {profileLoading ? (
+            <div className="flex min-h-[320px] items-center justify-center">
+              <LoadingState message="Loading user details..." />
+            </div>
+          ) : (
           <div className="flex flex-col">
             <div className="flex items-center space-x-[12px] mt-[40px] mb-[28px]">
               <Avatar>
@@ -1171,8 +1210,17 @@ const WithdrawalPage = () => {
                 <p className="text-[#A4A4A4]">Verification</p>
                 <p>{profileData?.verification_type}</p>
               </div>
+              {profileData?.referral_link && (
+                <div className="flex items-center justify-between gap-4 border-b pb-2">
+                  <p className="text-[#A4A4A4]">Referral Link</p>
+                  <p className="max-w-[260px] truncate text-right text-[#F75803]">
+                    {profileData.referral_link}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
+          )}
         </SheetContent>
       </Sheet>
 

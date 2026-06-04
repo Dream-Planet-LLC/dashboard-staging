@@ -6,6 +6,12 @@ import { ColumnDef } from "@tanstack/react-table";
 import { UserTable } from "@/components/UserTable";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -25,7 +31,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { CalendarIcon, PeopleIcon, refreshIcon, TooltipLine } from "@/svg";
-import { fetchBuyerInsightOverview } from "@/lib/api";
+import { fetchAdminUserDetails, fetchBuyerInsightOverview } from "@/lib/api";
+import { toast } from "sonner";
 
 // ────────────────────────────────────────────────
 // Types
@@ -165,6 +172,9 @@ const BuyersPage = () => {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("Last Year");
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [hoveredPoint, setHoveredPoint] = useState<ChartDataPoint | null>(null);
+  const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
+  const [profileData, setProfileData] = useState<any>({});
+  const [profileLoading, setProfileLoading] = useState(false);
   // ── NEW: date-range state ──
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -259,6 +269,56 @@ const BuyersPage = () => {
     return null;
   };
 
+  const openProfileSheet = async (buyer: TopBuyer) => {
+    setIsProfileSheetOpen(true);
+    setProfileLoading(true);
+    setProfileData({
+      id: buyer.id,
+      name: buyer.fan.name,
+      username: buyer.fan.username,
+      full_name: buyer.fan.name,
+      email: `${buyer.fan.username.replace("@", "")}@dreamplanet.org`,
+      phone_number: "Not provided",
+      country: "Not provided",
+      image: buyer.fan.avatar,
+      status: "active",
+      createdAt: new Date().toISOString(),
+      verification_type: "Fan",
+      noOfMembers: "0",
+      noOfPosts: "0",
+      noOfInvestor: "0",
+      interested_creators: "0",
+    });
+
+    try {
+      const details = await fetchAdminUserDetails(buyer.id);
+      setProfileData((current: any) => ({
+        ...current,
+        id: details.id,
+        name: details.full_name || current.name,
+        username: details.username || current.username,
+        full_name: details.full_name || current.full_name,
+        email: details.email || current.email,
+        phone_number: details.phone_number || current.phone_number,
+        country: details.country || current.country,
+        image: details.image || current.image,
+        status: details.status || current.status,
+        createdAt: details.createdAt || current.createdAt,
+        verification_type: details.user_type || current.verification_type,
+        noOfMembers: details.noOfMembers ?? current.noOfMembers,
+        noOfPosts: details.noOfPosts ?? current.noOfPosts,
+        noOfInvestor: details.noOfInvestor ?? current.noOfInvestor,
+        interested_creators:
+          details.interested_creators ?? current.interested_creators,
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load user details");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   // Table columns
   const columns: ColumnDef<TopBuyer>[] = [
     {
@@ -319,7 +379,10 @@ const BuyersPage = () => {
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <button className="text-[#F75803] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium hover:underline">
+        <button
+          onClick={() => openProfileSheet(row.original)}
+          className="text-[#F75803] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium hover:underline"
+        >
           View Profile
         </button>
       ),
@@ -616,6 +679,117 @@ const BuyersPage = () => {
           placeholder="Search buyers..."
         />
       </div>
+
+      {/* Profile Sheet */}
+      <Sheet open={isProfileSheetOpen} onOpenChange={setIsProfileSheetOpen}>
+        <SheetContent className="sm:max-w-[519px] overflow-y-auto scrollbar-hide">
+          <SheetHeader>
+            <SheetTitle className="flex justify-between">
+              <p className="text-[#111810] font-medium text-[20px]">
+                User Details
+              </p>
+            </SheetTitle>
+          </SheetHeader>
+          {profileLoading ? (
+            <div className="flex min-h-[320px] items-center justify-center">
+              <LoadingState message="Loading user details..." />
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              <div className="flex items-center space-x-[12px] mt-[40px] mb-[28px]">
+                <Avatar>
+                  <AvatarImage
+                    className="object-cover"
+                    src={profileData?.image}
+                    alt={profileData?.full_name || "User"}
+                  />
+                  <AvatarFallback className="bg-gray-200 text-black">
+                    {profileData?.name?.[0] || ""}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-[20px] font-medium text-[#111810]">
+                    {profileData?.full_name}
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <p className="flex items-center space-x-1">
+                      <span className="text-[#A4A4A4]">@</span>
+                      <span className="text-[#A4A4A4]">
+                        {profileData?.username}
+                      </span>
+                    </p>
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        profileData?.status === "active"
+                          ? "bg-[#2BAC47]"
+                          : "bg-[#C83532]"
+                      }`}
+                    ></div>
+                    <span className="text-[#A4A4A4] text-[14px]">
+                      {profileData?.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-8 mb-[28px]">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-[#A4A4A4] text-[14px]">
+                    Members in forum
+                  </p>
+                  <h2 className="font-Recoleta font-medium text-[28px]">
+                    {profileData?.noOfMembers}
+                  </h2>
+                </div>
+                <div className="h-[61px] w-[1px] bg-[#E4E4E4]"></div>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-[#A4A4A4] text-[14px]">
+                    Post in portfolio
+                  </p>
+                  <h2 className="font-Recoleta font-medium text-[28px] flex">
+                    {profileData?.noOfPosts}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Full Name</p>
+                  <p>{profileData?.full_name}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Email</p>
+                  <p className="text-[#F75803]">{profileData?.email}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Phone Number</p>
+                  <p className="text-[#F75803]">{profileData?.phone_number}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Country</p>
+                  <p>{profileData?.country || "Null"}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Interested Creators</p>
+                  <p>{profileData?.interested_creators}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4] line-clamp-2">Date Joined</p>
+                  <p>{profileData?.createdAt?.substring(0, 10)}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">No Of Investor</p>
+                  <p>{profileData?.noOfInvestor}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-2">
+                  <p className="text-[#A4A4A4]">Verification</p>
+                  <p>{profileData?.verification_type}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
