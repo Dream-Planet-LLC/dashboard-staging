@@ -207,7 +207,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
       </div>
 
       {/* Logout Button */}
-      <div className="px-3 py-4 ">
+      <div className="px-3 py-4 my-2">
         <button
           onClick={() => {
             dispatch(clearUser());

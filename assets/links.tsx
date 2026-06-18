@@ -114,12 +114,12 @@ export const NavLinks = [
     accordion: false,
 
   },
-  {
-    name: "Investments",
-    icon: <InvestmentIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
-    href: "/investments",
-    accordion: false,
-  },
+  // {
+  //   name: "Investments",
+  //   icon: <InvestmentIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+  //   href: "/investments",
+  //   accordion: false,
+  // },
   {
     name: "Forum",
     icon: <ForumIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
@@ -156,12 +156,12 @@ export const NavLinks = [
     ],
   },
 
-    {
-    name: "Events",
-    icon: <EventsIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
-    href: "/events",
-    accordion: false,
-  },
+  //   {
+  //   name: "Events",
+  //   icon: <EventsIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+  //   href: "/events",
+  //   accordion: false,
+  // },
 
     {
     name: "Orders",
@@ -170,12 +170,12 @@ export const NavLinks = [
     accordion: false,
   },
 
-    {
-    name: "Payouts",
-    icon: <PayoutsIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
-    href: "/payouts",
-    accordion: false,
-  },
+  //   {
+  //   name: "Payouts",
+  //   icon: <PayoutsIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+  //   href: "/payouts",
+  //   accordion: false,
+  // },
 
   {
     name: "Withdrawal",
@@ -184,12 +184,12 @@ export const NavLinks = [
     accordion: false,
   },
 
-    {
-    name: "Hire",
-    icon: <HireIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
-    href: "/hire",
-    accordion: false,
-  },
+  //   {
+  //   name: "Hire",
+  //   icon: <HireIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+  //   href: "/hire",
+  //   accordion: false,
+  // },
 
   {
     name: "Buyers",
@@ -215,12 +215,12 @@ export const NavLinks = [
   //   accordion: false,
   // },
 
-    {
-    name: "Moderation",
-    icon: <ModerationIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
-    href: "/moderation",
-    accordion: false,
-  },
+  //   {
+  //   name: "Moderation",
+  //   icon: <ModerationIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+  //   href: "/moderation",
+  //   accordion: false,
+  // },
   {
     name: "Change Password",
     icon: <ChangePasswordIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
