@@ -14,7 +14,10 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "@/redux/slices/adminslice";
 import { RootState } from "@/redux/store";
-import { NAV_PERMISSIONS } from "@/constants/permission";
+import {
+  LEGACY_NAV_PERMISSIONS,
+  NAV_PERMISSIONS,
+} from "@/constants/permission";
 import { ChevronRight, ChevronRightIcon } from "lucide-react";
 
 type SidebarProps = {
@@ -37,24 +40,17 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
     ) {
       return true;
     }
-    return required ? permissions.includes(required) : false;
+    if (!required) {
+      return false;
+    }
+
+    return [required, ...(LEGACY_NAV_PERMISSIONS[featureName] ?? [])].some(
+      (permission) => permissions.includes(permission),
+    );
   };
 
   const visibleLinks = NavLinks.filter((item: any) => {
-    if (
-      item.name === "Change Password" ||
-      item.name === "Overview" ||
-      item.name === "Sellers Store" ||
-      item.name === "Products" ||
-      item.name === "Events" ||
-      item.name === "Orders" ||
-      item.name === "Payouts" ||
-      item.name === "Withdrawal" ||
-      item.name === "Hire" ||
-      item.name === "Buyers" ||
-      item.name === "Wallet" ||
-      item.name === "Moderation"
-    ) {
+    if (item.name === "Change Password") {
       return true;
     }
 
@@ -67,7 +63,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
       "Broadcast",
       "Users",
       "Challenge",
-      "Campaign",
+      "Invest (campaign)",
       "Payments",
       "Performance",
       "Report",

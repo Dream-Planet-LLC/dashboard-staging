@@ -54,79 +54,79 @@ type TabType = "Pending" | "Accepted" | "Completed";
 // Mock Data
 // ────────────────────────────────────────────────
 const mockStats: HireStats = {
-  totalRequests: 232000,
-  activeProjects: 5200,
-  completedProjects: 10300,
+  totalRequests: 0,
+  activeProjects: 0,
+  completedProjects: 0,
 };
 
 const mockTopCreators: TopCreator[] = [
   {
     name: "Liam Foster",
     category: "PHOTOGRAPHER",
-    hires: 142,
+    hires: 0,
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
   },
   {
     name: "Liam Foster",
     category: "MUSICIAN",
-    hires: 102,
+    hires: 0,
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
   },
   {
     name: "Liam Foster",
     category: "PHOTOGRAPHY",
-    hires: 100,
+    hires: 0,
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
   },
   {
     name: "Liam Foster",
     category: "ARTIST",
-    hires: 99,
+    hires: 0,
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
   },
   {
     name: "Liam Foster",
     category: "DESIGNER",
-    hires: 80,
+    hires: 0,
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
   },
   {
     name: "Liam Foster",
     category: "PHOTOGRAPHER",
-    hires: 67,
+    hires: 0,
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
   },
   {
     name: "Liam Foster",
     category: "MUSICIAN",
-    hires: 66,
+    hires: 0,
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
   },
   {
     name: "Liam Foster",
     category: "VIDEOGRAPHER",
-    hires: 65,
+    hires: 0,
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
   },
   {
     name: "Liam Foster",
     category: "DEVELOPER",
-    hires: 52,
+    hires: 0,
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
   },
   {
     name: "Liam Foster",
     category: "DJ",
-    hires: 50,
+    hires: 0,
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
   },
@@ -145,7 +145,7 @@ const mockHireRequests: HireRequest[] = [
       avatar:
         "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
     },
-    amount: 6000,
+    amount: 0,
     timeAgo: "2 HOURS AGO",
     message:
       "Hello, I'm interested in hiring you for a collaboration project. Let me know your availability so we can move forward with the collaboration.",
@@ -165,7 +165,7 @@ const mockHireRequests: HireRequest[] = [
       avatar:
         "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
     },
-    amount: 3200,
+    amount: 0,
     timeAgo: "2 HOURS AGO",
     message:
       "Hello, I'm interested in hiring you for a collaboration project. Let me know your availability so we can move forward with the collaboration.",
@@ -185,7 +185,7 @@ const mockHireRequests: HireRequest[] = [
       avatar:
         "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
     },
-    amount: 4500,
+    amount: 0,
     timeAgo: "3 HOURS AGO",
     message:
       "Hello, I'm interested in hiring you for a collaboration project. Let me know your availability so we can move forward with the collaboration.",
@@ -205,7 +205,7 @@ const mockHireRequests: HireRequest[] = [
       avatar:
         "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100",
     },
-    amount: 3200,
+    amount: 0,
     timeAgo: "2 HOURS AGO",
     message:
       "Hello, I'm interested in hiring you for a collaboration project. Let me know your availability so we can move forward with the collaboration.",

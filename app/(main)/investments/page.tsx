@@ -10,7 +10,7 @@ const row = [
   {
     name: "Olivia.Buckridge",
     investor: "Brent Skiles-Reynolds",
-    amount: "$26,000",
+    amount: "$0",
     country: "Nigeria",
     email: "Olivia_Buckridge@hotmail",
     phone: "+234 807 976 2056",
@@ -18,7 +18,7 @@ const row = [
   {
     name: "Olivia.Buckridge",
     investor: "Brent Skiles-Reynolds",
-    amount: "$26,000",
+    amount: "$0",
     country: "Nigeria",
     email: "Olivia_Buckridge@hotmail",
     phone: "+234 807 976 2056",
@@ -28,14 +28,14 @@ const row = [
 const dreamRow = [
   {
     name: "Olivia.Buckridge",
-    amount: "$26,000",
+    amount: "$0",
     country: "Nigeria",
     email: "Olivia_Buckridge@hotmail",
     phone: "+234 807 976 2056",
   },
   {
     name: "Olivia.Buckridge",
-    amount: "$26,000",
+    amount: "$0",
     country: "Nigeria",
     email: "Olivia_Buckridge@hotmail",
     phone: "+234 807 976 2056",
@@ -155,14 +155,14 @@ const Investments = () => {
             <div className="w-[3px] h-[12px] rounded-[32px] bg-[#007BFF] "></div>
             <p className="text-[#373737] text-[14px]">Total Amount Invested</p>
           </p>
-          <p className="text-[32px] font-Recoleta font-medium">$598,784.20</p>
+          <p className="text-[32px] font-Recoleta font-medium">$0</p>
         </div>
         <div className="border-l space-y-2 pl-2">
           <p className="flex items-center text-sm  py-0 space-x-[4px]">
             <div className="w-[3px] h-[12px] rounded-[32px] bg-[#2BAC47] "></div>
             <p className="text-[#373737] text-[14px]">No. of Investor</p>
           </p>
-          <p className="text-[32px] font-Recoleta font-medium">23</p>
+          <p className="text-[32px] font-Recoleta font-medium">0</p>
         </div>
       </div>
       <div>

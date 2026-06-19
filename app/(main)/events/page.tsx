@@ -13,7 +13,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Search, Ban, StopCircle, MoreHorizontalIcon, MoreVerticalIcon, Trash2Icon } from "lucide-react";
+import {
+  Search,
+  Ban,
+  StopCircle,
+  MoreHorizontalIcon,
+  MoreVerticalIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -59,8 +66,8 @@ const mockEvents: Event[] = [
     creatorAvatar:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
     status: "LIVE",
-    viewers: 245,
-    revenue: 8940,
+    viewers: 0,
+    revenue: 0,
     date: "19 Jan, 2026 at 19:00",
     eventImage:
       "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=400",
@@ -72,8 +79,8 @@ const mockEvents: Event[] = [
     creatorAvatar:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
     status: "LIVE",
-    viewers: "8.2K",
-    revenue: 1240,
+    viewers: 0,
+    revenue: 0,
     date: "19 Jan, 2026 at 19:00",
     eventImage:
       "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=400",
@@ -85,8 +92,8 @@ const mockEvents: Event[] = [
     creatorAvatar:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
     status: "LIVE",
-    viewers: "114.9K",
-    revenue: 71240,
+    viewers: 0,
+    revenue: 0,
     date: "19 Jan, 2026 at 19:00",
     eventImage:
       "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=400",
@@ -98,8 +105,8 @@ const mockEvents: Event[] = [
     creatorAvatar:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
     status: "LIVE",
-    viewers: "3.1K",
-    revenue: 12240,
+    viewers: 0,
+    revenue: 0,
     date: "19 Jan, 2026 at 19:00",
     eventImage:
       "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=400",
@@ -111,8 +118,8 @@ const mockEvents: Event[] = [
     creatorAvatar:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
     status: "UPCOMING",
-    viewers: "17.6K",
-    revenue: 18240,
+    viewers: 0,
+    revenue: 0,
     date: "19 Jan, 2026 at 19:00",
     eventImage:
       "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=400",
@@ -124,8 +131,8 @@ const mockEvents: Event[] = [
     creatorAvatar:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
     status: "COMPLETED",
-    viewers: "9.9K",
-    revenue: 1240,
+    viewers: 0,
+    revenue: 0,
     date: "19 Jan, 2026 at 19:00",
     eventImage:
       "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=400",
@@ -168,19 +175,22 @@ const EventsPage = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const totalEvents = 12560; // Mock total
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
+  const totalEvents = filteredEvents.length;
+  const totalPages = Math.ceil(totalEvents / pageSize);
+  const paginatedEvents = filteredEvents.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingState message="Loading events..." />
       </div>
-    );
-  }
-
-  if (!filteredEvents.length) {
-    return (
-      <div className="p-8 text-center text-[#808080]">No events available</div>
     );
   }
 
@@ -250,7 +260,7 @@ const EventsPage = () => {
       header: () => (
         <div className="flex items-center gap-1">
           <span>Revenue</span>
-       {UpDown}
+          {UpDown}
         </div>
       ),
       cell: ({ row }) => (
@@ -264,7 +274,7 @@ const EventsPage = () => {
       header: () => (
         <div className="flex items-center gap-1">
           <span>Date</span>
-       {UpDown}
+          {UpDown}
         </div>
       ),
       cell: ({ row }) => (
@@ -290,7 +300,7 @@ const EventsPage = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 space-y-2">
               <DropdownMenuItem className="flex items-center gap-2 text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
-              {whiteProIcon}
+                {whiteProIcon}
                 Ban Creator
               </DropdownMenuItem>
 
@@ -323,11 +333,9 @@ const EventsPage = () => {
     );
   };
 
-  const showingStart = (currentPage - 1) * pageSize + 1;
-  const showingEnd = Math.min(
-    Math.min(showingStart + pageSize - 1, totalEvents),
-    showingStart + filteredEvents.length - 1,
-  );
+  const showingStart = totalEvents === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const showingEnd =
+    totalEvents === 0 ? 0 : Math.min(currentPage * pageSize, totalEvents);
 
   return (
     <div className="space-y-6 pb-10">
@@ -337,7 +345,8 @@ const EventsPage = () => {
           Events
         </h2>
         <p className="mt-1.5 text-[#A8A8A8] INT400 font-normal text-[14px] tracking-[-1.8%] leading-[20px]">
-         Manange all live, upcoming, and completed Events within the Dream Planet ecosystem.
+          Manange all live, upcoming, and completed Events within the Dream
+          Planet ecosystem.
         </p>
       </div>
 
@@ -361,7 +370,7 @@ const EventsPage = () => {
                 className="text-[#5B5B5B] INT400 text-[14px] leading-[20px] tracking-[-1.8%]"
               />
             </SelectTrigger>
-            <SelectContent className="w-[172px] mt-2 " >
+            <SelectContent className="w-[172px] mt-2 ">
               <SelectItem
                 value="All Status"
                 className="text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%] font-medium"
@@ -417,7 +426,7 @@ const EventsPage = () => {
 
       {/* DataView Component with external view control */}
       <DataView
-        data={filteredEvents}
+        data={paginatedEvents}
         columns={eventColumns}
         renderCard={renderEventCard}
         searchPlaceholder="Search events..."
@@ -428,37 +437,47 @@ const EventsPage = () => {
       {/* Pagination */}
       <div className="flex items-center justify-between text-sm text-[#808080] flex-1">
         <p className="INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
-          SHOWING {filteredEvents.length > 0 ? showingStart : 0}-
-          {filteredEvents.length > 0 ? showingEnd : 0} OF{" "}
-          {totalEvents.toLocaleString()}
+          SHOWING {showingStart}-{showingEnd} OF {totalEvents.toLocaleString()}
         </p>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
+          <button
+             className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
           >
-            <Image
-              src="/icons/backbutton.svg"
-              height={20}
-              width={20}
-              alt="previous"
-            />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={showingEnd >= totalEvents}
-            onClick={() => setCurrentPage(currentPage + 1)}
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.21885 8.00047L10.5187 11.3003L9.57592 12.2431L5.33325 8.00047L9.57592 3.75781L10.5187 4.70062L7.21885 8.00047Z"
+                fill="#111810"
+              />
+            </svg>
+          </button>
+          <button
+            className="text-[#111810] bg-[#F7F7F7] h-8 w-8  rounded-full flex items-center justify-center cursor-pointer"
+            disabled={totalPages === 0 || currentPage >= totalPages}
+            onClick={() =>
+              setCurrentPage((page) => Math.min(totalPages, page + 1))
+            }
           >
-            <Image
-              src="/icons/forwardbutton.svg"
-              height={20}
-              width={20}
-              alt="next"
-            />
-          </Button>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8.78105 8.00047L5.4812 4.70062L6.42401 3.75781L10.6667 8.00047L6.42401 12.2431L5.4812 11.3003L8.78105 8.00047Z"
+                fill="#111810"
+              />
+            </svg>
+          </button>
         </div>
       </div>
     </div>

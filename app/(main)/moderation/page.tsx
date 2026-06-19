@@ -44,7 +44,7 @@ const mockFlaggedProducts: FlaggedProduct[] = [
   {
     id: "1",
     type: "AUDIO",
-    timeAgo: "2MINS AGO",
+    timeAgo: "0MINS AGO",
     title: "Luxury Watch Replica",
     creator: "@neetocreative",
     thumbnail: "",
@@ -55,7 +55,7 @@ const mockFlaggedProducts: FlaggedProduct[] = [
   {
     id: "2",
     type: "AUDIO",
-    timeAgo: "5MINS AGO",
+    timeAgo: "0MINS AGO",
     title: "Luxury Watch Replica",
     creator: "@neetocreative",
     thumbnail: "",
@@ -65,7 +65,7 @@ const mockFlaggedProducts: FlaggedProduct[] = [
   {
     id: "3",
     type: "AUDIO",
-    timeAgo: "10MINS AGO",
+    timeAgo: "0MINS AGO",
     title: "Luxury Watch Replica",
     creator: "@neetocreative",
     thumbnail: "",
@@ -87,7 +87,7 @@ const mockFlaggedCreators: FlaggedCreator[] = [
 const mockLiveSessions: LiveSession[] = [
   {
     id: "1",
-    watching: "1.2K WATCHING",
+    watching: "0 WATCHING",
     title: "Video Production 101",
     creator: "@neonvibes",
     creatorAvatar: "",

@@ -50,18 +50,40 @@ import { useRouter } from "next/navigation";
 import LoadingState from "@/components/LoadingState";
 import { updateRoles } from "@/redux/slices/adminsettingslice";
 
+const CAMPAIGN_FEATURE_LABEL = "Invest (campaign)";
+
 const features = [
   "Broadcast",
   "Users",
   "Challenge",
+  CAMPAIGN_FEATURE_LABEL,
   "Payments",
   "Performance",
   "Report",
+  "Code Generator",
   "Admin Setting",
   "Investments",
   "Forum",
+  "Overview",
+  "Sellers Store",
+  "Products",
+  "Events",
+  "Orders",
+  "Payouts",
+  "Withdrawal",
+  "Hire",
+  "Buyers",
+  "Wallet",
+  "Moderation",
   "Change Password",
+  "Access Control",
 ];
+
+const normalizeFeatureLabel = (feature: string) =>
+  feature === "Campaign" ? CAMPAIGN_FEATURE_LABEL : feature;
+
+const normalizeFeatureLabels = (features: string[] = []) =>
+  Array.from(new Set(features.map(normalizeFeatureLabel)));
 
 const AdminSetting = () => {
   const router = useRouter();
@@ -418,7 +440,7 @@ const AdminSetting = () => {
   const handleEditRole = (role: any) => {
     setEditingRole(role);
     setSelectedRole(role.name);
-    setSelectedFeatures(role.features || []);
+    setSelectedFeatures(normalizeFeatureLabels(role.features || []));
     setIsEditDialogOpen(true);
   };
 
@@ -708,7 +730,7 @@ const handleUpdateRole = async () => {
                         className="mr-[8px]"
                       />
                     </span>
-                    {feature}
+                    {normalizeFeatureLabel(feature)}
                   </p>
                 ))}
               </AccordionContent>
@@ -730,14 +752,14 @@ const handleUpdateRole = async () => {
           }
         }}
       >
-        <DialogContent className="sm:max-w-[432px]  max-h-[80vh] overflow-y-scroll scrollbar-hide ">
+        <DialogContent className="sm:max-w-[432px] max-h-[80vh] overflow-hidden flex flex-col">
           <DialogDescription className="hidden"></DialogDescription>
           <DialogHeader>
             <DialogTitle className="font-medium">
               {editingRole ? "Edit Role" : "Create Role"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 overflow-y-auto min-h-0 pr-1">
             <div className="flex flex-col space-y-2">
               <Label htmlFor="creator" className="font-medium">
                 Role
@@ -810,7 +832,7 @@ const handleUpdateRole = async () => {
 
               {/* Expandable section */}
               {isExpanded && (
-                <div className="border transition-all px-2 pt-2 w-full">
+                <div className="border transition-all px-2 pt-2 w-full max-h-[240px] overflow-y-auto">
                   {features.map((feature) => (
                     <div
                       key={feature}
@@ -846,7 +868,7 @@ const handleUpdateRole = async () => {
               )}
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="shrink-0 border-t border-[#F1F1F1] bg-white pt-4">
             {selectedRole && selectedFeatures.length > 0 ? (
               <>
                 <Button

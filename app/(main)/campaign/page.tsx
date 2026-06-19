@@ -448,7 +448,7 @@ const Campaign = () => {
     <div className="w-full grid grid-cols-8 space-x-4">
       <section className="col-span-6 flex flex-col space-y-7">
         <div>
-          <h2 className="text-[#111810] font-medium INT500 text-[24px] leading-[32px] tracking-[-1.5%]">Campaign</h2>
+          <h2 className="text-[#111810] font-medium INT500 text-[24px] leading-[32px] tracking-[-1.5%]">Invest (campaign)</h2>
           <p className="mt-1.5 text-[#A8A8A8] INT400 text-[14px] leading-[20px] tracking-[-1.8%]">
          View and Manage Creator Campaigns
           </p>

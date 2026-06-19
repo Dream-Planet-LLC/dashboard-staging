@@ -4,7 +4,10 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { NAV_PERMISSIONS } from "@/constants/permission";
+import {
+  LEGACY_NAV_PERMISSIONS,
+  NAV_PERMISSIONS,
+} from "@/constants/permission";
 
 interface Props {
   children: React.ReactNode;
@@ -21,7 +24,9 @@ export default function ProtectedRoute({ children, feature }: Props) {
   const hasAccess =
     permissions.includes(NAV_PERMISSIONS.full_access) ||
     permissions.includes("full_access") ||
-    permissions.includes(requiredPermission);
+    [requiredPermission, ...(LEGACY_NAV_PERMISSIONS[feature] ?? [])].some(
+      (permission) => permissions.includes(permission),
+    );
 
   useEffect(() => {
     if (!hasAccess) {

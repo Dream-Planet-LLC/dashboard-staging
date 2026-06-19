@@ -1,11 +1,12 @@
 // constants/navPermissions.ts
 
 export const NAV_PERMISSIONS: Record<string, string> = {
-    full_access: "full_access",
+  full_access: "full_access",
   Broadcast: "Broadcast",
   Users: "Members",
   Challenge: "Challenge",
-  Campaign: "Campaign",
+  Campaign: "Invest (campaign)",
+  "Invest (campaign)": "Invest (campaign)",
   Payments: "Payments",
   Performance: "Performance",
   Report: "Report",
@@ -26,4 +27,8 @@ export const NAV_PERMISSIONS: Record<string, string> = {
   Buyers: "Buyers",
   Wallet: "Wallet",
   Moderation: "Moderation",
+};
+
+export const LEGACY_NAV_PERMISSIONS: Record<string, string[]> = {
+  "Invest (campaign)": ["Campaign"],
 };
