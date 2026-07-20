@@ -14,7 +14,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   
     useEffect(() => {
       if (user?.id) {
-        router.push("/changepassword");
+        router.push("/overview");
       }
     }, [user, router]);
 

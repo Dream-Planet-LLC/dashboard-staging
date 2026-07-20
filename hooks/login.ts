@@ -72,7 +72,7 @@ const useLogin = () => {
       }
 
       // dispatch(updateUser(response?.data?.response?.admin));
-      router.push("/");
+      router.push("/overview");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "An unexpected error occurred.");
     } finally {
