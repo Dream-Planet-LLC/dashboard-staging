@@ -102,6 +102,8 @@ interface ManualWithdrawal {
   username: string;
   user_image: string;
   amount: number;
+  plaform_revenue?: number | string;
+  platform_revenue?: number | string;
   currency: string;
   status: "pending" | "completed" | "rejected";
   bank_name: string;
@@ -142,6 +144,14 @@ const formatCurrency = (num: number) =>
     currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
+  }).format(num);
+
+const formatCurrencyFixed2 = (num: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(num);
 
 const formatDate = (dateValue?: string | null) => {
@@ -553,6 +563,21 @@ const WithdrawalPage = () => {
           {formatCurrency(row.getValue("amount"))}
         </span>
       ),
+    },
+    {
+      id: "platformRevenue",
+      header: "Platform Revenue",
+      cell: ({ row }) => {
+        const withdrawal = row.original;
+        const platformRevenue =
+          withdrawal.plaform_revenue ?? withdrawal.platform_revenue ?? 0;
+
+        return (
+          <span className="font-medium text-[#373737] INT500 text-[14px] leading-[20px] tracking-[-1.5%]">
+            {formatCurrencyFixed2(Number(platformRevenue) || 0)}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "balance",
