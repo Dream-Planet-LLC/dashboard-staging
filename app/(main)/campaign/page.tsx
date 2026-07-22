@@ -1025,6 +1025,10 @@ const Campaign = () => {
                 <div className="space-y-[20px]">
                   {donations?.map((donation) => {
                     const createdAt = donation?.createdAt;
+                    const donorName =
+                      donation?.anonymous || !donation?.username?.trim()
+                        ? "Anonymous"
+                        : donation.username.trim();
                     const now = new Date();
                     const createdDate = new Date(createdAt);
                     const differenceInMs =
@@ -1065,16 +1069,16 @@ const Campaign = () => {
                           <Avatar>
                             <AvatarImage
                               className="object-cover"
-                              src={donation?.image}
-                              alt="@shadcn"
+                              src={donation?.image ?? undefined}
+                              alt={donorName}
                             />
                             <AvatarFallback>
-                              {donation?.username[0]}
+                              {donorName.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div>
                             <p className="text-[14px] font-medium">
-                              {donation?.username}
+                              {donorName}
                             </p>
                             <p className="text-[#A4A4A4] text-[14px]">
                               {timeAgo}

@@ -39,9 +39,9 @@ interface donationProps {
   campaign_id: number;
   createdAt: string;
   id: 441;
-  image: string;
+  image: string | null;
   user_id: number;
-  username: string;
+  username: string | null;
 }
 
 // Initial state with an array of campaignProps and top-level status and user_type
