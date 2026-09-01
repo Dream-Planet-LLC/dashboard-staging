@@ -6,7 +6,7 @@ import {
   updateRoles,
 } from "@/redux/slices/adminsettingslice";
 import { AppDispatch, RootState } from "@/redux/store";
-import axios from "axios";
+import axios from "@/lib/authenticatedApi";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { useState } from "react";
@@ -99,8 +99,10 @@ const useAdminsetting = () => {
         features,
       });
       toast.success("Role Created successfully");
+      return true;
     } catch (error: any) {
       toast.error("Something went wrong");
+      return false;
     } finally {
       setadminLoading(false);
     }
@@ -174,9 +176,10 @@ const useAdminsetting = () => {
         role_name: roleName,
       });
       toast.success("Admin Role Updated successfully");
-      await getAdminAccepted();
+      return true;
     } catch (error: any) {
       toast.error("Admin Role Update Failed");
+      return false;
     } finally {
       setadminLoading(false);
     }
@@ -185,56 +188,59 @@ const useAdminsetting = () => {
   const sendLink = async (email: string) => {
     setadminLoading(true);
     try {
-      await axios.post(`${base_url}/admin-settings/send-link`, {
-        email: email,
-        link: "www.dreamplanet.org",
-      });
-      toast.success("Link Sent Successfully");
+      const response = await axios.post(
+        `${base_url}/admin-settings/send-admin-invitation`,
+        { email }
+      );
+      toast.success(
+        response?.data?.message || "Admin invitation sent successfully."
+      );
+      return true;
     } catch (error: any) {
       toast.error(error.response?.data?.message || "An unexpected error occurred.");
+      return false;
     } finally {
       setadminLoading(false);
     }
   };
 
-const updateRole = async (
-  id: number,
-  name: string,
-  features: string[]
-) => {
-  setadminLoading(true);
-  try {
-    await axios.post(`${base_url}/admin-settings/update-role`, {
-      id,
-      name,
-      features,
-    });
+  const updateRole = async (
+    id: number,
+    name: string,
+    features: string[]
+  ) => {
+    setadminLoading(true);
+    try {
+      await axios.post(`${base_url}/admin-settings/update-role`, {
+        id,
+        name,
+        features,
+      });
 
-    toast.success("Role updated successfully");
+      toast.success("Role updated successfully");
+      return true;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to update role");
+      return false;
+    } finally {
+      setadminLoading(false);
+    }
+  };
 
-    await getAdminAccepted(); // refresh roles
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || "Failed to update role");
-  } finally {
-    setadminLoading(false);
-  }
-};
+  const deleteRole = async (id: number) => {
+    setadminLoading(true);
+    try {
+      await axios.post(`${base_url}/admin-settings/delete-role`, { id });
 
-
-const deleteRole = async (id: number) => {
-  setadminLoading(true);
-  try {
-    await axios.post(`${base_url}/admin-settings/delete-role`, { id });
-
-    toast.success("Role deleted successfully");
-
-    await getAdminAccepted(); // refresh roles
-  } catch (error: any) {
-    toast.error("Failed to delete role");
-  } finally {
-    setadminLoading(false);
-  }
-};
+      toast.success("Role deleted successfully");
+      return true;
+    } catch (error: any) {
+      toast.error("Failed to delete role");
+      return false;
+    } finally {
+      setadminLoading(false);
+    }
+  };
 
 
   return {
@@ -245,8 +251,8 @@ const deleteRole = async (id: number) => {
     updateAdminStatus,
     deleteAdmin,
     updateAdminRole,
-     updateRole,
-  deleteRole,
+    updateRole,
+    deleteRole,
     sendLink,
     adminLoading,
     pendingPage,

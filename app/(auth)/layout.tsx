@@ -6,6 +6,7 @@ import { AeonikFont, RecoletaFont } from "@/utils/customFonts";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
+import { getLandingRoute } from "@/constants/permission";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   
@@ -14,7 +15,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   
     useEffect(() => {
       if (user?.id) {
-        router.push("/overview");
+        router.replace(getLandingRoute(user.permissions));
       }
     }, [user, router]);
 

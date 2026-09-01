@@ -4,7 +4,7 @@ import {
   updatePaginationBroadcast,
 } from "@/redux/slices/broadcastslice";
 import { AppDispatch, RootState } from "@/redux/store";
-import axios from "axios";
+import axios from "@/lib/authenticatedApi";
 import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";

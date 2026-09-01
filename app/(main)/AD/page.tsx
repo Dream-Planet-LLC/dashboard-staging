@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import AdminSetting from "../adminsetting/page";
 import { useEffect } from "react";
 import LoadingState from "@/components/LoadingState";
+import { getLandingRoute, hasPermission } from "@/constants/permission";
 
 export default function AdminSettingPage() {
   const router = useRouter();
@@ -15,14 +16,14 @@ export default function AdminSettingPage() {
     useSelector((state: RootState) => state.admin.loggedInUser.permissions || [])
   ;
 
-  const hasAdminSettingAccess = permissions.includes("Admin Setting");
+  const hasAdminSettingAccess = hasPermission(permissions, "Admin Setting");
 
   // Redirect if no permission
   useEffect(() => {
     if (!hasAdminSettingAccess) {
-      router.replace("/broadcast"); // or "/unauthorized"
+      router.replace(getLandingRoute(permissions));
     }
-  }, [hasAdminSettingAccess, router]);
+  }, [hasAdminSettingAccess, permissions, router]);
 
   // Optional: Show nothing or a loader while checking
   if (!hasAdminSettingAccess) {

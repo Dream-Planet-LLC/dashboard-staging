@@ -6,7 +6,7 @@ import {
   updateReports,
 } from "@/redux/slices/reportslice";
 import { AppDispatch, RootState } from "@/redux/store";
-import axios from "axios";
+import axios from "@/lib/authenticatedApi";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useCallback } from "react";

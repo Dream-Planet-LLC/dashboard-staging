@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { useSelector } from "react-redux";
+import { getLandingRoute } from "@/constants/permission";
 
 type NavbarProps = {
   onMenuToggle?: () => void;
@@ -28,7 +29,7 @@ const Navbar = ({ onMenuToggle }: NavbarProps) => {
         <div
           className="cursor-pointer"
           onClick={() => {
-            router.push("/broadcast");
+            router.push(getLandingRoute(user.permissions));
           }}
         >
           <Image

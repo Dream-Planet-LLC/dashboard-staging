@@ -5,7 +5,8 @@ import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
-  LEGACY_NAV_PERMISSIONS,
+  getLandingRoute,
+  hasPermission,
   NAV_PERMISSIONS,
 } from "@/constants/permission";
 
@@ -20,19 +21,13 @@ export default function ProtectedRoute({ children, feature }: Props) {
   );
   const router = useRouter();
 
-  const requiredPermission = NAV_PERMISSIONS[feature];
-  const hasAccess =
-    permissions.includes(NAV_PERMISSIONS.full_access) ||
-    permissions.includes("full_access") ||
-    [requiredPermission, ...(LEGACY_NAV_PERMISSIONS[feature] ?? [])].some(
-      (permission) => permissions.includes(permission),
-    );
+  const hasAccess = hasPermission(permissions, feature);
 
   useEffect(() => {
     if (!hasAccess) {
-      router.replace("/broadcast");
+      router.replace(getLandingRoute(permissions));
     }
-  }, [hasAccess, router]);
+  }, [hasAccess, permissions, router]);
 
   if (!hasAccess) return null;
 

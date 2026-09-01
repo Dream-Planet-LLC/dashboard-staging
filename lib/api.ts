@@ -1,5 +1,7 @@
 // API utility functions for the dashboard
 
+import { authenticatedFetch as fetch } from "@/lib/authenticatedApi";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "";
 
 export interface AdminUserDetails {

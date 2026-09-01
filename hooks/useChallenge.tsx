@@ -4,7 +4,7 @@ import {
 } from "@/redux/slices/broadcastslice";
 import { updateChallengeAll, updatePaginationChallenge } from "@/redux/slices/challengeslice";
 import { AppDispatch, RootState } from "@/redux/store";
-import axios from "axios";
+import axios from "@/lib/authenticatedApi";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useCallback } from "react";
 import { debounce } from "lodash";

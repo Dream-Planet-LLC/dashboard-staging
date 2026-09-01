@@ -1,11 +1,15 @@
 import { AppDispatch, RootState } from "@/redux/store";
 import axios from "axios";
+import authenticatedAxios from "@/lib/authenticatedApi";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { updateUser } from "@/redux/slices/adminslice";
-import { NAV_PERMISSIONS } from "@/constants/permission";
+import {
+  getLandingRoute,
+  normalizePermissions,
+} from "@/constants/permission";
 
 const useLogin = () => {
   const base_url = process.env.NEXT_PUBLIC_BASE_URL;
@@ -19,7 +23,6 @@ const useLogin = () => {
 
   const login = async (email?: string, password?: string) => {
     setLoading(true);
-    console.log("login");
     try {
       const response = await axios.post(
         `${base_url}/admin-settings/login-admin`,
@@ -28,8 +31,6 @@ const useLogin = () => {
           password: password,
         }
       );
-
-      console.log(response, "login response");
 
       const payload =
         response?.data?.data?.response ??
@@ -41,18 +42,7 @@ const useLogin = () => {
         ? role.features
         : [];
 
-      // If user has "full_access" → give them EVERY permission available
-      const permissions = rawFeatures.includes("full_access")
-        ? Object.values(NAV_PERMISSIONS)
-        : rawFeatures
-            .map(
-              (f: string) => NAV_PERMISSIONS[f as keyof typeof NAV_PERMISSIONS]
-            )
-            .filter(Boolean);
-
-      if (permissions.length === 0) {
-        permissions.push(...Object.values(NAV_PERMISSIONS));
-      }
+      const permissions = normalizePermissions(rawFeatures);
 
       dispatch(
         updateUser({
@@ -71,10 +61,12 @@ const useLogin = () => {
         localStorage.setItem("auth_token", token);
       }
 
-      // dispatch(updateUser(response?.data?.response?.admin));
-      router.push("/overview");
+      toast.success(response?.data?.message || "Signed in successfully.");
+      router.push(getLandingRoute(permissions));
+      return true;
     } catch (error: any) {
       toast.error(error.response?.data?.message || "An unexpected error occurred.");
+      return false;
     } finally {
       setLoading(false);
     }
@@ -83,7 +75,7 @@ const useLogin = () => {
   const changePassword = async (oldPassword?: string, newPassword?: string) => {
     setLoading(true);
     try {
-      const response = await axios.post(
+      const response = await authenticatedAxios.post(
         `${base_url}/admin-settings/change-admin-password`,
         {
           admin_id: id,

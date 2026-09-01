@@ -60,9 +60,11 @@ const Login = () => {
         </div>
         <Button
           onClick={async () => {
-            await login(email, password);
-            setEmail('');
-            setPassword('');
+            const signedIn = await login(email, password);
+            if (signedIn) {
+              setEmail('');
+              setPassword('');
+            }
           }}
           className={`${canSubmit ? "btnColored" : "btnColoredInactive"} w-[370px]`}
           disabled={!canSubmit || loading}

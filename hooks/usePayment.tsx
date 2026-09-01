@@ -8,7 +8,7 @@ import {
 } from "@/redux/slices/paymentslice";
 
 import { AppDispatch, RootState } from "@/redux/store";
-import axios from "axios";
+import axios from "@/lib/authenticatedApi";
 import { useDispatch, useSelector } from "react-redux";
 import { useState } from "react";
 import { toast } from "sonner";

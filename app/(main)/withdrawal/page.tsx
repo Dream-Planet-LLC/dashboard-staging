@@ -72,6 +72,7 @@ import {
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
 import { fetchAdminUserDetails } from "@/lib/api";
+import { authenticatedFetch as fetch } from "@/lib/authenticatedApi";
 
 // Types based on API documentation
 interface Withdrawal {

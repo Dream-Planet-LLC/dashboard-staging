@@ -15,8 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "@/redux/slices/adminslice";
 import { RootState } from "@/redux/store";
 import {
-  LEGACY_NAV_PERMISSIONS,
-  NAV_PERMISSIONS,
+  hasPermission,
 } from "@/constants/permission";
 import { ChevronRight, ChevronRightIcon } from "lucide-react";
 
@@ -32,29 +31,12 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
     (state: RootState) => state.admin.loggedInUser.permissions || [],
   );
 
-  const hasPermission = (featureName: string) => {
-    const required = NAV_PERMISSIONS[featureName];
-    if (
-      permissions.includes(NAV_PERMISSIONS.full_access) ||
-      permissions.includes("full_access")
-    ) {
-      return true;
-    }
-    if (!required) {
-      return false;
-    }
-
-    return [required, ...(LEGACY_NAV_PERMISSIONS[featureName] ?? [])].some(
-      (permission) => permissions.includes(permission),
-    );
-  };
-
   const visibleLinks = NavLinks.filter((item: any) => {
     if (item.name === "Change Password") {
       return true;
     }
 
-    return hasPermission(item.name);
+    return hasPermission(permissions, item.name);
   });
 
   // Separate links into Platform and Digital Store sections
