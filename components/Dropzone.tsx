@@ -192,9 +192,9 @@ export default function Dropzone({
             </span>{" "}
             or drag and drop
           </p>
-          <p className="text-[#808080] text-[12px]">
+          {/* <p className="text-[#808080] text-[12px]">
             Maximum file size {MAX_FILE_SIZE_MB} MB.
-          </p>
+          </p> */}
         </div>
       )}
     </div>

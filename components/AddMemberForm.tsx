@@ -507,6 +507,7 @@ const CountryPicker = ({
   );
 };
 
+// country 
 const CountryFlag = ({ countryCode }: { countryCode: string }) => (
   <span className="react-tel-input flex !h-[14px] !w-5 shrink-0 items-center">
     <span
