@@ -127,9 +127,11 @@ const useAdminsetting = () => {
         status: "pending",
         role_id: roleId,
       });
-      toast.success("Admin Created successfully");
+      toast.success("Admin created successfully");
+      return true;
     } catch (error: any) {
-      toast.error(error.response.data.message || "Couldn't create Admin");
+      toast.error(error.response?.data?.message || "Couldn't create Admin");
+      return false;
     } finally {
       setadminLoading(false);
     }
