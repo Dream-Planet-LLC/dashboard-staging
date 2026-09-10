@@ -1,9 +1,15 @@
 import { PaginationProps } from "@/utils/interface";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-// Define the interface for a single user object
-interface broadcastProps {
+export interface BroadcastCreator {
+  id: number;
+  first_name: string | null;
+  last_name: string | null;
+}
+
+export interface BroadcastProps {
   admin_id: number | null;
+  creator: BroadcastCreator | null;
   challenge_id: null;
   content_type: null;
   createdAt: string | null;
@@ -20,8 +26,8 @@ interface broadcastProps {
 }
 
 const initialState = {
-  broadcastAll: [] as broadcastProps[],
-  broadcastEdit: {} as broadcastProps,
+  broadcastAll: [] as BroadcastProps[],
+  broadcastEdit: {} as BroadcastProps,
   pagination: {
     hasNextPage: false as boolean,
     hasPrevPage: false as boolean,
@@ -41,10 +47,10 @@ export const broadcastslice = createSlice({
   name: "broadcast",
   initialState,
   reducers: {
-    updateBroadcastAll: (state, action: PayloadAction<broadcastProps[]>) => {
+    updateBroadcastAll: (state, action: PayloadAction<BroadcastProps[]>) => {
       state.broadcastAll = action.payload;
     },
-    updateBroadcastEdit: (state, action: PayloadAction<broadcastProps>) => {
+    updateBroadcastEdit: (state, action: PayloadAction<BroadcastProps>) => {
       state.broadcastEdit = action.payload;
     },
      updatePaginationBroadcast: (state, action: PayloadAction<PaginationProps>) => {

@@ -164,7 +164,7 @@ const BroadcastCreate = () => {
           <Button
             onClick={async () => {
               const filePreviews = files.map((file) => file.preview);
-              await createBroadCast(title, null, description, filePreviews);
+              await createBroadCast(title, description, filePreviews);
               setTitle("");
               setDescription("");
               setFiles([]);

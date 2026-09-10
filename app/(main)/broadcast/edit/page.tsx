@@ -186,7 +186,6 @@ const BroadcastEdit = () => {
               await updateBroadCast(
                 broadcastEdit.id,
                 title,
-                null,
                 description,
                 filePreviews
               );

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon, EllipsisVertical } from "lucide-react";
 import { UserTable } from "@/components/UserTable";
 import { ColumnDef } from "@tanstack/react-table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -18,9 +17,25 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { Input } from "@/components/ui/input";
-import { updateBroadcastEdit } from "@/redux/slices/broadcastslice";
+import {
+  BroadcastProps,
+  updateBroadcastEdit,
+} from "@/redux/slices/broadcastslice";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import LoadingState from "@/components/LoadingState";
+import BroadcastThumbnail from "@/components/BroadcastThumbnail";
+
+const getCreatorName = (broadcast: BroadcastProps) => {
+  const fullName = [
+    broadcast.creator?.first_name,
+    broadcast.creator?.last_name,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  return fullName || "Unknown admin";
+};
 
 const BroadCast = () => {
   const { hasNextPage, hasPrevPage, limit, page, totalDocs } = useSelector(
@@ -62,24 +77,24 @@ const BroadCast = () => {
     return () => clearTimeout(timer);
   }, [isDeleteOpen, setisDeleteOpen]);
 
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<BroadcastProps>[] = [
     {
-      accessorKey: "name",
-      header: "Creator",
+      id: "broadcast",
+      header: "Broadcast",
       cell: ({ row }) => (
-        <div className="flex items-center space-x-1">
-          <Avatar>
-            <AvatarImage
-              className="object-contain"
-              src="https://github.com/shadcn.png"
-              alt="@shadcn"
-            />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
-          <div>
-            <p>{row.getValue("name")}</p>
-          </div>
-        </div>
+        <BroadcastThumbnail
+          mediaUrl={row.original.media_url?.[0]}
+          title={row.original.title}
+        />
+      ),
+    },
+    {
+      id: "creator",
+      header: "Created by",
+      cell: ({ row }) => (
+        <p className="text-[14px] text-[#373737]">
+          {getCreatorName(row.original)}
+        </p>
       ),
     },
     {
@@ -115,7 +130,7 @@ const BroadCast = () => {
             (1000 * 3600 * 24)
         );
 
-        if (daysDifference === 0) {
+        if (daysDifference <= 0) {
           return <p className="text-[14px] text-[#373737]">Today</p>;
         }
 
