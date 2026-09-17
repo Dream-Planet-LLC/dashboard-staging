@@ -36,7 +36,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
       return true;
     }
 
-    return hasPermission(permissions, item.name);
+    return hasPermission(permissions, item.permission ?? item.name);
   });
 
   // Separate links into Platform and Digital Store sections
@@ -78,6 +78,10 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
     ].includes(item.name),
   );
 
+  const engagementLinks = visibleLinks.filter(
+    (item: any) => item.section === "engagement",
+  );
+
   const renderNavLink = (item: any) => {
     const isActive =
       (path.includes(`${item.href}`) && item.href !== "/") ||
@@ -101,7 +105,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
                   className: "h-5 w-5",
                   pathColor,
                 })}
-                {item.name}
+                {item.label ?? item.name}
               </span>
             </AccordionTrigger>
             <AccordionContent className="flex flex-col px-3 py-2 gap-1">
@@ -144,7 +148,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
             className: "h-5 w-5",
             pathColor,
           })}
-          {item.name}
+          {item.label ?? item.name}
         </span>
         {item.accordion && <ChevronRight className="h-4 w-4" />}
       </Link>
@@ -174,6 +178,17 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
             </p>
             <div className="space-y-0.5">
               {digitalStoreLinks.map(renderNavLink)}
+            </div>
+          </div>
+        )}
+
+        {engagementLinks.length > 0 && (
+          <div className="space-y-1">
+            <p className="px-1 mb-3 text-[14px] INT500 font-medium text-[#C8C8C8] uppercase tracking-wider">
+              ENGAGEMENT
+            </p>
+            <div className="space-y-0.5">
+              {engagementLinks.map(renderNavLink)}
             </div>
           </div>
         )}

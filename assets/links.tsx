@@ -215,10 +215,28 @@ export const NavLinks = [
   //   accordion: false,
   // },
 
-    {
+  {
     name: "Moderation",
     icon: <ModerationIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
     href: "/moderation",
+    accordion: false,
+  },
+  {
+    name: "Engagement Overview",
+    label: "Overview",
+    permission: "full_access",
+    section: "engagement",
+    icon: <PerformanceIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/engagement/overview",
+    accordion: false,
+  },
+  {
+    name: "Engagement Fans",
+    label: "Fans",
+    permission: "full_access",
+    section: "engagement",
+    icon: <SellersStoreIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/engagement/fans",
     accordion: false,
   },
   {

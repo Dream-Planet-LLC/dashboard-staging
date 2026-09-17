@@ -226,7 +226,15 @@ const BroadCast = () => {
             Send, View and Manage App wide Broadcast Messages
           </p>
         </div>
-        <div>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => {
+              router.push("/broadcast/notification");
+            }}
+            className="btnPlain"
+          >
+            Create Notification
+          </Button>
           <Button
             onClick={() => {
               router.push("/broadcast/create");

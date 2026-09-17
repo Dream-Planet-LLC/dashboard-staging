@@ -66,6 +66,7 @@ const ROUTE_PERMISSIONS: Array<{
   { prefix: "/hire", feature: "Hire" },
   { prefix: "/buyers", feature: "Buyers" },
   { prefix: "/moderation", feature: "Moderation" },
+  { prefix: "/engagement", feature: "full_access" },
   { prefix: "/accesscontrol", feature: "Access Control" },
 ];
 
