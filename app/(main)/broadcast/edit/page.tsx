@@ -1,244 +1,176 @@
 "use client";
 
-import Dropzone from "@/components/Dropzone";
-import { Textarea } from "@/components/ui/textarea";
-import Image from "next/image";
-import Link from "next/link";
-import React, { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import BroadcastMediaUpload, {
+  BroadcastMediaFile,
+} from "@/components/broadcast/BroadcastMediaUpload";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import useBroadcast from "@/hooks/useBroadcast";
-import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
-interface FileWithPreview {
-  preview: string; // Cloudinary URL
-  name: string; // Original file name
-  size: number; // File size
-}
+const transformMediaUrls = (mediaUrls: string[]): BroadcastMediaFile[] =>
+  mediaUrls.map((url, index) => ({
+    preview: url,
+    name: `File-${index + 1}`,
+    size: 0,
+  }));
 
 const BroadcastEdit = () => {
-  const [isDeleteOpen, setisDeleteOpen] = useState(false);
-  const { updateBroadCast, deleteBroadcast, updateLoading, deleteLoading } = useBroadcast();
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const { updateBroadCast, deleteBroadcast, updateLoading, deleteLoading } =
+    useBroadcast();
   const router = useRouter();
-
   const broadcastEdit = useSelector(
-    (state: RootState) => state.broadcast.broadcastEdit
+    (state: RootState) => state.broadcast.broadcastEdit,
   );
-  const transformMediaUrls = (mediaUrls: string[]): FileWithPreview[] => {
-    return mediaUrls.map((url, index) => ({
-      preview: url,
-      name: `File-${index + 1}`, // Fallback name since no file name is provided
-      size: 0, // No file size available from backend, set as 0
-    }));
-  };
-
-  // Pre-populate fields from Redux state
-  const [title, setTitle] = useState<string>(broadcastEdit?.title || "");
-  const [description, setDescription] = useState<string>(
-    broadcastEdit?.text_content || ""
+  const [title, setTitle] = useState(broadcastEdit?.title || "");
+  const [description, setDescription] = useState(
+    broadcastEdit?.text_content || "",
   );
-  const [files, setFiles] = useState<FileWithPreview[]>(
-    broadcastEdit?.media_url ? transformMediaUrls(broadcastEdit.media_url) : []
+  const [files, setFiles] = useState<BroadcastMediaFile[]>(
+    broadcastEdit?.media_url ? transformMediaUrls(broadcastEdit.media_url) : [],
   );
 
-  const closeDeleteDialog = () => setisDeleteOpen(false);
-  const removeFile = (fileName: string) => {
-    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
-  };
+  const canSubmit =
+    Boolean(title.trim()) &&
+    Boolean(description.trim()) &&
+    files.length > 0 &&
+    !isUploading;
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      const closeButton = document.querySelector(
-        "button.absolute.right-4.top-4"
-      );
-
-      if (closeButton) {
-        closeButton.remove();
-      }
+      document.querySelector("button.absolute.right-4.top-4")?.remove();
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [isDeleteOpen, setisDeleteOpen]);
-  return (
-    <div className="flex justify-between items-start">
-      <div className="flex w-3/6 flex-col space-y-[24px]">
-      <div
-            onClick={() => {
-              router.push("/broadcast");
-            }}
-            className=" cursor-pointer flex items-center transition-all active:scale-95"
-          >
-          <ArrowLeft width={20} height={20} className="mr-[8px]" />
+  }, [isDeleteOpen]);
 
-            <span className="">Return back</span>
-          </div>
-        <div>
-          <h2 className=" text-2xl">Edit Broadcast</h2>
-          <p className="text-sm text-[#A8A8A8]">
-            update broadcast details and media content
+  const handleUpdate = async () => {
+    if (!canSubmit) return;
+
+    await updateBroadCast(
+      broadcastEdit.id,
+      title.trim(),
+      description.trim(),
+      files.map((file) => file.preview),
+    );
+    router.push("/broadcast");
+  };
+
+  const handleDelete = async () => {
+    setIsDeleteOpen(false);
+    await deleteBroadcast(broadcastEdit.id);
+    router.push("/broadcast");
+  };
+
+  return (
+    <main className="flex flex-col items-start pb-8">
+      <button
+        type="button"
+        onClick={() => router.push("/broadcast")}
+        className="inline-flex items-center gap-2 text-xs text-[#373737] transition hover:text-[#F75803]"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Return back
+      </button>
+
+      <div className="flex w-full items-center justify-between gap-3">
+        <header className="mt-5">
+          <h1 className="text-[22px] font-medium leading-7 text-[#111810]">
+            Edit Broadcast
+          </h1>
+          <p className="mt-0.5 text-xs text-[#A8A8A8]">
+            Update broadcast details and media content
           </p>
+        </header>
+
+        <div className="flex shrink-0 items-center gap-3">
+          <Button
+            className="btnPlain"
+            disabled={!canSubmit || updateLoading}
+            onClick={() => setIsDeleteOpen(true)}
+          >
+            Delete Post
+          </Button>
+          <Button
+            className="btnColored"
+            disabled={!canSubmit}
+            loading={updateLoading}
+            onClick={handleUpdate}
+          >
+            Upload Post
+          </Button>
         </div>
-        <div>
-          <p className="text-[#10002E] font-medium mb-1 text-[14px]">Title</p>
+      </div>
+
+      <div className="mt-6 w-full max-w-[500px] space-y-5">
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-medium text-[#10002E]">
+            Title
+          </span>
           <Input
-            className="focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[#C8C8C8] border-[#C8C8C8]"
             value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-            }}
+            onChange={(event) => setTitle(event.target.value)}
             placeholder="Enter Title"
+            className="h-11 border-[#C8C8C8] text-xs placeholder:text-[#C8C8C8] focus-visible:ring-0 focus-visible:ring-offset-0"
           />
-        </div>
-        <div>
-          <p className="text-[#10002E] font-medium mb-1 text-[14px]">
+        </label>
+
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-medium text-[#10002E]">
             Description
-          </p>
+          </span>
           <Textarea
-            className="focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[#C8C8C8] h-[120px] border-[#C8C8C8]"
             value={description}
-            onChange={(e) => {
-              setDescription(e.target.value);
-            }}
+            onChange={(event) => setDescription(event.target.value)}
             placeholder="Enter Description"
+            className="h-[120px] resize-none border-[#C8C8C8] text-xs placeholder:text-[#C8C8C8] focus-visible:ring-0 focus-visible:ring-offset-0"
           />
-        </div>
+        </label>
+
         <div>
-          <p className="text-[#10002E] font-medium mb-1 text-[14px]">Media</p>
-          <Dropzone
+          <p className="mb-1.5 text-xs font-medium text-[#10002E]">Media</p>
+          <BroadcastMediaUpload
             files={files}
             setFiles={setFiles}
-            className="w-full border border-[#C8C8C8] border-dashed cursor-pointer h-32 rounded-md flex justify-center items-center"
+            onUploadStateChange={setIsUploading}
           />
-          <div className="mt-4">
-            <ul className="space-y-2">
-              {files.map((file, index) => (
-                <div
-                  key={index}
-                  className="border rounded-[8px] border-[#E4E4E4] flex items-center p-4  justify-between "
-                >
-                  <div className="flex items-center space-x-2">
-                    <div className="border p-2 rounded-md">
-                      <Image
-                        src={"/icons/picturefileImage.svg"}
-                        height={13}
-                        width={17}
-                        alt="fileImage"
-                      />
-                    </div>
-
-                    <div>
-                      <p className="text-[#111810] font-medium">{file.name}</p>
-                      <p className="text-[12px] text-[#808080]">{file.size}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button className=" transition-all bg-transparent text-black hover:bg-transparent text-sm font-medium cursor-pointer active:scale-95">
-                      <Link href={file.preview} download={true} target="_blank">
-                        Preview
-                      </Link>
-                    </Button>
-                    <div className="bg-[#C8C8C8] rounded-full w-[4px] h-[4px]"></div>
-                    <Button
-                      onClick={() => {
-                        removeFile(file.name);
-                      }}
-                      className="text-sm text-[#BF3100] font-medium bg-transparent hover:bg-transparent cursor-pointer active:scale-95 transition-all"
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </ul>
-          </div>
         </div>
       </div>
-      <div className="flex items-center space-x-4">
-        {title && description && files.length > 0 ? (
-          <Button
-            onClick={() => {
-              setisDeleteOpen(true);
-            }}
-            className="btnPlain"
-          >
-            Delete Post
-          </Button>
-        ) : (
-          <Button className="btnPlainInactive" disabled={true}>
-            Delete Post
-          </Button>
-        )}
-        {title && description && files.length > 0 ? (
-          <Button
-            onClick={async () => {
-              const filePreviews = files.map((file) => file.preview);
-              await updateBroadCast(
-                broadcastEdit.id,
-                title,
-                description,
-                filePreviews
-              );
-              router.push("/broadcast");
-            }}
-            className="btnColored"
-            loading={updateLoading}
-          >
-            Upload Post
-          </Button>
-        ) : (
-          <Button className="btnColoredInactive" disabled={true}>
-            Upload Post
-          </Button>
-        )}
-      </div>
 
-      <Dialog open={isDeleteOpen} onOpenChange={closeDeleteDialog}>
+      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent className="sm:max-w-[384px]">
-          <div className="flex flex-col items-center justify-center gap-2 mt-7">
+          <div className="mt-7 flex flex-col items-center justify-center gap-2">
             <Image
-              src={"/DASHBOARDASSETS/ILLUSTRATION/DELETE.png"}
+              src="/DASHBOARDASSETS/ILLUSTRATION/DELETE.png"
               height={72}
               width={69.68}
-              alt="trashIcon"
+              alt="Delete broadcast"
             />
             <p className="text-[20px] font-medium">Delete this Broadcast?</p>
-            <p className="text-[14px] text-center text-[#808080]">
+            <p className="text-center text-[14px] text-[#808080]">
               Are you sure you want to delete this broadcast? This action is
               irreversible.
             </p>
           </div>
 
           <DialogFooter>
-            <div className="flex w-full justify-center items-center space-x-2">
-              <Button
-                className="w-full shadow-md text-[14px] text-black bg-transparent hover:bg-transparent transition-all hover:scale-105 active:scale-95 border"
-                type="submit"
-                onClick={() => {
-                  closeDeleteDialog();
-                }}
-              >
+            <div className="flex w-full items-center justify-center gap-2">
+              <Button className="btnPlain w-full" onClick={() => setIsDeleteOpen(false)}>
                 Cancel
               </Button>
               <Button
-                className="w-full shadow-md text-[14px] text-white bg-[#C83532] hover:bg-[#C83532] transition-all hover:scale-105 active:scale-95"
-                type="submit"
-                onClick={async () => {
-                  closeDeleteDialog();
-                  await deleteBroadcast(broadcastEdit.id);
-                  router.push("/broadcast");
-                }}
+                className="w-full bg-[#C83532] text-white hover:bg-[#C83532]"
                 loading={deleteLoading}
+                onClick={handleDelete}
               >
                 Delete
               </Button>
@@ -246,7 +178,7 @@ const BroadcastEdit = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </main>
   );
 };
 
