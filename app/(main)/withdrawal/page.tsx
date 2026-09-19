@@ -1113,7 +1113,7 @@ const WithdrawalPage = () => {
                     </div>
                   </div>
 
-                  {/* Rejection Reason */}
+                  {/* Rejection Reason hgjjjj */}
                   {selectedWithdrawal.rejection_reason && (
                     <div>
                       <h4 className="text-[#808080] INT500 font-medium text-[14px] leading-[20px] tracking-[-1.5%] mb-4">
@@ -1250,7 +1250,7 @@ const WithdrawalPage = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Reject Dialog */}
+      
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

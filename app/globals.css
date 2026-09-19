@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* int */
+
+
+
 @font-face {
   font-family: 'Inter';
   src: url('/fonts/AnyConv.com__Inter_18pt-Thin.woff2') format('woff');
