@@ -84,7 +84,8 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
 
   const renderNavLink = (item: any) => {
     const isActive =
-      (path.includes(`${item.href}`) && item.href !== "/") ||
+      (item.href !== "/" &&
+        (path === item.href || path.startsWith(`${item.href}/`))) ||
       (item.href === "/" && path === "/");
     const pathColor = isActive ? "#F75803" : "#A4A4A4";
 
