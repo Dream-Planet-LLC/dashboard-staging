@@ -20,7 +20,7 @@ const PaginationFooter = ({
   const end = total === 0 ? 0 : Math.min(page * pageSize, total);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 pt-6 text-xs font-medium tracking-[0.08em] text-[#909090]">
+    <div className="flex flex-wrap items-center justify-between gap-4 pt-6 text-[14px] INT500  text-[#A4A4A4]">
       <p>
         SHOWING {start}-{end} OF {total.toLocaleString()}
       </p>

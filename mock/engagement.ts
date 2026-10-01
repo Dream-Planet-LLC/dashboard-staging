@@ -59,24 +59,24 @@ export const engagementOverview = {
 };
 
 export const topEarningFans: TopEarningFan[] = [
-  { username: "nightowl_alex", amount: 3420, color: "#4F6EF7" },
-  { username: "cosmic_babe", amount: 2980, color: "#F06421" },
+  { username: "nightowl_alex", amount: 3420, color: "#3971EB" },
+  { username: "cosmic_babe", amount: 2980, color: "#EB6723" },
   { username: "star_gazer", amount: 2450, color: "#2BAC62" },
-  { username: "digital_wave", amount: 2100, color: "#D63B32" },
-  { username: "cyber_punk", amount: 1850, color: "#164B98" },
-  { username: "noah_creates", amount: 1735, color: "#A43D0A" },
-  { username: "ava_thompson", amount: 1610, color: "#9D55E5" },
-  { username: "ethan_b", amount: 1540, color: "#D99A0A" },
-  { username: "izzy_reed", amount: 1475, color: "#2AA88C" },
-  { username: "liam_morgan", amount: 1390, color: "#E83783" },
+  { username: "digital_wave", amount: 2100, color: "#C83532" },
+  { username: "cyber_punk", amount: 1850, color: "#063D90" },
+  { username: "noah_creates", amount: 1735, color: "#7E2D02" },
+  { username: "ava_thompson", amount: 1610, color: "#884CED" },
+  { username: "ethan_b", amount: 1540, color: "#CE941C" },
+  { username: "izzy_reed", amount: 1475, color: "#2CAB5B" },
+  { username: "liam_morgan", amount: 1390, color: "#DD3B83" },
 ];
 
 export const rewardDistribution: RewardDistributionItem[] = [
-  { name: "Likes", value: 34, color: "#28A95B" },
-  { name: "Comments", value: 22, color: "#D99A0A" },
-  { name: "Shares-Forum", value: 18, color: "#F06421" },
-  { name: "Shares-Social", value: 14, color: "#3F6EE8" },
-  { name: "Time Spent", value: 12, color: "#064B9B" },
+  { name: "Likes", value: 34, color: "#2CAB5B" },
+  { name: "Comments", value: 22, color: "#CE941C" },
+  { name: "Shares-Forum", value: 18, color: "#EB6723" },
+  { name: "Shares-Social", value: 14, color: "#3971EB" },
+  { name: "Time Spent", value: 12, color: "#063D90" },
 ];
 
 const activityTypes = ["Like", "Comment", "Share-Forum", "Share-Social", "Time Spent"];
@@ -122,12 +122,21 @@ export const getRewardBreakdown = (fanId: string): RewardBreakdown[] => {
 export const getPayoutHistory = (fanId: string): PayoutHistory[] => {
   const fanIndex = getFanIndex(fanId);
 
-  return Array.from({ length: 24 }, (_, index) => ({
-    id: `${fanId}-payout-${index + 1}`,
-    reference: `DP-${2026000 + fanIndex * 100 + index + 1}`,
-    date: new Date(Date.UTC(2026, 0, 18 - index)).toISOString(),
-    amount: 35 + ((index * 27 + fanIndex * 11) % 480),
-    status: index % 5 === 0 ? "Processing" : "Completed",
-  }));
+  return Array.from({ length: 24 }, (_, index): PayoutHistory => {
+    const status: PayoutHistory["status"] =
+      index % 9 === 8
+        ? "Processing"
+        : index % 5 === 1
+          ? "Failed"
+          : "Completed";
+
+    return {
+      id: `${fanId}-payout-${index + 1}`,
+      reference: `DP-${2026000 + fanIndex * 100 + index + 1}`,
+      date: new Date(Date.UTC(2026, 0, 18 - index)).toISOString(),
+      amount: 35 + ((index * 27 + fanIndex * 11) % 480),
+      status,
+    };
+  });
 };
 
