@@ -330,7 +330,13 @@ const FanProfilePage = ({ params }: { params: { fanId: string } }) => {
           ))}
         </div>
 
-        <div className="mt-4 overflow-x-auto">
+        <div
+          className={
+            activeTab === "rewards"
+              ? "-mt-16 overflow-x-auto pt-20"
+              : "mt-4 overflow-x-auto"
+          }
+        >
           {activeTab === "activity" && (
             <ActivityTable
               activityLog={activityLog}
@@ -519,7 +525,23 @@ const RewardPanel = ({
       <aside className="flex h-[116px] flex-col items-center justify-center rounded-xl bg-[#FEECE3] px-5 text-center">
         <p className="flex items-center gap-1.5 text-[13px] leading-[100%] tracking-[-1.5%] text-[#111810] INT600">
           TOTAL MTD
-          <Info className="h-3.5 w-3.5" />
+          <button
+            type="button"
+            className="group relative inline-flex cursor-help outline-none"
+            aria-label="About Total MTD"
+            aria-describedby="total-mtd-tooltip"
+          >
+            <Info className="h-3.5 w-3.5" aria-hidden="true" />
+            <span
+              id="total-mtd-tooltip"
+              role="tooltip"
+              className="pointer-events-none absolute bottom-[calc(100%+14px)] left-1/2 z-20 w-[214px] -translate-x-1/2 rounded-[4px] bg-[#333333] px-4 py-3 text-left text-[12px] font-normal leading-[16px] tracking-normal text-white opacity-0 shadow-[0_4px_10px_rgba(0,0,0,0.18)] transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100"
+            >
+              The total value recorded from the beginning of the current month
+              up to today.
+              <span className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-[7px] border-t-[9px] border-x-transparent border-t-[#333333]" />
+            </span>
+          </button>
         </p>
         <p className="mt-2 text-[48px] leading-none text-[#111810] INT700">
           {formatDecimalCurrency(
