@@ -75,6 +75,9 @@ const features = [
   "Buyers",
   "Wallet",
   "Moderation",
+  "Listings",
+  "Categories",
+  "Shipping",
   "Change Password",
   "Access Control",
 ];

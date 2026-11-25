@@ -1,4 +1,17 @@
 import React from "react";
+import { DesignIcon } from "./sales/DesignIcon";
+
+export function ShippingIcon({ className, pathColor }: { className: string; pathColor: string }) {
+  return <DesignIcon namespace="shipping" name="truck" size={20} color={pathColor} className={className} />;
+}
+
+export function ListingsIcon({ className, pathColor }: { className: string; pathColor: string }) {
+  return <DesignIcon name="listings" size={20} color={pathColor} className={className} />;
+}
+
+export function CategoriesIcon({ className, pathColor }: { className: string; pathColor: string }) {
+  return <DesignIcon name="categories" size={20} color={pathColor} className={className} />;
+}
 
 export function BroadCastIcon({
   className,

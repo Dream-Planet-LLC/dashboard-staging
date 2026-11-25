@@ -2,6 +2,7 @@
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import LoadingState from "@/components/LoadingState";
+import { SalesWorkspace } from "@/components/sales/SalesWorkspace";
 import { cn } from "@/lib/utils";
 import { RootState } from "@/redux/store";
 import { AeonikFont, RecoletaFont } from "@/utils/customFonts";
@@ -13,6 +14,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const user = useSelector((state: RootState) => state.admin.loggedInUser);
   const router = useRouter();
   const pathname = usePathname();
+  const isSalesRoute = ["/orders", "/listings", "/categories", "/shipping"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isRouteLoading, setIsRouteLoading] = useState(false);
   const [routeLoadingMessage, setRouteLoadingMessage] = useState("Loading...");
@@ -35,11 +37,11 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className={`${AeonikFont.className} ${RecoletaFont.variable}`}>
-      <div className="px-4 min-h-screen flex flex-col">
-        <Navbar onMenuToggle={() => setIsSidebarOpen(true)} />
+      <div className={cn("min-h-screen flex flex-col", isSalesRoute ? "px-4 md:px-6" : "px-4")}>
+        <Navbar salesLayout={isSalesRoute} onMenuToggle={() => setIsSidebarOpen(true)} />
         <div className="flex flex-grow">
-          <div className="hidden md:flex sticky top-12 w-[210px] py-4  border-r h-[calc(100vh-3rem)] overflow-hidden">
-            <div className="overflow-y-scroll overflow-x-hidden h-full scrollbar-hide">
+          <div className={cn("hidden md:flex sticky shrink-0 border-r overflow-hidden", isSalesRoute ? "top-[88px] w-[240px] pr-6 h-[calc(100vh-88px)]" : "top-12 w-[210px] py-4 h-[calc(100vh-3rem)]")}>
+            <div className="w-full overflow-y-scroll overflow-x-hidden h-full scrollbar-hide">
               <Sidebar
                 onNavigate={(label) => {
                   setRouteLoadingMessage(`Loading ${label.toLowerCase()}...`);
@@ -83,14 +85,14 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               </div>
             </div>
           </div>
-          <div className="p-5 w-full">
-            {isRouteLoading ? (
+          <div className={cn("min-w-0 flex-1", isSalesRoute ? "py-6 pl-0 pr-0 md:pl-10 md:pr-2" : "p-5 w-full")}>
+            <SalesWorkspace enabled={isSalesRoute}>{isRouteLoading ? (
               <div className="flex min-h-[60vh] items-center justify-center">
                 <LoadingState message={routeLoadingMessage} />
               </div>
             ) : (
               children
-            )}
+            )}</SalesWorkspace>
           </div>
         </div>
       </div>

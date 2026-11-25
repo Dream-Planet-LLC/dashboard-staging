@@ -22,6 +22,9 @@ import {
   OverviewIcon,
   SellersStoreIcon,
   WithdrawalIcon,
+  ListingsIcon,
+  CategoriesIcon,
+  ShippingIcon,
 
 } from "@/components/icons";
 
@@ -165,8 +168,31 @@ export const NavLinks = [
 
     {
     name: "Orders",
+    section: "sales",
     icon: <OrdersIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
     href: "/orders",
+    accordion: false,
+  },
+
+  {
+    name: "Listings",
+    section: "sales",
+    icon: <ListingsIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/listings",
+    accordion: false,
+  },
+  {
+    name: "Categories",
+    section: "sales",
+    icon: <CategoriesIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/categories",
+    accordion: false,
+  },
+  {
+    name: "Shipping",
+    section: "sales",
+    icon: <ShippingIcon className="mr-2 h-7 w-4" pathColor="#808080" />,
+    href: "/shipping",
     accordion: false,
   },
 

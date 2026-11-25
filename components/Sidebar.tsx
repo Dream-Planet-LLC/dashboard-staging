@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,16 @@ import {
   hasPermission,
 } from "@/constants/permission";
 import { ChevronRight, ChevronRightIcon } from "lucide-react";
+import { DesignIcon } from "./sales/DesignIcon";
+
+const salesSidebarIcons: Record<string, string> = {
+  Broadcast: "broadcast", Users: "users", Challenge: "challenge", Payments: "payments",
+  Performance: "performance", Report: "report", Investments: "investments", Forum: "forum",
+  Overview: "overview", "Sellers Store": "sellers-store", Products: "products", Events: "events",
+  Orders: "orders", Listings: "listings", Categories: "categories", Payouts: "payouts",
+  Withdrawal: "withdrawal", Hire: "hire", Buyers: "buyers", Moderation: "moderation",
+  "Admin Setting": "admin", "Change Password": "password",
+};
 
 type SidebarProps = {
   onNavigate?: (label: string) => void;
@@ -25,7 +35,19 @@ type SidebarProps = {
 
 const Sidebar = ({ onNavigate }: SidebarProps) => {
   const path = usePathname();
+  const isSalesRoute = ["/orders", "/listings", "/categories", "/shipping"].some((route) => path === route || path.startsWith(`${route}/`));
   const dispatch = useDispatch();
+  const navScroller = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!path.startsWith("/shipping")) return;
+    const scroller = navScroller.current;
+    const activeLink = scroller?.querySelector<HTMLAnchorElement>('a[href="/shipping"]');
+    if (scroller && activeLink) {
+      const overflow = activeLink.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom;
+      if (overflow > 0) scroller.scrollTop += overflow + 24;
+    }
+  }, [path]);
 
   const permissions = useSelector(
     (state: RootState) => state.admin.loggedInUser.permissions || [],
@@ -39,7 +61,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
     return hasPermission(permissions, item.permission ?? item.name);
   });
 
-  // Separate links into Platform and Digital Store sections
+  // Group links by the area of the dashboard they belong to.
   const platformLinks = visibleLinks.filter((item: any) =>
     [
       "Broadcast",
@@ -60,7 +82,6 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
       "Sellers Store",
       "Products",
       "Events",
-      "Orders",
       "Payouts",
       "Withdrawal",
       "Hire",
@@ -68,6 +89,8 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
       "Moderation",
     ].includes(item.name),
   );
+
+  const salesLinks = visibleLinks.filter((item: any) => item.section === "sales");
 
   const settingsLinks = visibleLinks.filter((item: any) =>
     [
@@ -87,7 +110,11 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
       (item.href !== "/" &&
         (path === item.href || path.startsWith(`${item.href}/`))) ||
       (item.href === "/" && path === "/");
-    const pathColor = isActive ? "#F75803" : "#A4A4A4";
+    const pathColor = isSalesRoute ? "#111810" : isActive ? "#F75803" : "#A4A4A4";
+
+    const icon = isSalesRoute && salesSidebarIcons[item.name]
+      ? <DesignIcon name={salesSidebarIcons[item.name]} size={20} />
+      : React.cloneElement(item.icon, { className: "h-5 w-5", pathColor });
 
     if (item.accordion) {
       return (
@@ -99,15 +126,14 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
                 isActive
                   ? "bg-[#FFEEE6] text-[#F75803]"
                   : "text-[#A4A4A4] text-[#808080] hover:text-[#808080]/80",
+                isSalesRoute && "h-10 py-2 text-[16px] font-medium leading-6 tracking-[-0.015em] text-[#808080] [&>svg]:hidden",
               )}
             >
               <span className="flex items-center gap-3">
-                {React.cloneElement(item.icon, {
-                  className: "h-5 w-5",
-                  pathColor,
-                })}
+                {icon}
                 {item.label ?? item.name}
               </span>
+              {isSalesRoute && <DesignIcon name="nav-chevron" size={16} />}
             </AccordionTrigger>
             <AccordionContent className="flex flex-col px-3 py-2 gap-1">
               {item.sublink.map((sublink: any) => {
@@ -141,14 +167,13 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
         className={cn(
           "flex items-center justify-between text-[14px] INT400 py-2.5 px-3 transition-colors rounded-sm",
           isActive ? "bg-[#FFEEE6] text-[#F75803]" : "bg-none text-[#808080] hover:text-[#808080]/80",
+          isSalesRoute && "h-10 py-2 text-[16px] font-medium leading-6 tracking-[-0.015em]",
+          isSalesRoute && isActive && "rounded-xl bg-[#F7F7F7] text-[#111810]",
         )}
         onClick={() => onNavigate?.(item.name)}
       >
         <span className="flex items-center gap-3">
-          {React.cloneElement(item.icon, {
-            className: "h-5 w-5",
-            pathColor,
-          })}
+          {icon}
           {item.label ?? item.name}
         </span>
         {item.accordion && <ChevronRight className="h-4 w-4" />}
@@ -158,14 +183,14 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      <div className="flex-1 overflow-y-auto py-4 space-y-6">
+      <div ref={navScroller} className={cn("flex-1 overflow-y-auto space-y-6", isSalesRoute ? "py-6" : "py-4")}>
         {/* Platform Section */}
         {platformLinks.length > 0 && (
           <div className="space-y-1">
-            <p className="text-[14px] INT500 font-medium text-[#C8C8C8] uppercase tracking-wider px-1 mb-3">
+            <p className="text-[14px] INT500 font-medium text-[#C8C8C8] uppercase tracking-[0.06em] px-0 mb-4">
               PLATFORM
             </p>
-            <div className="space-y-0.5">
+            <div className={isSalesRoute ? "space-y-3" : "space-y-0.5"}>
               {platformLinks.map(renderNavLink)}
             </div>
           </div>
@@ -174,21 +199,30 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
         {/* Digital Store Section */}
         {digitalStoreLinks.length > 0 && (
           <div className="space-y-1">
-            <p className="text-[14px] INT500  text-[#C8C8C8] uppercase tracking-wider px-1 mb-3">
+            <p className="text-[14px] INT500  text-[#C8C8C8] uppercase tracking-[0.06em] px-0 mb-4">
               DIGITAL STORE
             </p>
-            <div className="space-y-0.5">
+            <div className={isSalesRoute ? "space-y-3" : "space-y-0.5"}>
               {digitalStoreLinks.map(renderNavLink)}
             </div>
           </div>
         )}
 
+        {salesLinks.length > 0 && (
+          <div className="space-y-1">
+            <p className="px-0 mb-4 text-[14px] INT500 font-medium text-[#C8C8C8] uppercase tracking-wider">
+              SALES
+            </p>
+            <div className={isSalesRoute ? "space-y-3" : "space-y-0.5"}>{salesLinks.map(renderNavLink)}</div>
+          </div>
+        )}
+
         {engagementLinks.length > 0 && (
           <div className="space-y-1">
-            <p className="px-1 mb-3 text-[14px] INT500 font-medium text-[#C8C8C8] uppercase tracking-wider">
+            <p className="px-0 mb-4 text-[14px] INT500 font-medium text-[#C8C8C8] uppercase tracking-wider">
               ENGAGEMENT
             </p>
-            <div className="space-y-0.5">
+            <div className={isSalesRoute ? "space-y-3" : "space-y-0.5"}>
               {engagementLinks.map(renderNavLink)}
             </div>
           </div>
@@ -208,6 +242,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
           }}
           className="flex items-center gap-2 w-full  text-[#C83532] INT500 text-[14px] font-medium hover:bg-[#FAFAFA] transition-all active:scale-95"
         >
+          {isSalesRoute ? <DesignIcon name="logout" size={20} /> : (
           <svg
             width="20"
             height="20"
@@ -220,6 +255,8 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
               fill="#C83532"
             />
           </svg>
+          )}
+
 
           <span>Logout</span>
         </button>
