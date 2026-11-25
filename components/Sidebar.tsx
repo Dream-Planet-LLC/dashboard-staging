@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,17 +16,7 @@ import { RootState } from "@/redux/store";
 import {
   hasPermission,
 } from "@/constants/permission";
-import { ChevronRight, ChevronRightIcon } from "lucide-react";
-import { DesignIcon } from "./sales/DesignIcon";
-
-const salesSidebarIcons: Record<string, string> = {
-  Broadcast: "broadcast", Users: "users", Challenge: "challenge", Payments: "payments",
-  Performance: "performance", Report: "report", Investments: "investments", Forum: "forum",
-  Overview: "overview", "Sellers Store": "sellers-store", Products: "products", Events: "events",
-  Orders: "orders", Listings: "listings", Categories: "categories", Payouts: "payouts",
-  Withdrawal: "withdrawal", Hire: "hire", Buyers: "buyers", Moderation: "moderation",
-  "Admin Setting": "admin", "Change Password": "password",
-};
+import { ChevronRight } from "lucide-react";
 
 type SidebarProps = {
   onNavigate?: (label: string) => void;
@@ -35,7 +24,6 @@ type SidebarProps = {
 
 const Sidebar = ({ onNavigate }: SidebarProps) => {
   const path = usePathname();
-  const isSalesRoute = ["/orders", "/listings", "/categories", "/shipping"].some((route) => path === route || path.startsWith(`${route}/`));
   const dispatch = useDispatch();
   const navScroller = useRef<HTMLDivElement>(null);
 
@@ -110,11 +98,8 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
       (item.href !== "/" &&
         (path === item.href || path.startsWith(`${item.href}/`))) ||
       (item.href === "/" && path === "/");
-    const pathColor = isSalesRoute ? "#111810" : isActive ? "#F75803" : "#A4A4A4";
-
-    const icon = isSalesRoute && salesSidebarIcons[item.name]
-      ? <DesignIcon name={salesSidebarIcons[item.name]} size={20} />
-      : React.cloneElement(item.icon, { className: "h-5 w-5", pathColor });
+    const pathColor = isActive ? "#F75803" : "#A4A4A4";
+    const icon = React.cloneElement(item.icon, { className: "h-5 w-5", pathColor });
 
     if (item.accordion) {
       return (
@@ -126,14 +111,12 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
                 isActive
                   ? "bg-[#FFEEE6] text-[#F75803]"
                   : "text-[#A4A4A4] text-[#808080] hover:text-[#808080]/80",
-                isSalesRoute && "h-10 py-2 text-[16px] font-medium leading-6 tracking-[-0.015em] text-[#808080] [&>svg]:hidden",
               )}
             >
               <span className="flex items-center gap-3">
                 {icon}
                 {item.label ?? item.name}
               </span>
-              {isSalesRoute && <DesignIcon name="nav-chevron" size={16} />}
             </AccordionTrigger>
             <AccordionContent className="flex flex-col px-3 py-2 gap-1">
               {item.sublink.map((sublink: any) => {
@@ -148,6 +131,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
                         : "text-[#A4A4A4] hover:text-[#808080]",
                     )}
                     href={sublink.href}
+                    aria-current={isSubActive ? "page" : undefined}
                     onClick={() => onNavigate?.(sublink.title)}
                   >
                     {sublink.title}
@@ -164,11 +148,10 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
       <Link
         key={item.href}
         href={item.href}
+        aria-current={isActive ? "page" : undefined}
         className={cn(
           "flex items-center justify-between text-[14px] INT400 py-2.5 px-3 transition-colors rounded-sm",
           isActive ? "bg-[#FFEEE6] text-[#F75803]" : "bg-none text-[#808080] hover:text-[#808080]/80",
-          isSalesRoute && "h-10 py-2 text-[16px] font-medium leading-6 tracking-[-0.015em]",
-          isSalesRoute && isActive && "rounded-xl bg-[#F7F7F7] text-[#111810]",
         )}
         onClick={() => onNavigate?.(item.name)}
       >
@@ -183,14 +166,14 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      <div ref={navScroller} className={cn("flex-1 overflow-y-auto space-y-6", isSalesRoute ? "py-6" : "py-4")}>
+      <div ref={navScroller} className="flex-1 overflow-y-auto space-y-6 py-4">
         {/* Platform Section */}
         {platformLinks.length > 0 && (
           <div className="space-y-1">
             <p className="text-[14px] INT500 font-medium text-[#C8C8C8] uppercase tracking-[0.06em] px-0 mb-4">
               PLATFORM
             </p>
-            <div className={isSalesRoute ? "space-y-3" : "space-y-0.5"}>
+            <div className="space-y-0.5">
               {platformLinks.map(renderNavLink)}
             </div>
           </div>
@@ -202,7 +185,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
             <p className="text-[14px] INT500  text-[#C8C8C8] uppercase tracking-[0.06em] px-0 mb-4">
               DIGITAL STORE
             </p>
-            <div className={isSalesRoute ? "space-y-3" : "space-y-0.5"}>
+            <div className="space-y-0.5">
               {digitalStoreLinks.map(renderNavLink)}
             </div>
           </div>
@@ -210,10 +193,10 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
 
         {salesLinks.length > 0 && (
           <div className="space-y-1">
-            <p className="px-0 mb-4 text-[14px] INT500 font-medium text-[#C8C8C8] uppercase tracking-wider">
+            <p className="px-0 mb-4 text-[14px] INT500 font-medium text-[#C8C8C8] uppercase tracking-[0.06em]">
               SALES
             </p>
-            <div className={isSalesRoute ? "space-y-3" : "space-y-0.5"}>{salesLinks.map(renderNavLink)}</div>
+            <div className="space-y-0.5">{salesLinks.map(renderNavLink)}</div>
           </div>
         )}
 
@@ -222,7 +205,7 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
             <p className="px-0 mb-4 text-[14px] INT500 font-medium text-[#C8C8C8] uppercase tracking-wider">
               ENGAGEMENT
             </p>
-            <div className={isSalesRoute ? "space-y-3" : "space-y-0.5"}>
+            <div className="space-y-0.5">
               {engagementLinks.map(renderNavLink)}
             </div>
           </div>
@@ -242,7 +225,6 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
           }}
           className="flex items-center gap-2 w-full  text-[#C83532] INT500 text-[14px] font-medium hover:bg-[#FAFAFA] transition-all active:scale-95"
         >
-          {isSalesRoute ? <DesignIcon name="logout" size={20} /> : (
           <svg
             width="20"
             height="20"
@@ -255,7 +237,6 @@ const Sidebar = ({ onNavigate }: SidebarProps) => {
               fill="#C83532"
             />
           </svg>
-          )}
 
 
           <span>Logout</span>

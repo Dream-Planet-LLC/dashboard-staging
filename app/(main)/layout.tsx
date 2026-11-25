@@ -37,10 +37,10 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className={`${AeonikFont.className} ${RecoletaFont.variable}`}>
-      <div className={cn("min-h-screen flex flex-col", isSalesRoute ? "px-4 md:px-6" : "px-4")}>
-        <Navbar salesLayout={isSalesRoute} onMenuToggle={() => setIsSidebarOpen(true)} />
+      <div className="min-h-screen flex flex-col px-4">
+        <Navbar onMenuToggle={() => setIsSidebarOpen(true)} />
         <div className="flex flex-grow">
-          <div className={cn("hidden md:flex sticky shrink-0 border-r overflow-hidden", isSalesRoute ? "top-[88px] w-[240px] pr-6 h-[calc(100vh-88px)]" : "top-12 w-[210px] py-4 h-[calc(100vh-3rem)]")}>
+          <div className="hidden md:flex sticky shrink-0 border-r overflow-hidden top-12 w-[210px] py-4 h-[calc(100vh-3rem)]">
             <div className="w-full overflow-y-scroll overflow-x-hidden h-full scrollbar-hide">
               <Sidebar
                 onNavigate={(label) => {
@@ -85,7 +85,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               </div>
             </div>
           </div>
-          <div className={cn("min-w-0 flex-1", isSalesRoute ? "py-6 pl-0 pr-0 md:pl-10 md:pr-2" : "p-5 w-full")}>
+          <div className="min-w-0 flex-1 p-5 w-full">
             <SalesWorkspace enabled={isSalesRoute}>{isRouteLoading ? (
               <div className="flex min-h-[60vh] items-center justify-center">
                 <LoadingState message={routeLoadingMessage} />
